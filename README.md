@@ -1,1 +1,1 @@
-# SniffsLivetwitchBot
+# SniffsLiveTwitchBot
