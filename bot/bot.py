@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime
 import re
 
@@ -61,7 +60,7 @@ class TwitchBot(commands.Bot,):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
         await self.get_channel_status()
-        # await self.channel.send(self.NICK + " is joined the channels.")
+        await self.channel.send(self.NICK + " is joined the channels.")
         print("Joined")
 
     async def event_message(self, ctx):
@@ -108,7 +107,7 @@ class TwitchBot(commands.Bot,):
             except KeyError:
                 self.CHANNEL_LIVE = False
         print("LIVE")
-        # await self.channel.send(f"@{self.CHANNELS} มาแล้ววววว")
+        await self.channel.send(f"@{self.CHANNELS} มาแล้ววววว")
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
