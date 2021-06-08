@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import re
 
@@ -10,7 +11,6 @@ class TwitchBot(commands.Bot,):
 
         self.environment = environment
         self.market_open = False
-        self.CHANNEL_LIVE = False
 
         try:
             if(environment == "dev"):
@@ -59,9 +59,10 @@ class TwitchBot(commands.Bot,):
     async def event_ready(self):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
-        await self.get_channel_status()
+        self.channel_live = await self.get_channel_status()
         await self.channel.send(self.NICK + " is joined the channels.")
         print("Joined")
+        await self.greeting_sniffs()
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
@@ -100,14 +101,29 @@ class TwitchBot(commands.Bot,):
         return users.all
     
     async def get_channel_status(self):
-        while not self.CHANNEL_LIVE:
-            channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-            try:
-                self.CHANNEL_LIVE = (channel_status["type"] == "live")
-            except KeyError:
-                self.CHANNEL_LIVE = False
-        print("LIVE")
-        await self.channel.send(f"@{self.CHANNELS} มาแล้ววววว")
+        channel_status = await self.twitch_api.get_stream(self.CHANNELS)
+        if channel_status is not None:
+            self.channel_live = (channel_status["type"] == "live")
+        else: self.channel_live = False
+        return self.channel_live
+
+    async def greeting_sniffs(self):  # TODO: move to function.py
+        if self.channel_live:
+            print(f"[{datetime.utcnow()}] {self.CHANNELS} is live.")
+            while self.channel_live:
+                self.channel_live = await self.get_channel_status()
+                if not self.channel_live:
+                    await self.channel.send(f"@{self.CHANNELS} ไปแล้ววววว")
+                    await self.greeting_sniffs()
+                await asyncio.sleep(5)
+        else:
+            print(f"[{datetime.utcnow()}] {self.CHANNELS} is offline.")
+            while not self.channel_live:
+                self.channel_live = await self.get_channel_status()
+                if self.channel_live:
+                    await self.channel.send(f"@{self.CHANNELS} มาแล้ววววว")
+                    await self.greeting_sniffs()
+                await asyncio.sleep(5)
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
