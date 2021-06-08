@@ -133,3 +133,23 @@ class TwitchBot(commands.Bot,):
             else: coin = 0
             print(f"[{datetime.utcnow()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
             await self.channel.send(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
+
+    @commands.command(name="uptime")#getting live stream time
+    async def uptime_command(self, ctx):
+        data = await ctx.get_stream()
+
+        if data is None:
+            return await ctx.send("ยังไม่ถึงเวลาไลฟน้าาาา")
+        
+        uptime = datetime.utcnow() - datetime.fromisoformat(
+            data["start_at"][-1]
+        )
+        await ctx.send("f{uptime}")
+    
+    @commands.command(name="discord")
+    async def discord_command(self, ctx):
+        await ctx.send("https://discord.gg/Q3AMaHQEGU")#this is a temporary link waiting for permanent link
+
+    @commands.command(name="facebook")
+    async def facebook_command(self, ctx):
+        await ctx.send("https://www.facebook.com/sniffslive/")#waiting for permanent link
