@@ -8,10 +8,11 @@ from twitchio.ext import commands
 
 
 class TwitchBot(commands.Bot,):
-    def __init__(self,environment,dryrun,userfunction):
+    def __init__(self,environment,dryrun,userfunction,automod):
 
         self.environment = environment
         self.dryrun = dryrun
+        self.automod = automod  # need to fixed
         self.channel_live = False
         self.channel_live_on = ""
         self.market_open = False
