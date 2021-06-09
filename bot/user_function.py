@@ -68,10 +68,10 @@ class UserFunction:
                 user_stat["watchtime_redeem"] = watchtime_redeem
                 self.add_coin(username, point_to_add)
                 print(f"User: {username} ได้รับ {point_to_add} sniffscoin จากการดูไลฟ์ครบ {str(int((point_to_add * watchtime_to_point) / 60))} นาที")
-            await asyncio.sleep(watchtime_to_point * 60)
+            await asyncio.sleep(self.watchtime_to_point * 60)
         print(self.user_point)
         asyncio.create_task(self.add_point_by_watchtime())
-    
+
     def get_user_watchtime(self, username):
         try:
             watchtime = self.watchtime_session[username]["watchtime_session"]
@@ -79,16 +79,17 @@ class UserFunction:
         except KeyError:
             watchtime = 0
         return watchtime
-    
+
     def add_coin(self, username, coin):
         try:
             self.user_point[username] += coin
         except KeyError:
             self.user_point[username] = coin
-    
+
     def get_coin(self, username):
         try:
             coin = self.user_point[username]
         except KeyError:
             coin = 0
+        # self.bot_cmd.send_message("test")
         return coin

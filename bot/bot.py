@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import random
 import re
 
 from twitchio.client import Client
@@ -152,7 +153,7 @@ class TwitchBot(commands.Bot,):
                 self.user_function.add_coin(username.lower(), coin)
             print(f"[{datetime.utcnow()}] All {len(users)} users receive {coin} sniffscoin")
             await self.send_message(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
-    
+
     @commands.command(name="give")
     async def give_coin_user(self, ctx):
         if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
@@ -218,3 +219,24 @@ class TwitchBot(commands.Bot,):
     @commands.command(name="facebook")
     async def facebook_command(self, ctx):
         await self.send_message("https://www.facebook.com/sniffslive/")#waiting for permanent link
+    
+    @commands.command(name="thanos")
+    async def thanos(self, ctx):
+        thanos_timeout = 180
+        casualtie = 0
+        print("Thanos: Do you call me?")
+        userslist = await self.get_users_list()
+        userslist = [username for username in userslist if username not in [self.NICK, self.CHANNELS]]
+        print(userslist)
+        if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            number_user = int(len(userslist) / 2)
+            random.shuffle(userslist)
+            poor_users = userslist[:number_user]
+            for username in poor_users:
+                if (bool(random.getrandbits(1))):
+                    casualtie += 1
+                    print(f"[THANOS] [{datetime.utcnow()}] Timeout: {username}")
+                    await self.channel.timeout(username, thanos_timeout, "โดนทานอสดีดนิ้ว")
+                    await asyncio.sleep(0.5)
+            
+        await self.channel.send(f"ใช้งาน Thanos Mode มี {casualtie} คนในแชทหายตัวไป....")
