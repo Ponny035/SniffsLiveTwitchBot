@@ -25,9 +25,14 @@ class UserFunction:
             self.watchtime_session[username] = {}
             self.watchtime_session[username]["status"] = "part"
             self.watchtime_session[username]["part_on"] = timestamp
+        # TODO: write watchtime to DB when user part
     
-    def get_channel_live_on(self, channel_live, channel_live_on):
-        if channel_live: self.channel_live, self.channel_live_on = channel_live, channel_live_on
+    async def get_channel_live_on(self, channel_live, channel_live_on):
+        if channel_live:
+            self.channel_live, self.channel_live_on = channel_live, channel_live_on
+        else:
+            self.channel_live = False
+            self.channel_live_on = ""
 
     async def update_user_watchtime(self):
         while self.channel_live:
@@ -38,12 +43,15 @@ class UserFunction:
                 else:
                     user_stat["watchtime_session"] = (user_stat["part_on"] - max(user_stat["join_on"], self.channel_live_on)).total_seconds()
             await asyncio.sleep(1)
-        while True:
-            await asyncio.sleep(60)
+        if self.watchtime_session != {}:
+            # TODO: write watchtime to DB when live end
+            print("write watchtime to DB")
+            self.watchtime_session = {}
     
     def get_user_watchtime(self, username):
         try:
             watchtime = self.watchtime_session[username]["watchtime_session"]
+            # TODO: fetch watchtime from DB
         except KeyError:
             watchtime = 0
         return watchtime

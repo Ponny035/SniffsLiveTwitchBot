@@ -119,8 +119,10 @@ class TwitchBot(commands.Bot,):
 
     async def greeting_sniffs(self):
         if self.channel_live:
-            self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
-            await self.user_function.update_user_watchtime()
+            usernames = await self.get_users_list()
+            for username in usernames: self.user_function.user_join(username,self.channel_live_on)
+            await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
+            asyncio.create_task(self.user_function.update_user_watchtime())
             print(f"[{datetime.utcnow()}] {self.CHANNELS} is live.")
             while self.channel_live:
                 await self.get_channel_status()
@@ -129,7 +131,7 @@ class TwitchBot(commands.Bot,):
                     await self.greeting_sniffs()
                 await asyncio.sleep(5)
         else:
-            self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
+            await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
             print(f"[{datetime.utcnow()}] {self.CHANNELS} is offline.")
             while not self.channel_live:
                 await self.get_channel_status()
