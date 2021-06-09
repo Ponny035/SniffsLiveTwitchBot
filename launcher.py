@@ -1,9 +1,9 @@
-from bot import TwitchBot, UserFunction
+from bot import TwitchBot, UserFunction, automod
 import sys
 
 def main(environment, dryrun):
     userfunction = UserFunction()
-    bot = TwitchBot(environment, dryrun, userfunction)
+    bot = TwitchBot(environment, dryrun, userfunction, automod)
     bot.run()
 
 if __name__ == "__main__":
