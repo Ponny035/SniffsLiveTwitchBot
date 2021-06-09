@@ -102,10 +102,6 @@ class TwitchBot(commands.Bot,):
     # TODO (1.1): write watchtime to db after live end
     # TODO (1.1): asynnio every xx minutes to increase xx points (diff watchtime_session and watchtime_redeem => mod xx minute => add point => write watchtime_redeem = xx minute)
 
-    async def event_usernotice_subscription(self, metadata):  # get sub metadata TODO (2.1): implement function
-        print("New Sub")
-        print(metadata)
-
     async def get_users_list(self):
         users = await self.get_chatters(self.CHANNELS)
         return users.all
@@ -123,6 +119,7 @@ class TwitchBot(commands.Bot,):
             for username in usernames: self.user_function.user_join(username,self.channel_live_on)
             await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
             asyncio.create_task(self.user_function.update_user_watchtime())
+            asyncio.create_task(self.user_function.add_point_by_watchtime())
             print(f"[{datetime.utcnow()}] {self.CHANNELS} is live.")
             while self.channel_live:
                 await self.get_channel_status()
@@ -146,32 +143,56 @@ class TwitchBot(commands.Bot,):
             commands_split = ctx.content.split()
             try:
                 coin = int(commands_split[1])
+                if coin < 0: coin = 0
             except:
                 coin = 1
             users = await self.get_users_list()
             # TODO: add sniffscoin to DB
+            for username in users:
+                self.user_function.add_coin(username.lower(), coin)
             print(f"[{datetime.utcnow()}] All {len(users)} users receive {coin} sniffscoin")
             await self.send_message(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
+    
+    @commands.command(name="give")
+    async def give_coin_user(self, ctx):
+        if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            commands_split = ctx.content.split()
+            try:
+                username = commands_split[1]
+            except:
+                username = ""
+            try:
+                coin = int(commands_split[2])
+                if coin < 0: coin = 0
+            except:
+                coin = 1
+            if username != "":
+                self.user_function.add_coin(username, coin)
+            print(f"[{datetime.utcnow()}] User: {username} receive {coin} sniffscoin")
+            await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
         if self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS:
-            user_stat = {  # dummy response
-                "username": ctx.author.name.lower(),
-                "coin": 1,
-            }
-            if user_stat: coin = user_stat["coin"]
-            else: coin = 0
+            coin = self.user_function.get_coin(ctx.author.name.lower())
             print(f"[{datetime.utcnow()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
             await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
     
     @commands.command(name="watchtime")
     async def check_user_watchtime(self, ctx):
         watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
-        watchtime_min = str(int(watchtime / 60))
-        watchtime_sec = str(int(watchtime % 60))
-        print(f"[{datetime.utcnow()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_min} mins {watchtime_sec} secs")
-        await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
+        watchtime_hour = 0
+        watchtime_min = 0
+        watchtime_sec = int(watchtime % 60)
+        if watchtime >= 60: watchtime_min = int(watchtime / 60)
+        if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
+        print(f"[{datetime.utcnow()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
+        if watchtime_hour > 0:
+            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_hour} ชั่วโมง {watchtime_min} นาที {watchtime_sec} วินาที")
+        elif watchtime_min > 0:
+            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
+        else:
+            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_sec} วินาที")
     
     @commands.command(name="uptime")#getting live stream time
     async def uptime_command(self, ctx):
