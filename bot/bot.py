@@ -7,9 +7,10 @@ from twitchio.ext import commands
 
 
 class TwitchBot(commands.Bot,):
-    def __init__(self,environment,userfunction):
+    def __init__(self,environment,dryrun,userfunction):
 
         self.environment = environment
+        self.dryrun = dryrun
         self.channel_live = False
         self.channel_live_on = ""
         self.market_open = False
@@ -58,12 +59,17 @@ class TwitchBot(commands.Bot,):
         except Exception as e:
             msg = "start bot fail with error \"" + str(e) + "\" try check your ... first "
             raise TypeError(msg)
-            
+
+    async def send_message(self, msg):
+        if self.dryrun != "msgoff":
+            await self.channel.send(msg)
+        else: print(f"[INFO] Dry run mode is on \"{msg}\" not sent")
+
     async def event_ready(self):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
         await self.get_channel_status()
-        # await self.channel.send(self.NICK + " is joined the channels.")
+        await self.send_message(self.NICK + " is joined the channels.")
         print("Joined")
         await self.greeting_sniffs()
 
@@ -75,7 +81,7 @@ class TwitchBot(commands.Bot,):
             try:
                 self.bit = re.search(r"(?<=bits=)([0-9]+)", ctx.raw_data)[0]
                 print(f"[{ctx.timestamp}] {ctx.author.name.lower()}: {self.bit} bits")
-                await self.channel.send(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {self.bit} บิทคร้าบ")
+                await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {self.bit} บิทคร้าบ")
             except:
                 self.bit = 0
 
@@ -84,13 +90,13 @@ class TwitchBot(commands.Bot,):
     async def event_join(self, user):  # get user join notice TODO (1.1.1): write to dict
         await self.get_channel_status()
         if self.channel_live:
-            if user.name.lower() == "armzi": await self.channel.send(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
+            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
         if user.name.lower() not in [self.NICK, self.NICK+"\r"]: self.user_function.user_join(user.name.lower(), datetime.utcnow())
 
     async def event_part(self, user):  # get user part notice TODO (1.1.2): write to dict
         await self.get_channel_status()
         if self.channel_live:
-            if user.name.lower() == "armzi": await self.channel.send(f"พ่อ @{user.name} ไปแล้ว บะบายคร้าบบบบ")
+            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} ไปแล้ว บะบายคร้าบบบบ")
         if user.name.lower() not in [self.NICK, self.NICK+"\r"]: self.user_function.user_part(user.name.lower(), datetime.utcnow())
 
     # TODO (1.1): write watchtime to db after live end
@@ -119,7 +125,7 @@ class TwitchBot(commands.Bot,):
             while self.channel_live:
                 await self.get_channel_status()
                 if not self.channel_live:
-                    await self.channel.send(f"@{self.CHANNELS} ไปแล้ววววว")
+                    await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
                     await self.greeting_sniffs()
                 await asyncio.sleep(5)
         else:
@@ -128,7 +134,7 @@ class TwitchBot(commands.Bot,):
             while not self.channel_live:
                 await self.get_channel_status()
                 if self.channel_live:
-                    await self.channel.send(f"@{self.CHANNELS} มาแล้ววววว")
+                    await self.send_message(f"@{self.CHANNELS} มาแล้ววววว")
                     await self.greeting_sniffs()
                 await asyncio.sleep(5)
 
@@ -143,7 +149,7 @@ class TwitchBot(commands.Bot,):
             users = await self.get_users_list()
             # TODO: add sniffscoin to DB
             print(f"[{datetime.utcnow()}] All {len(users)} users receive {coin} sniffscoin")
-            await ctx.send(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
+            await self.send_message(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
@@ -155,7 +161,7 @@ class TwitchBot(commands.Bot,):
             if user_stat: coin = user_stat["coin"]
             else: coin = 0
             print(f"[{datetime.utcnow()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
-            await ctx.send(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
+            await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
     
     @commands.command(name="watchtime")
     async def check_user_watchtime(self, ctx):
@@ -163,11 +169,11 @@ class TwitchBot(commands.Bot,):
         watchtime_min = str(int(watchtime / 60))
         watchtime_sec = str(int(watchtime % 60))
         print(f"[{datetime.utcnow()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_min} mins {watchtime_sec} secs")
-        await ctx.send(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
+        await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
     
     @commands.command(name="uptime")#getting live stream time
     async def uptime_command(self, ctx):
-        if not self.channel_live: return await ctx.send("ยังไม่ถึงเวลาไลฟน้าาาา")
+        if not self.channel_live: return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
         uptime = (datetime.utcnow() - self.channel_live_on).total_seconds()
         uptime_hour = 0
         uptime_min = 0
@@ -176,16 +182,16 @@ class TwitchBot(commands.Bot,):
         if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
         print(f"[{datetime.utcnow()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
         if uptime_hour > 0:
-            await ctx.send(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
+            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
         elif uptime_min > 0:
-            await ctx.send(f"สนิฟไลฟ์มาแล้ว {uptime_min} นาที {uptime_sec} วินาที น้าาา")
+            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_min} นาที {uptime_sec} วินาที น้าาา")
         else:
-            await ctx.send(f"สนิฟไลฟ์มาแล้ว {uptime_sec} วินาที น้าาา")
+            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_sec} วินาที น้าาา")
 
     @commands.command(name="discord")
     async def discord_command(self, ctx):
-        await ctx.send("https://discord.gg/Q3AMaHQEGU")#this is a temporary link waiting for permanent link
+        await self.send_message("https://discord.gg/Q3AMaHQEGU")#this is a temporary link waiting for permanent link
 
     @commands.command(name="facebook")
     async def facebook_command(self, ctx):
-        await ctx.send("https://www.facebook.com/sniffslive/")#waiting for permanent link
+        await self.send_message("https://www.facebook.com/sniffslive/")#waiting for permanent link
