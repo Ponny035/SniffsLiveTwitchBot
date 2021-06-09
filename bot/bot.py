@@ -240,4 +240,4 @@ class TwitchBot(commands.Bot,):
                     await self.channel.timeout(username, thanos_timeout, "โดนทานอสดีดนิ้ว")
                     await asyncio.sleep(0.5)
             
-        await self.channel.send(f"ใช้งาน Thanos Mode มี {casualtie} คนในแชทหายตัวไป....")
+        await self.send_message(f"ใช้งาน Thanos Mode มี {casualtie} คนในแชทหายตัวไป....")
