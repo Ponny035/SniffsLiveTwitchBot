@@ -8,7 +8,7 @@ from twitchio.ext import commands
 
 
 class TwitchBot(commands.Bot,):
-    def __init__(self,environment,dryrun,userfunction,automod):
+    def __init__(self, environment, dryrun, userfunction, automod):
 
         self.environment = environment
         self.dryrun = dryrun
@@ -21,37 +21,37 @@ class TwitchBot(commands.Bot,):
         try:
             if(environment == "dev"):
                 print("Init bot on DEVELOPMENT environment")
-                with open ("./data/dev_env", "r", encoding="utf-8") as f:
+                with open("./data/dev_env", "r", encoding="utf-8") as f:
                     IRC_TOKEN, API_TOKEN, self.NICK, self.CHANNELS = (l.strip() for l in f.readlines())
                 super().__init__(
-                    irc_token = IRC_TOKEN,
-                    api_token = API_TOKEN,
-                    client_id = "uej04g8lskt59abzr5o50lt67k9kmi",
-                    prefix = "!", 
-                    nick = self.NICK,
-                    initial_channels = [self.CHANNELS],
+                    irc_token=IRC_TOKEN,
+                    api_token=API_TOKEN,
+                    client_id="uej04g8lskt59abzr5o50lt67k9kmi",
+                    prefix="!",
+                    nick=self.NICK,
+                    initial_channels=[self.CHANNELS],
                 )
                 self.twitch_api = Client(
-                    client_id = "wt9nmvcq4oszo9k4qpswvl7htigg08",
-                    client_secret = "5c2ihtk3viinbrpnvlooys8c56w56f"
+                    client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
+                    client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
                 )
 
             elif(environment == "prod"):
                 print("Init bot on PRODUCTION environment")
-                with open ("./data/env", "r", encoding="utf-8") as f:
+                with open("./data/env", "r", encoding="utf-8") as f:
                     IRC_TOKEN, API_TOKEN, self.NICK, self.CHANNELS = (l.strip() for l in f.readlines())
 
                 super().__init__(
-                    irc_token = IRC_TOKEN,
-                    api_token = API_TOKEN,
-                    client_id = "uej04g8lskt59abzr5o50lt67k9kmi",
-                    prefix = "!", 
-                    nick = self.NICK,
-                    initial_channels = [self.CHANNELS],
+                    irc_token=IRC_TOKEN,
+                    api_token=API_TOKEN,
+                    client_id="uej04g8lskt59abzr5o50lt67k9kmi",
+                    prefix="!",
+                    nick=self.NICK,
+                    initial_channels=[self.CHANNELS],
                 )
                 self.twitch_api = Client(
-                    client_id = "wt9nmvcq4oszo9k4qpswvl7htigg08",
-                    client_secret = "5c2ihtk3viinbrpnvlooys8c56w56f"
+                    client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
+                    client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
                 )
             print("Done")
         except (FileNotFoundError):
@@ -65,7 +65,8 @@ class TwitchBot(commands.Bot,):
     async def send_message(self, msg):
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
-        else: print(f"[INFO] Dry run mode is on \"{msg}\" not sent")
+        else:
+            print(f"[INFO] Dry run mode is on \"{msg}\" not sent")
 
     async def event_ready(self):
         print("Bot joining channel.")
@@ -83,7 +84,7 @@ class TwitchBot(commands.Bot,):
             try:
                 self.bit = re.search(r"(?<=bits=)([0-9]+)", ctx.raw_data)[0]
                 print(f"[{ctx.timestamp}] {ctx.author.name.lower()}: {self.bit} bits")
-                await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {self.bit} บิทคร้าบ")
+                await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {self.bit} บิทค้าาา")
             except:
                 self.bit = 0
 
@@ -98,7 +99,7 @@ class TwitchBot(commands.Bot,):
     async def event_part(self, user):  # get user part notice TODO (1.1.2): write to dict
         await self.get_channel_status()
         if self.channel_live:
-            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} ไปแล้ว บะบายคร้าบบบบ")
+            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
         if user.name.lower() not in [self.NICK, self.NICK+"\r"]: self.user_function.user_part(user.name.lower(), datetime.utcnow())
 
     # TODO (1.1): write watchtime to db after live end
@@ -107,7 +108,7 @@ class TwitchBot(commands.Bot,):
     async def get_users_list(self):
         users = await self.get_chatters(self.CHANNELS)
         return users.all
-    
+
     async def get_channel_status(self):
         channel_status = await self.twitch_api.get_stream(self.CHANNELS)
         if channel_status is not None:
@@ -118,7 +119,7 @@ class TwitchBot(commands.Bot,):
     async def greeting_sniffs(self):
         if self.channel_live:
             usernames = await self.get_users_list()
-            for username in usernames: self.user_function.user_join(username,self.channel_live_on)
+            for username in usernames: self.user_function.user_join(username, self.channel_live_on)
             await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
             asyncio.create_task(self.user_function.update_user_watchtime())
             asyncio.create_task(self.user_function.add_point_by_watchtime())
@@ -179,7 +180,7 @@ class TwitchBot(commands.Bot,):
             coin = self.user_function.get_coin(ctx.author.name.lower())
             print(f"[{datetime.utcnow()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
             await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
-    
+
     @commands.command(name="watchtime")
     async def check_user_watchtime(self, ctx):
         watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
@@ -195,8 +196,8 @@ class TwitchBot(commands.Bot,):
             await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
         else:
             await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_sec} วินาที")
-    
-    @commands.command(name="uptime")#getting live stream time
+
+    @commands.command(name="uptime")  # getting live stream time
     async def uptime_command(self, ctx):
         if not self.channel_live: return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
         uptime = (datetime.utcnow() - self.channel_live_on).total_seconds()
@@ -215,29 +216,31 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="discord")
     async def discord_command(self, ctx):
-        await self.send_message("https://discord.gg/Q3AMaHQEGU")#this is a temporary link waiting for permanent link
+        await self.send_message("https://discord.gg/Q3AMaHQEGU")  # this is a temporary link waiting for permanent link
 
     @commands.command(name="facebook")
     async def facebook_command(self, ctx):
-        await self.send_message("https://www.facebook.com/sniffslive/")#waiting for permanent link
-    
+        await self.send_message("https://www.facebook.com/sniffslive/")  # waiting for permanent link
+
     @commands.command(name="thanos")
     async def thanos(self, ctx):
         thanos_timeout = 180
         casualtie = 0
-        print("Thanos: Do you call me?")
+        print("[THANOS] [{datetime.utcnow()}] Wanna go to hell?")
+        await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
         userslist = await self.get_users_list()
-        userslist = [username for username in userslist if username not in [self.NICK, self.CHANNELS]]
-        print(userslist)
+        exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
+        userslist = [username for username in userslist if username not in exclude_list]
         if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             number_user = int(len(userslist) / 2)
             random.shuffle(userslist)
             poor_users = userslist[:number_user]
+            if self.environment == "dev": poor_users += ["sirju001"]  # just for fun
             for username in poor_users:
                 if (bool(random.getrandbits(1))):
                     casualtie += 1
                     print(f"[THANOS] [{datetime.utcnow()}] Timeout: {username}")
-                    await self.channel.timeout(username, thanos_timeout, "โดนทานอสดีดนิ้ว")
+                    await self.channel.timeout(username, thanos_timeout, "โดนสนิฟดีดนิ้ว")
                     await asyncio.sleep(0.5)
-            
+
         await self.send_message(f"ใช้งาน Thanos Mode มี {casualtie} คนในแชทหายตัวไป....")

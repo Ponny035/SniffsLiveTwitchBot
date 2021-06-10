@@ -17,7 +17,7 @@ class UserFunction:
             self.watchtime_session[username] = {}
             self.watchtime_session[username]["status"] = "join"
             self.watchtime_session[username]["join_on"] = timestamp
-    
+
     def user_part(self, username, timestamp):
         try:
             if self.watchtime_session[username]["status"] != "part":
@@ -28,7 +28,7 @@ class UserFunction:
             self.watchtime_session[username]["status"] = "part"
             self.watchtime_session[username]["part_on"] = timestamp
         # TODO: write watchtime to DB when user part
-    
+
     async def get_channel_live_on(self, channel_live, channel_live_on):
         if channel_live:
             self.channel_live, self.channel_live_on = channel_live, channel_live_on
@@ -50,7 +50,7 @@ class UserFunction:
             print("write watchtime to DB")
             print(self.watchtime_session)
             self.watchtime_session = {}
-    
+
     async def add_point_by_watchtime(self):
         if self.channel_live:
             for username, user_stat in self.watchtime_session.items():
