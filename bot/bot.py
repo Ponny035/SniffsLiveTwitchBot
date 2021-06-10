@@ -3,7 +3,7 @@ from datetime import datetime
 import random
 import re
 
-from twitchio.client import Client
+import nest_asyncio
 from twitchio.ext import commands
 
 
@@ -16,7 +16,7 @@ class TwitchBot(commands.Bot,):
         self.channel_live = False
         self.channel_live_on = ""
         self.market_open = False
-        self.user_function = userfunction
+        nest_asyncio.apply()
 
         try:
             if(environment == "dev"):
@@ -30,10 +30,6 @@ class TwitchBot(commands.Bot,):
                     prefix="!",
                     nick=self.NICK,
                     initial_channels=[self.CHANNELS],
-                )
-                self.twitch_api = Client(
-                    client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
-                    client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
                 )
 
             elif(environment == "prod"):
@@ -49,11 +45,11 @@ class TwitchBot(commands.Bot,):
                     nick=self.NICK,
                     initial_channels=[self.CHANNELS],
                 )
-                self.twitch_api = Client(
-                    client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
-                    client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
-                )
+
+            self.user_function = userfunction(self.CHANNELS)
+
             print("Done")
+
         except (FileNotFoundError):
             msg = "Sorry you DON'T HAVE PERMISSION to run on production."
             raise TypeError(msg)
@@ -71,10 +67,24 @@ class TwitchBot(commands.Bot,):
     async def event_ready(self):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
-        await self.get_channel_status()
+        asyncio.create_task(self.user_function.get_channel_status(self.event_offline, self.event_live))
         await self.send_message(self.NICK + " is joined the channels.")
         print("Joined")
+
+    # custom event to trigger when channel is live and return channel start time
+    async def event_live(self, starttime):
+        self.channel_live = True
+        self.channel_live_on = starttime
+        print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
         await self.greeting_sniffs()
+        await self.activate_point_system(starttime)
+
+    # custome event to trigger when channel is offline
+    async def event_offline(self):
+        self.channel_live = False
+        print(f"[INFO] [{datetime.utcnow()}] {self.CHANNELS} is offline")
+        await self.greeting_sniffs()
+        pass
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
@@ -91,16 +101,18 @@ class TwitchBot(commands.Bot,):
             await self.handle_commands(ctx)
 
     async def event_join(self, user):  # get user join notice TODO (1.1.1): write to dict
-        await self.get_channel_status()
         if self.channel_live:
-            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
-        if user.name.lower() not in [self.NICK, self.NICK+"\r"]: self.user_function.user_join(user.name.lower(), datetime.utcnow())
+            if user.name.lower() == "armzi":
+                await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
+        if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
+            self.user_function.user_join(user.name.lower(), datetime.utcnow())
 
     async def event_part(self, user):  # get user part notice TODO (1.1.2): write to dict
-        await self.get_channel_status()
         if self.channel_live:
-            if user.name.lower() == "armzi": await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
-        if user.name.lower() not in [self.NICK, self.NICK+"\r"]: self.user_function.user_part(user.name.lower(), datetime.utcnow())
+            if user.name.lower() == "armzi":
+                await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
+        if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
+            self.user_function.user_part(user.name.lower(), datetime.utcnow())
 
     # TODO (1.1): write watchtime to db after live end
     # TODO (1.1): asynnio every xx minutes to increase xx points (diff watchtime_session and watchtime_redeem => mod xx minute => add point => write watchtime_redeem = xx minute)
@@ -109,36 +121,18 @@ class TwitchBot(commands.Bot,):
         users = await self.get_chatters(self.CHANNELS)
         return users.all
 
-    async def get_channel_status(self):
-        channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-        if channel_status is not None:
-            self.channel_live = (channel_status["type"] == "live")
-            self.channel_live_on = datetime.strptime(channel_status["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-        else: self.channel_live = False
-
     async def greeting_sniffs(self):
         if self.channel_live:
-            usernames = await self.get_users_list()
-            for username in usernames: self.user_function.user_join(username, self.channel_live_on)
-            await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
-            asyncio.create_task(self.user_function.update_user_watchtime())
-            asyncio.create_task(self.user_function.add_point_by_watchtime())
-            print(f"[{datetime.utcnow()}] {self.CHANNELS} is live.")
-            while self.channel_live:
-                await self.get_channel_status()
-                if not self.channel_live:
-                    await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
-                    await self.greeting_sniffs()
-                await asyncio.sleep(5)
-        else:
-            await self.user_function.get_channel_live_on(self.channel_live, self.channel_live_on)
-            print(f"[{datetime.utcnow()}] {self.CHANNELS} is offline.")
-            while not self.channel_live:
-                await self.get_channel_status()
-                if self.channel_live:
-                    await self.send_message(f"@{self.CHANNELS} มาแล้ววววว")
-                    await self.greeting_sniffs()
-                await asyncio.sleep(5)
+            await self.send_message(f"@{self.CHANNELS} มาแล้ววววว")
+        elif not self.channel_live:
+            await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
+
+    async def activate_point_system(self, starttime):
+        usernames = await self.get_users_list()
+        for username in usernames:
+            self.user_function.user_join(username, self.channel_live_on)
+        asyncio.create_task(self.user_function.update_user_watchtime(starttime))
+        asyncio.create_task(self.user_function.add_point_by_watchtime())
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
@@ -199,7 +193,8 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="uptime")  # getting live stream time
     async def uptime_command(self, ctx):
-        if not self.channel_live: return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
+        if not self.channel_live:
+            return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
         uptime = (datetime.utcnow() - self.channel_live_on).total_seconds()
         uptime_hour = 0
         uptime_min = 0
@@ -226,7 +221,7 @@ class TwitchBot(commands.Bot,):
     async def thanos(self, ctx):
         thanos_timeout = 180
         casualtie = 0
-        print("[THANOS] [{datetime.utcnow()}] Wanna go to hell?")
+        print(f"[THANOS] [{datetime.utcnow()}] Wanna go to hell?")
         await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
         userslist = await self.get_users_list()
         exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
