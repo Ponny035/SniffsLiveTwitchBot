@@ -1,7 +1,8 @@
 from typing import Dict, Optional, Union
 from dataclasses import dataclass
 from contextlib import contextmanager
-
+# from collections import defaultdict//second choice of try
+# from . import db 
 import logging
 
 log = logging.getLogger(__name__)
@@ -117,3 +118,34 @@ def new_message_processing_scope(bot):
             mod_actions.execute(bot)
         except:
             log.exception("Faild to execute moderation action after messsage process scope end")
+
+
+
+
+# Curses = ("fuck, poo, boo, you are suck")
+# Warning_timers = (1,5,60)
+
+
+# def clear(bot, user, message):
+#     if any([curses in message for curses in Curses]):
+#         Warn(bot, user, reason="cursss")
+#         return False
+
+#     return True
+
+
+# def warn(bot, user, *, reason=None):
+#     Warnings = db("SELECT warning FROM user WHERE user id?",
+#     user["id"])
+
+#     if Warnings < len(Warning_timers):
+#         mins = Warning_timers[warnings]
+#         bot.send_message(f"/timeout {user['name']} {mins}m")
+#         bot.seng_message(f"{user['name']}, you ahve been mute for this reason: {reason}. Un mute in {mins} mins.")
+
+#         db.execute("UPDATE users SET warnings = Warnings +1 WHERE UserID = ?",
+#         user["ID"])
+
+#     else:
+#         bot.send_message(f"/ban{user["name"]} Repeted infractions.")
+#         bot.send_message(f"{user["name"]}, you have beeen ban from chat.")
