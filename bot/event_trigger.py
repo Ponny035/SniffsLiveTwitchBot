@@ -41,9 +41,9 @@ class EventTrigger:
         try:
             bits = re.search(r"(?<=bits=)([0-9]+)", ctx.raw_data)[0]
             print(f"[BITS] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {bits} bits")
+            await event_bit(ctx, bits)
         except:
             pass
-        await event_bit(ctx, bits)
 
     async def parsing_sub_data(self, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
         pass
