@@ -80,6 +80,10 @@ class EventTrigger:
         try:
             gift_sub_count = tags["msg-param-mass-gift-count"]
         except KeyError:
+            gift_sub_count = 0
+        try:
+            sub_month_count = tags["msg-param-cumulative-months"]
+        except KeyError:
             pass
         try:
             msg_id = tags["msg-id"]
@@ -89,7 +93,8 @@ class EventTrigger:
         if msg_id == "sub":
             data = {
                 "username": username,
-                "methods": methods
+                "methods": methods,
+                "sub_month_count": sub_month_count
             }
             await sub(channel, data)
 
@@ -97,6 +102,7 @@ class EventTrigger:
             data = {
                 "username": username,
                 "methods": methods,
+                "sub_month_count": sub_month_count,
                 "streak_months": streak_months
             }
             await resub(channel, data)

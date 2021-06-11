@@ -13,7 +13,7 @@ class TwitchBot(commands.Bot,):
 
         # init external function
         self.automod = automod  # need to fixed
-        self.user_function = userfunction()
+        self.user_function = userfunction(self.environment)
 
         nest_asyncio.apply()
 
@@ -73,6 +73,10 @@ class TwitchBot(commands.Bot,):
         else:
             print(f"[INFO] Dry run mode is on \"{msg}\" not sent")
 
+    def print_to_console(self, msg):
+        if self.environment == "dev":
+            print(msg)
+
     async def event_ready(self):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
@@ -99,14 +103,15 @@ class TwitchBot(commands.Bot,):
         self.channel_live_on = starttime
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
         await self.greeting_sniffs()
-        await self.activate_point_system()
+        await self.activate_point_system("start")
 
     # custome event to trigger when channel is offline
     async def event_offline(self):
         self.channel_live = False
+        self.channel_live_on = None
         print(f"[INFO] [{self.get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
-        await self.activate_point_system()
+        await self.activate_point_system("stop")
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
@@ -116,34 +121,59 @@ class TwitchBot(commands.Bot,):
             await self.handle_commands(ctx)
 
     async def event_bits(self, ctx, bits):
-        await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {bits} บิทค้าาา")
+        response = await self.user_function.add_point_by_bit(ctx.author.name.lower(), bits)
+        if response != "":
+            await self.send_message(response)
+        else:
+            await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {bits} บิทค้าาา")
 
     async def event_sub(self, channel, data):
-        print(f"sub: {data}")
-        pass
+        usernames = await self.get_users_list()
+        response = self.user_function.subscription_payout(data["username"], usernames)
+        for msg in response:
+            await self.send_message(msg)
+        self.print_to_console(f"sub: {data}")
 
     async def event_resub(self, channel, data):
-        print(f"resub: {data}")
+        usernames = await self.get_users_list()
+        response = self.user_function.subscription_payout(data["username"], usernames)
+        for msg in response:
+            await self.send_message(msg)
+        self.print_to_console(f"resub: {data}")
         pass
 
     async def event_subgift(self, channel, data):
-        print(f"subgift: {data}")
+        usernames = await self.get_users_list()
+        response = self.user_function.gift_subscription_payout(data["username"], data["recipent"], usernames)
+        for msg in response:
+            await self.send_message(msg)
+        self.print_to_console(f"subgift: {data}")
         pass
     
     async def event_submystergift(self, channel, data):
-        print(f"submysterygift: {data}")
+        usernames = await self.get_users_list()
+        response = self.user_function.giftmystery_subscription_payout(data["username"], data["gift_sub_count"], usernames)
+        for msg in response:
+            await self.send_message(msg)
+        self.print_to_console(f"submysterygift: {data}")
         pass
 
     async def event_anonsubgift(self, channel, data):
-        print(f"anonsubgift: {data}")
+        usernames = await self.get_users_list()
+        response = self.user_function.anongift_subscription_payout(data["recipent"], data["gift_sub_count"], usernames)
+        for msg in response:
+            await self.send_message(msg)
+        self.print_to_console(f"anonsubgift: {data}")
         pass
 
     async def event_anonsubmysterygift(self, channel, data):
-        print(f"anonsubmysterygift: {data}")
+        await self.send_message(f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามจำนวน {data['gift_sub_count']} Gift")
+        self.print_to_console(f"anonsubmysterygift: {data}")
         pass
 
     async def event_raid(self, channel, data):
-        print(f"raid: {data}")
+        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} ค่าา")
+        self.print_to_console(f"raid: {data}")
         pass
 
     async def event_join(self, user):
@@ -172,12 +202,12 @@ class TwitchBot(commands.Bot,):
         elif not self.channel_live:
             await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
 
-    async def activate_point_system(self):
-        if self.channel_live:
+    async def activate_point_system(self, cmd):
+        if cmd == "start":
             usernames = await self.get_users_list()
-            for username in usernames:
-                self.user_function.user_join_part("join", username.lower(), self.channel_live_on)
-        asyncio.create_task(self.user_function.activate_point_system(self.channel_live, self.channel_live_on))
+        elif cmd == "stop":
+            usernames = None
+        asyncio.create_task(self.user_function.activate_point_system(self.channel_live, self.channel_live_on, usernames))
 
     @commands.command(name="market")
     async def activate_market(self, ctx):
@@ -207,7 +237,6 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             usernames = await self.get_users_list()
             self.user_function.payday(usernames, coin)
-            print(f"[COIN] [{self.get_timestamp()}] All {len(usernames)} users receive {coin} sniffscoin")
             await self.send_message(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin")
 
     @commands.command(name="give")
@@ -226,7 +255,6 @@ class TwitchBot(commands.Bot,):
             usernames = await self.get_users_list()
             if (username is not None) and (username in usernames):
                 self.user_function.add_coin(username, coin)
-                print(f"[COIN] [{self.get_timestamp()}] User: {username} receive {coin} sniffscoin")
                 await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
@@ -235,7 +263,6 @@ class TwitchBot(commands.Bot,):
             if (self.user_function.check_cooldown(ctx.author.name.lower(), "coin")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "coin")
                 coin = self.user_function.get_coin(ctx.author.name.lower())
-                print(f"[COIN] [{self.get_timestamp()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
                 await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
 
     @commands.command(name="watchtime")
@@ -243,7 +270,6 @@ class TwitchBot(commands.Bot,):
         if (self.user_function.check_cooldown(ctx.author.name.lower(), "watchtime")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             self.user_function.set_cooldown(ctx.author.name.lower(), "watchtime")
             watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
-            print(f"[TIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime[0]} hours {watchtime[1]} mins {watchtime[2]} secs")
             if any(time > 0 for time in watchtime):
                 response_string = f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว"
                 if watchtime[0] > 0:
@@ -290,11 +316,10 @@ class TwitchBot(commands.Bot,):
     @commands.command(name="callhell")
     async def callhell(self, ctx):
         if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
-            print(f"[HELL] [{self.get_timestamp()}] Wanna go to hell?")
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
             usernames = await self.get_users_list()
             exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
-            data = await self.user_function.call_to_hell(usernames, exclude_list, self.environment, self.channel.timeout)
+            data = await self.user_function.call_to_hell(usernames, exclude_list, self.channel.timeout)
             users_string = ", ".join(data["poor_users"])
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป....")
