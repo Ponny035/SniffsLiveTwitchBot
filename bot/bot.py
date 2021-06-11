@@ -83,7 +83,7 @@ class TwitchBot(commands.Bot,):
             self.event_subgift,
             self.event_submystergift,
             self.event_anonsubgift,
-            self.event_anonmysterysubgift,
+            self.event_anonsubmysterygift,
             self.event_raid
         )
 
