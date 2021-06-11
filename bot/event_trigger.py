@@ -45,5 +45,101 @@ class EventTrigger:
         except:
             pass
 
-    async def parsing_sub_data(self, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
-        pass
+    async def parsing_sub_data(self, channel, tags, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
+        try:
+            username = tags["login"]
+        except KeyError:
+            try:
+                username = tags["display-name"].lower()
+            except KeyError:
+                pass
+        try:
+            plan = tags["msg-param-sub-plan"]
+        except KeyError:
+            plan = ""
+        try:
+            plan_name = tags["msg-param-sub-plan-name"].replace("\\s", " ")
+        except KeyError:
+            plan_name = None
+        try:
+            prime = (plan == "Prime")
+        except:
+            prime = False
+        methods = [prime, plan, plan_name]
+        try:
+            streak_months = tags["msg-param-streak-months"]
+        except KeyError:
+            streak_months = 0
+        try:
+            recipent = tags["msg-param-recipient-user-name"]
+        except KeyError:
+            try:
+                recipent = tags["msg-param-recipent-display-name"].lower()
+            except KeyError:
+                pass
+        try:
+            gift_sub_count = tags["msg-param-mass-gift-count"]
+        except KeyError:
+            pass
+        try:
+            msg_id = tags["msg-id"]
+        except KeyError:
+            return
+
+        if msg_id == "sub":
+            data = {
+                "username": username,
+                "methods": methods
+            }
+            await sub(channel, data)
+
+        elif msg_id == "resub":
+            data = {
+                "username": username,
+                "methods": methods,
+                "streak_months": streak_months
+            }
+            await resub(channel, data)
+
+        elif msg_id == "subgift":
+            data = {
+                "username": username,
+                "methods": methods,
+                "streak_months": streak_months,
+                "recipent": recipent
+            }
+            await subgift(channel, data)
+
+        elif msg_id == "submysterygift":
+            data = {
+                "username": username,
+                "methods": methods,
+                "gift_sub_count": gift_sub_count
+            }
+            await submysterygift(channel, data)
+
+        elif msg_id == "anonsubgift":
+            data = {
+                "methods": methods,
+                "streak_months": streak_months,
+                "recipent": recipent
+            }
+            await anonsubgift(channel, data)
+
+        elif msg_id == "anonsubmysterygift":
+            data = {
+                "methods": methods,
+                "gift_sub_count": gift_sub_count
+            }
+            await anonsubmysterygift(channel, data)
+
+        elif msg_id == "raid":
+            try:
+                username = tags["msg-param-login"]
+            except KeyError:
+                username = tags["msg-param-displayName"].lower()
+            data = {
+                "username": username,
+                "viewers": tags["msg-param-viewerCount"]
+            }
+            await raid(channel, data)

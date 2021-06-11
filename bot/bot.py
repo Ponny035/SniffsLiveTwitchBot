@@ -74,9 +74,18 @@ class TwitchBot(commands.Bot,):
         await self.send_message(self.NICK + " is joined the channels.")
         print("Joined")
 
-    async def event_raw_usernotice(self, channel, tags: dict):
-        pass
-        return await super().event_raw_usernotice(channel, tags)
+    async def event_raw_usernotice(self, channel, tags):
+        await self.event_trigger.parsing_sub_data(
+            channel,
+            tags,
+            self.event_sub,
+            self.event_resub,
+            self.event_subgift,
+            self.event_submystergift,
+            self.event_anonsubgift,
+            self.event_anonmysterysubgift,
+            self.event_raid
+        )
 
     # custom event to trigger when channel is live and return channel start time
     async def event_live(self, starttime):
@@ -102,6 +111,34 @@ class TwitchBot(commands.Bot,):
 
     async def event_bits(self, ctx, bits):
         await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {bits} บิทค้าาา")
+
+    async def event_sub(self, channel, data):
+        print(f"sub: {data}")
+        pass
+
+    async def event_resub(self, channel, data):
+        print(f"resub: {data}")
+        pass
+
+    async def event_subgift(self, channel, data):
+        print(f"subgift: {data}")
+        pass
+    
+    async def event_submystergift(self, channel, data):
+        print(f"submysterygift: {data}")
+        pass
+
+    async def event_anonsubgift(self, channel, data):
+        print(f"anonsubgift: {data}")
+        pass
+
+    async def event_anonsubmysterygift(self, channel, data):
+        print(f"anonsubmysterygift: {data}")
+        pass
+
+    async def event_raid(self, channel, data):
+        print(f"raid: {data}")
+        pass
 
     async def event_join(self, user):
         if self.channel_live:
