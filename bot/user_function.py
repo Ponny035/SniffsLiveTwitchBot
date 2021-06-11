@@ -1,82 +1,61 @@
 import asyncio
 from datetime import datetime
-from twitchio.client import Client
 
 
 class UserFunction:
-    def __init__(self, channels):
-        self.CHANNELS = channels
+    def __init__(self):
         self.channel_live = False
         self.watchtime_session = {}
         self.watchtime_to_point = 1  # 1 min to 1 point
         self.user_point = {}
-        self.twitch_api = Client(
-            client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
-            client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
-        )
-        # asyncio.ensure_future(self.get_channel_status(self.callFunc))
-        # asyncio.get_event_loop().run_forever()
 
-    def user_join(self, username, timestamp):
+    def get_timestamp(self):
+        return datetime.utcnow().replace(microsecond=0)
+
+    async def activate_point_system(self, live, starttime=None):
+        self.channel_live = live
+        if starttime is not None:
+            self.channel_live_on = starttime
+            await self.add_point_by_watchtime()
+        else:
+            self.channel_live_on = None
+
+    def user_join_part(self, status, username, timestamp):
         try:
-            if self.watchtime_session[username]["status"] != "join":
-                self.watchtime_session[username]["status"] = "join"
+            if self.watchtime_session[username]["status"] != status:
+                self.watchtime_session[username]["status"] = status
+                if status == "join":
+                    self.watchtime_session[username]["join_on"] = timestamp
+                elif status == "part":
+                    self.watchtime_session[username]["part_on"] = timestamp
+                    self.update_user_watchtime()
+        except KeyError:
+            self.watchtime_session[username] = {}
+            self.watchtime_session[username]["status"] = status
+            if status == "join":
                 self.watchtime_session[username]["join_on"] = timestamp
-        except KeyError:
-            self.watchtime_session[username] = {}
-            self.watchtime_session[username]["status"] = "join"
-            self.watchtime_session[username]["join_on"] = timestamp
-
-    def user_part(self, username, timestamp):
-        try:
-            if self.watchtime_session[username]["status"] != "part":
-                self.watchtime_session[username]["status"] = "part"
+            elif status == "part":
                 self.watchtime_session[username]["part_on"] = timestamp
-        except KeyError:
-            self.watchtime_session[username] = {}
-            self.watchtime_session[username]["status"] = "part"
-            self.watchtime_session[username]["part_on"] = timestamp
+                self.update_user_watchtime()
         # TODO: write watchtime to DB when user part
 
-    async def get_channel_status(self, callback1, callback2):
-        success_callback = [0, 0]
-        while True:
-            if self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is None and success_callback[0] == 0:
-                    self.channel_live = False
-                    success_callback = [1, 1]
-                    await callback1()
-                    await asyncio.sleep(10)
-                    success_callback[1] = 0
-            elif not self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is not None and success_callback[1] == 0:
-                    self.channel_live = (channel_status["type"] == "live")
-                    self.channel_live_on = datetime.strptime(channel_status["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-                    success_callback = [1, 1]
-                    await callback2(self.channel_live_on)
-                    await asyncio.sleep(10)
-                    success_callback[0] = 0
-
-    async def update_user_watchtime(self, starttime):
+    def update_user_watchtime(self):
         if self.channel_live:
             for user_stat in self.watchtime_session.values():
-                now = datetime.utcnow()
+                now = self.get_timestamp()
                 if user_stat["status"] == "join":
-                    user_stat["watchtime_session"] = (now - max(user_stat["join_on"], starttime)).total_seconds()
+                    user_stat["watchtime_session"] = (now - max(user_stat["join_on"], self.channel_live_on)).total_seconds()
                 else:
-                    user_stat["watchtime_session"] = (user_stat["part_on"] - max(user_stat["join_on"], starttime)).total_seconds()
-            await asyncio.sleep(1)
-            asyncio.create_task(self.update_user_watchtime(starttime))
+                    user_stat["watchtime_session"] = (user_stat["part_on"] - max(user_stat["join_on"], self.channel_live_on)).total_seconds()
         elif self.watchtime_session != {}:
             # TODO: write watchtime to DB when live end
             print("write watchtime to DB")
-            print(self.watchtime_session)
+            print(f"[LOG] {self.watchtime_session}")
             self.watchtime_session = {}
 
     async def add_point_by_watchtime(self):
-        if self.channel_live:
+        while self.channel_live:
+            self.update_user_watchtime()
             for username, user_stat in self.watchtime_session.items():
                 watchtime_to_point = self.watchtime_to_point * 60
                 try:
@@ -91,14 +70,13 @@ class UserFunction:
                 watchtime_redeem += point_to_add * watchtime_to_point
                 user_stat["watchtime_redeem"] = watchtime_redeem
                 self.add_coin(username, point_to_add)
-                print(f"User: {username} ได้รับ {point_to_add} sniffscoin จากการดูไลฟ์ครบ {str(int((point_to_add * watchtime_to_point) / 60))} นาที")
-            print(self.user_point)
+                # print(f"User: {username} ได้รับ {point_to_add} sniffscoin จากการดูไลฟ์ครบ {str(int((point_to_add * watchtime_to_point) / 60))} นาที")
             await asyncio.sleep(self.watchtime_to_point * 60)
-            asyncio.create_task(self.add_point_by_watchtime())
-        else:
-            print(self.user_point)
+        print("write point to DB")
+        print(f"[LOG] {self.user_point}")
 
     def get_user_watchtime(self, username):
+        self.update_user_watchtime()
         try:
             watchtime = self.watchtime_session[username]["watchtime_session"]
             # TODO: fetch watchtime from DB
@@ -117,5 +95,4 @@ class UserFunction:
             coin = self.user_point[username]
         except KeyError:
             coin = 0
-        # self.bot_cmd.send_message("test")
         return coin

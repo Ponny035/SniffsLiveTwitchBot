@@ -1,8 +1,8 @@
-from bot import TwitchBot, UserFunction, automod
+from bot import TwitchBot, UserFunction, automod, EventTrigger
 import sys
 
 def main(environment, dryrun):
-    bot = TwitchBot(environment, dryrun, UserFunction, automod)
+    bot = TwitchBot(environment, dryrun, UserFunction, automod, EventTrigger)
     bot.run()
 
 if __name__ == "__main__":

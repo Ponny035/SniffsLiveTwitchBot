@@ -1,20 +1,20 @@
 import asyncio
 from datetime import datetime
 import random
-import re
 
 import nest_asyncio
 from twitchio.ext import commands
 
 
 class TwitchBot(commands.Bot,):
-    def __init__(self, environment, dryrun, userfunction, automod):
+    def __init__(self, environment, dryrun, userfunction, automod, event_trigger):
 
         self.environment = environment
         self.dryrun = dryrun
         self.automod = automod  # need to fixed
         self.channel_live = False
         self.channel_live_on = ""
+        self.user_function = userfunction()
         self.market_open = False
         nest_asyncio.apply()
 
@@ -46,7 +46,7 @@ class TwitchBot(commands.Bot,):
                     initial_channels=[self.CHANNELS],
                 )
 
-            self.user_function = userfunction(self.CHANNELS)
+            self.event_trigger = event_trigger(self.CHANNELS)
 
             print("Done")
 
@@ -58,6 +58,9 @@ class TwitchBot(commands.Bot,):
             msg = "start bot fail with error \"" + str(e) + "\" try check your ... first "
             raise TypeError(msg)
 
+    def get_timestamp(self):
+        return datetime.utcnow().replace(microsecond=0)
+
     async def send_message(self, msg):
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
@@ -67,9 +70,13 @@ class TwitchBot(commands.Bot,):
     async def event_ready(self):
         print("Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
-        asyncio.create_task(self.user_function.get_channel_status(self.event_offline, self.event_live))
+        asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
         await self.send_message(self.NICK + " is joined the channels.")
         print("Joined")
+
+    async def event_raw_usernotice(self, channel, tags: dict):
+        pass
+        return await super().event_raw_usernotice(channel, tags)
 
     # custom event to trigger when channel is live and return channel start time
     async def event_live(self, starttime):
@@ -77,45 +84,40 @@ class TwitchBot(commands.Bot,):
         self.channel_live_on = starttime
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
         await self.greeting_sniffs()
-        await self.activate_point_system(starttime)
+        await self.activate_point_system()
 
     # custome event to trigger when channel is offline
     async def event_offline(self):
         self.channel_live = False
-        print(f"[INFO] [{datetime.utcnow()}] {self.CHANNELS} is offline")
+        print(f"[INFO] [{self.get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
-        pass
+        await self.activate_point_system()
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
-            print(f"[{ctx.timestamp}] {ctx.author.name.lower()}: {ctx.content}")
+            print(f"[MESSAGE] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
-            # catch bit event TODO (2.2): every xxx bit add xxx point
-            try:
-                self.bit = re.search(r"(?<=bits=)([0-9]+)", ctx.raw_data)[0]
-                print(f"[{ctx.timestamp}] {ctx.author.name.lower()}: {self.bit} bits")
-                await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {self.bit} บิทค้าาา")
-            except:
-                self.bit = 0
-
+            await self.event_trigger.check_bits(ctx, self.event_bits)
             await self.handle_commands(ctx)
 
-    async def event_join(self, user):  # get user join notice TODO (1.1.1): write to dict
+    async def event_bits(self, ctx, bits):
+        await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {bits} บิทค้าาา")
+
+    async def event_join(self, user):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
         if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
-            self.user_function.user_join(user.name.lower(), datetime.utcnow())
+            self.user_function.user_join_part("join", user.name.lower(), self.get_timestamp())
 
-    async def event_part(self, user):  # get user part notice TODO (1.1.2): write to dict
+    async def event_part(self, user):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
         if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
-            self.user_function.user_part(user.name.lower(), datetime.utcnow())
+            self.user_function.user_join_part("part", user.name.lower(), self.get_timestamp())
 
     # TODO (1.1): write watchtime to db after live end
-    # TODO (1.1): asynnio every xx minutes to increase xx points (diff watchtime_session and watchtime_redeem => mod xx minute => add point => write watchtime_redeem = xx minute)
 
     async def get_users_list(self):
         users = await self.get_chatters(self.CHANNELS)
@@ -127,12 +129,12 @@ class TwitchBot(commands.Bot,):
         elif not self.channel_live:
             await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
 
-    async def activate_point_system(self, starttime):
-        usernames = await self.get_users_list()
-        for username in usernames:
-            self.user_function.user_join(username, self.channel_live_on)
-        asyncio.create_task(self.user_function.update_user_watchtime(starttime))
-        asyncio.create_task(self.user_function.add_point_by_watchtime())
+    async def activate_point_system(self):
+        if self.channel_live:
+            usernames = await self.get_users_list()
+            for username in usernames:
+                self.user_function.user_join_part("join", username.lower(), self.channel_live_on)
+        asyncio.create_task(self.user_function.activate_point_system(self.channel_live, self.channel_live_on))
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
@@ -147,7 +149,7 @@ class TwitchBot(commands.Bot,):
             # TODO: add sniffscoin to DB
             for username in users:
                 self.user_function.add_coin(username.lower(), coin)
-            print(f"[{datetime.utcnow()}] All {len(users)} users receive {coin} sniffscoin")
+            print(f"[PAYDAY] [{self.get_timestamp()}] All {len(users)} users receive {coin} sniffscoin")
             await self.send_message(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
 
     @commands.command(name="give")
@@ -165,14 +167,14 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             if username != "":
                 self.user_function.add_coin(username, coin)
-            print(f"[{datetime.utcnow()}] User: {username} receive {coin} sniffscoin")
+            print(f"[GIVE] [{self.get_timestamp()}] User: {username} receive {coin} sniffscoin")
             await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
         if self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS:
             coin = self.user_function.get_coin(ctx.author.name.lower())
-            print(f"[{datetime.utcnow()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
+            print(f"[COIN] [{self.get_timestamp()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
             await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
 
     @commands.command(name="watchtime")
@@ -183,7 +185,7 @@ class TwitchBot(commands.Bot,):
         watchtime_sec = int(watchtime % 60)
         if watchtime >= 60: watchtime_min = int(watchtime / 60)
         if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
-        print(f"[{datetime.utcnow()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
+        print(f"[WATCHTIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
         if watchtime_hour > 0:
             await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_hour} ชั่วโมง {watchtime_min} นาที {watchtime_sec} วินาที")
         elif watchtime_min > 0:
@@ -195,13 +197,13 @@ class TwitchBot(commands.Bot,):
     async def uptime_command(self, ctx):
         if not self.channel_live:
             return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
-        uptime = (datetime.utcnow() - self.channel_live_on).total_seconds()
+        uptime = (self.get_timestamp() - self.channel_live_on).total_seconds()
         uptime_hour = 0
         uptime_min = 0
         uptime_sec = int(uptime % 60)
         if uptime >= 60: uptime_min = int(uptime / 60)
         if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
-        print(f"[{datetime.utcnow()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
+        print(f"[UPTIME] [{self.get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
         if uptime_hour > 0:
             await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
         elif uptime_min > 0:
@@ -217,11 +219,11 @@ class TwitchBot(commands.Bot,):
     async def facebook_command(self, ctx):
         await self.send_message("https://www.facebook.com/sniffslive/")  # waiting for permanent link
 
-    @commands.command(name="thanos")
-    async def thanos(self, ctx):
-        thanos_timeout = 180
+    @commands.command(name="callhell")
+    async def callhell(self, ctx):
+        callhell_timeout = 180
         casualtie = 0
-        print(f"[THANOS] [{datetime.utcnow()}] Wanna go to hell?")
+        print(f"[CALLHELL] [{self.get_timestamp()}] Wanna go to hell?")
         await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
         userslist = await self.get_users_list()
         exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
@@ -232,10 +234,10 @@ class TwitchBot(commands.Bot,):
             poor_users = userslist[:number_user]
             if self.environment == "dev": poor_users += ["sirju001"]  # just for fun
             for username in poor_users:
-                if (bool(random.getrandbits(1))):
-                    casualtie += 1
-                    print(f"[THANOS] [{datetime.utcnow()}] Timeout: {username}")
-                    await self.channel.timeout(username, thanos_timeout, "โดนสนิฟดีดนิ้ว")
-                    await asyncio.sleep(0.5)
-
-        await self.send_message(f"ใช้งาน Thanos Mode มี {casualtie} คนในแชทหายตัวไป....")
+                casualtie += 1
+                print(f"[CALLHELL] [{self.get_timestamp()}] Timeout: {username}")
+                await self.channel.timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
+                await asyncio.sleep(0.5)
+            users_string = ", ".join(poor_users)
+            await self.send_message(f"บ๊ายบายคุณ {users_string}")
+            await self.send_message(f"ใช้งาน Sniffnos มี {casualtie} คนในแชทหายตัวไป....")
