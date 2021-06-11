@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import random
 
 
 class UserFunction:
@@ -14,6 +15,16 @@ class UserFunction:
     def get_timestamp(self):
         return datetime.utcnow().replace(microsecond=0)
 
+    def sec_to_hms(self, time):
+        hour, min, sec = 0, 0, 0
+        try:
+            hour = int(time / 3600)
+            min = int((time / 60) - (60 * hour))
+            sec = int(time % 60)
+        except:
+            pass
+        return [hour, min, sec]
+
     async def activate_point_system(self, live, starttime=None):
         self.channel_live = live
         if starttime is not None:
@@ -22,6 +33,7 @@ class UserFunction:
         else:
             self.channel_live_on = None
 
+    # watchtime related system
     def user_join_part(self, status, username, timestamp):
         try:
             if self.watchtime_session[username]["status"] != status:
@@ -86,16 +98,7 @@ class UserFunction:
             watchtime = 0
         return self.sec_to_hms(watchtime)
 
-    def sec_to_hms(self, time):
-        hour, min, sec = 0, 0, 0
-        try:
-            hour = int(time / 3600)
-            min = int((time / 60) - (60 * hour))
-            sec = int(time % 60)
-        except:
-            pass
-        return [hour, min, sec]
-
+    # coin related system
     def add_coin(self, username, coin):
         try:
             self.user_point[username] += coin
@@ -109,6 +112,37 @@ class UserFunction:
             coin = 0
         return coin
 
+    def payday(self, usernames, coin):
+        for username in usernames:
+            self.add_coin(username.lower(), coin)
+
+    # mod function
+    async def call_to_hell(self, usernames, exclude_list, environment, timeout):
+        callhell_timeout = 180
+        casualtie = 0
+        usernames = [username for username in usernames if username not in exclude_list]
+        number_user = int(len(usernames) / 2)
+        random.shuffle(usernames)
+        poor_users = usernames[:number_user]
+        if environment == "dev":
+            callhell_timeout = 60  # for testing purpose only
+            try:
+                poor_users.remove("bosssoq")
+            except ValueError:
+                pass
+            poor_users += ["sirju001"]
+        for username in poor_users:
+            casualtie += 1
+            print(f"[HELL] [{self.get_timestamp()}] Timeout: {username}")
+            await timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
+            await asyncio.sleep(0.5)
+        data = {
+            "casualtie": casualtie,
+            "poor_users": poor_users
+        }
+        return data
+
+    # cooldown related system
     def set_cooldown(self, username, command):
         now = self.get_timestamp()
         try:
