@@ -4,10 +4,12 @@ from datetime import datetime
 
 class UserFunction:
     def __init__(self):
-        self.channel_live = False
         self.watchtime_session = {}
-        self.watchtime_to_point = 1  # 1 min to 1 point
         self.user_point = {}
+        self.command_cooldown = {}
+        self.channel_live = False
+        self.watchtime_to_point = 1  # 1 min to 1 point
+        self.cooldown = 20
 
     def get_timestamp(self):
         return datetime.utcnow().replace(microsecond=0)
@@ -50,7 +52,7 @@ class UserFunction:
         elif self.watchtime_session != {}:
             # TODO: write watchtime to DB when live end
             print("write watchtime to DB")
-            print(f"[LOG] {self.watchtime_session}")
+            print(f"[_LOG] {self.watchtime_session}")
             self.watchtime_session = {}
 
     async def add_point_by_watchtime(self):
@@ -73,7 +75,7 @@ class UserFunction:
                 # print(f"User: {username} ได้รับ {point_to_add} sniffscoin จากการดูไลฟ์ครบ {str(int((point_to_add * watchtime_to_point) / 60))} นาที")
             await asyncio.sleep(self.watchtime_to_point * 60)
         print("write point to DB")
-        print(f"[LOG] {self.user_point}")
+        print(f"[_LOG] {self.user_point}")
 
     def get_user_watchtime(self, username):
         self.update_user_watchtime()
@@ -96,3 +98,23 @@ class UserFunction:
         except KeyError:
             coin = 0
         return coin
+
+    def set_cooldown(self, username, command):
+        now = self.get_timestamp()
+        try:
+            self.command_cooldown[username][command] = now
+        except KeyError:
+            self.command_cooldown[username] = {}
+            self.command_cooldown[username][command] = now
+
+    def check_cooldown(self, username, command):
+        try:
+            timestamp = self.command_cooldown[username][command]
+            now = self.get_timestamp()
+            diff = (now - timestamp).total_seconds()
+            if diff > self.cooldown:
+                return True
+            else:
+                return False
+        except KeyError:
+            return True

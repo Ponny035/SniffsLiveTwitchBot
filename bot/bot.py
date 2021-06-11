@@ -11,12 +11,17 @@ class TwitchBot(commands.Bot,):
 
         self.environment = environment
         self.dryrun = dryrun
+
+        # init external function
         self.automod = automod  # need to fixed
-        self.channel_live = False
-        self.channel_live_on = ""
         self.user_function = userfunction()
-        self.market_open = False
+
         nest_asyncio.apply()
+
+        # define default variable
+        self.market_open = False
+        self.channel_live = False
+        self.channel_live_on = None
 
         try:
             if(environment == "dev"):
@@ -104,7 +109,7 @@ class TwitchBot(commands.Bot,):
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
-            print(f"[MESSAGE] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
+            print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
             await self.event_trigger.check_bits(ctx, self.event_bits)
             await self.handle_commands(ctx)
@@ -173,9 +178,26 @@ class TwitchBot(commands.Bot,):
                 self.user_function.user_join_part("join", username.lower(), self.channel_live_on)
         asyncio.create_task(self.user_function.activate_point_system(self.channel_live, self.channel_live_on))
 
+    @commands.command(name="market")
+    async def activate_market(self, ctx):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            commands_split = ctx.content.split()
+            try:
+                status = commands_split[1]
+            except:
+                status = None
+            if status == "open":
+                self.market_open = True
+                print(f"[COIN] [{self.get_timestamp()}] Market is now open")
+                await self.send_message("เปิดตลาดแล้วจ้าาาา~")
+            elif status == "close":
+                self.market_open = False
+                print(f"[COIN] [{self.get_timestamp()}] Market is now close")
+                await self.send_message("ปิดตลาดแล้วจ้าาาา~")
+
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
-        if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+        if (ctx.author.name.lower() == self.CHANNELS) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             commands_split = ctx.content.split()
             try:
                 coin = int(commands_split[1])
@@ -186,12 +208,12 @@ class TwitchBot(commands.Bot,):
             # TODO: add sniffscoin to DB
             for username in users:
                 self.user_function.add_coin(username.lower(), coin)
-            print(f"[PAYDAY] [{self.get_timestamp()}] All {len(users)} users receive {coin} sniffscoin")
+            print(f"[COIN] [{self.get_timestamp()}] All {len(users)} users receive {coin} sniffscoin")
             await self.send_message(f"ผู้ชมทั้งหมด {len(users)} คน ได้รับ {coin} sniffscoin")
 
     @commands.command(name="give")
     async def give_coin_user(self, ctx):
-        if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+        if (ctx.author.name.lower() == self.CHANNELS) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             commands_split = ctx.content.split()
             try:
                 username = commands_split[1]
@@ -204,75 +226,85 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             if username != "":
                 self.user_function.add_coin(username, coin)
-            print(f"[GIVE] [{self.get_timestamp()}] User: {username} receive {coin} sniffscoin")
+            print(f"[COIN] [{self.get_timestamp()}] User: {username} receive {coin} sniffscoin")
             await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
-        if self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS:
-            coin = self.user_function.get_coin(ctx.author.name.lower())
-            print(f"[COIN] [{self.get_timestamp()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
-            await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
+        if (self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.environment == "dev"):
+            if (self.user_function.check_cooldown(ctx.author.name.lower(), "coin")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+                self.user_function.set_cooldown(ctx.author.name.lower(), "coin")
+                coin = self.user_function.get_coin(ctx.author.name.lower())
+                print(f"[COIN] [{self.get_timestamp()}] Coin checked by {ctx.author.name.lower()}: {coin} sniffscoin")
+                await self.send_message(f"@{ctx.author.name.lower()} มี {coin} sniffscoin")
 
     @commands.command(name="watchtime")
     async def check_user_watchtime(self, ctx):
-        watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
-        watchtime_hour = 0
-        watchtime_min = 0
-        watchtime_sec = int(watchtime % 60)
-        if watchtime >= 60: watchtime_min = int(watchtime / 60)
-        if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
-        print(f"[WATCHTIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
-        if watchtime_hour > 0:
-            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_hour} ชั่วโมง {watchtime_min} นาที {watchtime_sec} วินาที")
-        elif watchtime_min > 0:
-            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
-        else:
-            await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_sec} วินาที")
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "watchtime")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "watchtime")
+            watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
+            watchtime_hour = 0
+            watchtime_min = 0
+            watchtime_sec = int(watchtime % 60)
+            if watchtime >= 60: watchtime_min = int(watchtime / 60)
+            if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
+            print(f"[TIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
+            if watchtime_hour > 0:
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_hour} ชั่วโมง {watchtime_min} นาที {watchtime_sec} วินาที")
+            elif watchtime_min > 0:
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
+            else:
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_sec} วินาที")
 
     @commands.command(name="uptime")  # getting live stream time
     async def uptime_command(self, ctx):
-        if not self.channel_live:
-            return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
-        uptime = (self.get_timestamp() - self.channel_live_on).total_seconds()
-        uptime_hour = 0
-        uptime_min = 0
-        uptime_sec = int(uptime % 60)
-        if uptime >= 60: uptime_min = int(uptime / 60)
-        if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
-        print(f"[UPTIME] [{self.get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
-        if uptime_hour > 0:
-            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
-        elif uptime_min > 0:
-            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_min} นาที {uptime_sec} วินาที น้าาา")
-        else:
-            await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_sec} วินาที น้าาา")
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "uptime")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "uptime")
+            if not self.channel_live:
+                return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
+            uptime = (self.get_timestamp() - self.channel_live_on).total_seconds()
+            uptime_hour = 0
+            uptime_min = 0
+            uptime_sec = int(uptime % 60)
+            if uptime >= 60: uptime_min = int(uptime / 60)
+            if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
+            print(f"[TIME] [{self.get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
+            if uptime_hour > 0:
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
+            elif uptime_min > 0:
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_min} นาที {uptime_sec} วินาที น้าาา")
+            else:
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_sec} วินาที น้าาา")
 
     @commands.command(name="discord")
     async def discord_command(self, ctx):
-        await self.send_message("https://discord.gg/Q3AMaHQEGU")  # this is a temporary link waiting for permanent link
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "discord")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "discord")
+            await self.send_message("https://discord.gg/Q3AMaHQEGU")  # this is a temporary link waiting for permanent link
 
     @commands.command(name="facebook")
     async def facebook_command(self, ctx):
-        await self.send_message("https://www.facebook.com/sniffslive/")  # waiting for permanent link
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "facebook")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "facebook")
+            await self.send_message("https://www.facebook.com/sniffslive/")  # waiting for permanent link
 
     @commands.command(name="callhell")
     async def callhell(self, ctx):
-        callhell_timeout = 180
-        casualtie = 0
-        print(f"[CALLHELL] [{self.get_timestamp()}] Wanna go to hell?")
-        await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
-        userslist = await self.get_users_list()
-        exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
-        userslist = [username for username in userslist if username not in exclude_list]
         if ctx.author.name.lower() == self.CHANNELS or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            callhell_timeout = 180
+            casualtie = 0
+            print(f"[HELL] [{self.get_timestamp()}] Wanna go to hell?")
+            await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
+            userslist = await self.get_users_list()
+            exclude_list = [self.NICK, self.CHANNELS, "sirju001"]
+            userslist = [username for username in userslist if username not in exclude_list]
             number_user = int(len(userslist) / 2)
             random.shuffle(userslist)
             poor_users = userslist[:number_user]
             if self.environment == "dev": poor_users += ["sirju001"]  # just for fun
             for username in poor_users:
                 casualtie += 1
-                print(f"[CALLHELL] [{self.get_timestamp()}] Timeout: {username}")
+                print(f"[HELL] [{self.get_timestamp()}] Timeout: {username}")
                 await self.channel.timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
                 await asyncio.sleep(0.5)
             users_string = ", ".join(poor_users)
