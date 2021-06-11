@@ -84,7 +84,17 @@ class UserFunction:
             # TODO: fetch watchtime from DB
         except KeyError:
             watchtime = 0
-        return watchtime
+        return self.sec_to_hms(watchtime)
+
+    def sec_to_hms(self, time):
+        hour, min, sec = 0, 0, 0
+        try:
+            hour = int(time / 3600)
+            min = int((time / 60) - (60 * hour))
+            sec = int(time % 60)
+        except:
+            pass
+        return [hour, min, sec]
 
     def add_coin(self, username, coin):
         try:

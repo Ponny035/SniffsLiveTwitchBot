@@ -24,7 +24,7 @@ class EventTrigger:
                     self.channel_live = False
                     success_callback = [1, 1]
                     await chan_offline()
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(31)
                     success_callback[1] = 0
             elif not self.channel_live:
                 channel_status = await self.twitch_api.get_stream(self.CHANNELS)
@@ -33,7 +33,7 @@ class EventTrigger:
                     self.channel_live_on = datetime.strptime(channel_status["started_at"], "%Y-%m-%dT%H:%M:%SZ")
                     success_callback = [1, 1]
                     await chan_online(self.channel_live_on)
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(31)
                     success_callback[0] = 0
 
     async def check_bits(self, ctx, event_bit):

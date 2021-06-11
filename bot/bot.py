@@ -243,18 +243,18 @@ class TwitchBot(commands.Bot,):
         if (self.user_function.check_cooldown(ctx.author.name.lower(), "watchtime")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             self.user_function.set_cooldown(ctx.author.name.lower(), "watchtime")
             watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
-            watchtime_hour = 0
-            watchtime_min = 0
-            watchtime_sec = int(watchtime % 60)
-            if watchtime >= 60: watchtime_min = int(watchtime / 60)
-            if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
-            print(f"[TIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime_hour} hours {watchtime_min} mins {watchtime_sec} secs")
-            if watchtime_hour > 0:
-                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_hour} ชั่วโมง {watchtime_min} นาที {watchtime_sec} วินาที")
-            elif watchtime_min > 0:
-                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_min} นาที {watchtime_sec} วินาที")
+            # watchtime_hour = 0
+            # watchtime_min = 0
+            # watchtime_sec = int(watchtime % 60)
+            # if watchtime >= 60: watchtime_min = int(watchtime / 60)
+            # if watchtime_min >= 60: watchtime_hour = int(watchtime_min / 60); watchtime_min = int(watchtime_min % 60)
+            print(f"[TIME] [{self.get_timestamp()}] Watchtime checked by {ctx.author.name.lower()}: {watchtime[0]} hours {watchtime[1]} mins {watchtime[2]} secs")
+            if watchtime[0] > 0:
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime[0]} ชั่วโมง {watchtime[1]} นาที {watchtime[2]} วินาที")
+            elif watchtime[1] > 0:
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime[1]} นาที {watchtime[2]} วินาที")
             else:
-                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime_sec} วินาที")
+                await self.send_message(f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว {watchtime[2]} วินาที")
 
     @commands.command(name="uptime")  # getting live stream time
     async def uptime_command(self, ctx):
@@ -262,19 +262,19 @@ class TwitchBot(commands.Bot,):
             self.user_function.set_cooldown(ctx.author.name.lower(), "uptime")
             if not self.channel_live:
                 return await self.send_message("ยังไม่ถึงเวลาไลฟน้าาาา")
-            uptime = (self.get_timestamp() - self.channel_live_on).total_seconds()
-            uptime_hour = 0
-            uptime_min = 0
-            uptime_sec = int(uptime % 60)
-            if uptime >= 60: uptime_min = int(uptime / 60)
-            if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
-            print(f"[TIME] [{self.get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime_hour} hours {uptime_min} mins {uptime_sec} secs")
-            if uptime_hour > 0:
-                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_hour} ชั่วโมง {uptime_min} นาที {uptime_sec} วินาที น้าาา")
-            elif uptime_min > 0:
-                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_min} นาที {uptime_sec} วินาที น้าาา")
+            uptime = self.user_function.sec_to_hms((self.get_timestamp() - self.channel_live_on).total_seconds())
+            # uptime_hour = 0
+            # uptime_min = 0
+            # uptime_sec = int(uptime % 60)
+            # if uptime >= 60: uptime_min = int(uptime / 60)
+            # if uptime_min >= 60: uptime_hour = int(uptime_min / 60); uptime_min = int(uptime_min % 60)
+            print(f"[TIME] [{self.get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime[0]} hours {uptime[1]} mins {uptime[2]} secs")
+            if uptime[0] > 0:
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime[0]} ชั่วโมง {uptime[1]} นาที {uptime[2]} วินาที น้าาา")
+            elif uptime[1] > 0:
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime[1]} นาที {uptime[2]} วินาที น้าาา")
             else:
-                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime_sec} วินาที น้าาา")
+                await self.send_message(f"สนิฟไลฟ์มาแล้ว {uptime[2]} วินาที น้าาา")
 
     @commands.command(name="discord")
     async def discord_command(self, ctx):
