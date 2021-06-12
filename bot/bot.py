@@ -12,7 +12,7 @@ class TwitchBot(commands.Bot,):
         self.dryrun = dryrun
 
         # init external function
-        self.automod = automod  # need to fixed
+        self.automod = automod()  # need to fixed
         self.user_function = userfunction(self.environment)
 
         nest_asyncio.apply()
@@ -118,6 +118,7 @@ class TwitchBot(commands.Bot,):
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
+            await self.automod.clear(ctx.author.name.lower(), ctx.content, self.send_message, self.channel)
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):

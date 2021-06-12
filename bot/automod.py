@@ -3,7 +3,8 @@
 # from contextlib import contextmanager
 from collections import defaultdict #second choice of try
 # from . import db 
-import warnings
+# import warnings
+from datetime import datetime
 # import logging
 
 # log = logging.getLogger(__name__)
@@ -122,31 +123,37 @@ import warnings
 
 
 
+class automod:
+    def __init__(self):
+        self.CURSES = ("fuck", "poo", "boo", "you are suck")
+        self.warning_timers = (1, 5, 60)
+        self.warning_users = {}
 
-Curses = ("fuck, poo, boo, you are suck")
-Warning_timers = (1,5,60)
+    def get_timestamp(self):
+        return datetime.utcnow().replace(microsecond=0)
 
+    async def clear(self, user, message, send_message, mod_action):
+        if any([curse in message.lower() for curse in self.CURSES]):
+            await self.warn(user, send_message, mod_action, reason="curses")
 
-def clear(bot, user, message):
-    if any([curses in message for curses in Curses]):
-        warn(bot, user, reason="cursss")
-        return False
+    async def warn(self, user, send_message, mod_action, reason=None):
+        # Warnings = db("SELECT warning FROM user WHERE user id?",
+        # user["id"])
+        warning = 0
+        try:
+            warning = self.warning_users[user]
+            self.warning_users[user] += 1
+        except KeyError:
+            self.warning_users[user] = 1
+        if warning < len(self.warning_timers):
+            timeout_mins = self.warning_timers[warning]
+            await mod_action.timeout(user, timeout_mins * 60, f"คำพูดไม่น่ารัก เตือนครั้งที่ {self.warning_users[user]}")
+            print(f"[AMOD] [{self.get_timestamp()}] Timeout: {user} Duration: {timeout_mins} Reason: {reason}")
+            await send_message(f"@{user} คำพูดไม่น่ารัก ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
 
-    return True
+            # db.execute("UPDATE users SET warnings = Warnings +1 WHERE UserID = ?",
+            # user["ID"])
 
-
-def warn(bot, user, *, reason=None):
-    # Warnings = db("SELECT warning FROM user WHERE user id?",
-    # user["id"])
-
-    if warn < len(Warning_timers):
-        mins = Warning_timers[warnings]
-        bot.send_message(f"/timeout {user['name']} {mins}m")
-        bot.seng_message(f"{user['name']}, you ahve been mute for this reason: {reason}. Un mute in {mins} mins.")
-
-        # db.execute("UPDATE users SET warnings = Warnings +1 WHERE UserID = ?",
-        # user["ID"])
-
-    else:
-        bot.send_message(f"/ban{user['name']} Repeted infractions.")
-        bot.send_message(f"{user['name']}, you have beeen ban from chat.")
+        else:
+            await mod_action.ban(user, f"คำพูดไม่น่ารัก ครบ {self.warning_users[user]} ครั้ง บินไปซะ")
+            await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ")

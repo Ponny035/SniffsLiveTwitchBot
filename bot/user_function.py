@@ -189,7 +189,7 @@ class UserFunction:
             poor_users += ["sirju001"]
         for username in poor_users:
             casualtie += 1
-            print(f"[HELL] [{self.get_timestamp()}] Timeout: {username}")
+            print(f"[HELL] [{self.get_timestamp()}] Timeout: {username} Duration: {callhell_timeout} Reason: โดนสนิฟดีดนิ้ว")
             await timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
             await asyncio.sleep(0.5)
         data = {
