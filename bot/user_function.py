@@ -10,6 +10,7 @@ class UserFunction:
         self.user_point = {}
         self.command_cooldown = {}
         self.channel_live = False
+        self.coin_join_before_live = 5
         self.sub_to_point = 10  # 1 sub for 10 point
         self.bit_to_point = 50  # 50 bits for 1 point
         self.watchtime_to_point = 10  # 10 min to 1 point
@@ -39,6 +40,7 @@ class UserFunction:
             if usernames is not None:
                 for username in usernames:
                     self.user_join_part("join", username.lower(), self.channel_live_on)
+                    self.add_coin(username.lower(), self.coin_join_before_live)
             await self.add_point_by_watchtime()
         else:
             self.channel_live_on = None
@@ -111,12 +113,13 @@ class UserFunction:
         return watchtime_hms
 
     # coin related system
-    def add_coin(self, username, coin):
+    def add_coin(self, username, coin, nolog=False):
         try:
             self.user_point[username] += coin
         except KeyError:
             self.user_point[username] = coin
-        print(f"[COIN] [{self.get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
+        if not nolog:
+            print(f"[COIN] [{self.get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
     def get_coin(self, username):
         try:
@@ -126,14 +129,14 @@ class UserFunction:
         print(f"[COIN] [{self.get_timestamp()}] Coin checked by {username}: {coin} sniffscoin")
         return coin
 
-    def payday(self, usernames, coin):
+    def payday(self, usernames, coin, nolog=False):
         for username in usernames:
-            self.add_coin(username.lower(), coin)
+            self.add_coin(username.lower(), coin, nolog)
         print(f"[COIN] [{self.get_timestamp()}] All {len(usernames)} users receive {coin} sniffscoin")
 
     def subscription_payout(self, username, usernames):
         self.add_coin(username, self.sub_to_point)
-        self.payday(usernames, 1)
+        self.payday(usernames, 1, True)
         response1 = f"ยินดีต้อนรับ @{username} มาเป็นต้าวๆของสนิฟ"
         response2 = f"@{username} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
         print(f"[COIN] [{self.get_timestamp()}] {username} receive {self.sub_to_point} sniffscoin by sub")
@@ -142,7 +145,7 @@ class UserFunction:
     def gift_subscription_payout(self, username, recipent, usernames):
         self.add_coin(username, self.sub_to_point)
         self.add_coin(recipent, self.sub_to_point)
-        self.payday(usernames, 1)
+        self.payday(usernames, 1, True)
         response1 = f"@{username} ได้รับ {self.sub_to_point} sniffscoin จากการ Gift ให้ {recipent}"
         response2 = f"@{recipent} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
         print(f"[COIN] [{self.get_timestamp()}] {username} receive {self.sub_to_point} sniffscoin by giftsub to {recipent}")
@@ -150,14 +153,14 @@ class UserFunction:
 
     def giftmystery_subscription_payout(self, username, gift_count, usernames):
         self.add_coin(username, self.sub_to_point * gift_count)
-        self.payday(usernames, 1)
+        self.payday(usernames, 1, True)
         response1 = f"@{username} ได้รับ {self.sub_to_point * gift_count} sniffscoin จากการ Gift ให้สมาชิก {gift_count} คน"
         print(f"[COIN] [{self.get_timestamp()}] {username} receive {self.sub_to_point * gift_count} sniffscoin by giftmysterysub")
         return [response1]
 
     def anongift_subscription_payout(self, recipent, usernames):
         self.add_coin(recipent, self.sub_to_point)
-        self.payday(usernames, 1)
+        self.payday(usernames, 1, True)
         response1 = f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามค่าา"
         response2 = f"@{recipent} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
         print(f"[COIN] [{self.get_timestamp()}] {recipent} receive {self.sub_to_point} sniffscoin by anongiftsub")
