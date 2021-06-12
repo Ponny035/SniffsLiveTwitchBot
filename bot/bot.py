@@ -23,6 +23,7 @@ class TwitchBot(commands.Bot,):
         self.channel_live_on = None
         self.discord_link = "https://discord.gg/Q3AMaHQEGU"  # temp link
         self.facebook_link = "https://www.facebook.com/sniffslive/"
+        self.youtube_link = "https://www.youtube.com/SniffsLive"
 
         try:
             if(environment == "dev"):
@@ -325,3 +326,15 @@ class TwitchBot(commands.Bot,):
             users_string = ", ".join(data["poor_users"])
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป....")
+
+    @commands.command(name="commands")
+    async def commmands_command(self,ctx):
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
+            await self.send_message(f"นี่คือcommand ทั้งหมดน้า พิมพ์ตกใจcommandเพื่อดูคอมมานทั้งหมด | พิมพ์ตกใจcoinเพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ตกใจwatchtime เพื่อเชคเวลาที่ดูมาแล้ว | พิมพ์ตกใจuptime เพื่อดูเวลาไลฟ์ว่าสนิฟไลฟมากี่ชั่วโมงแล้ว | พิมพ์ตกใจdiscord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ตกใจfacebookเพื่อติดตามสนิฟผ่านทางเพจ!")
+    
+    @commands.command(name="youtube")
+    async def facebook_command(self, ctx):
+        if (self.user_function.check_cooldown(ctx.author.name.lower(), "youtube")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "youtube")
+            await self.send_message(f"@{ctx.author.name.lower()} {self.youtube_link}")
