@@ -5,6 +5,7 @@ from collections import defaultdict #second choice of try
 # from . import db 
 # import warnings
 from datetime import datetime
+import re
 # import logging
 
 # log = logging.getLogger(__name__)
@@ -132,19 +133,23 @@ class automod:
     def get_timestamp(self):
         return datetime.utcnow().replace(microsecond=0)
 
-    async def clear(self, user, message, send_message, mod_action):
+    async def clear(self, user, role, message, send_message, mod_action):
         if any([curse in message.lower() for curse in self.CURSES]):
             await self.warn(user, send_message, mod_action, reason="curses")
+        if not role:  # not mod or subscriber
+            if re.match("https?://", message) is not None:
+                await self.warn(user, send_message, mod_action, reason="paste_link_by_non_sub")
 
     async def warn(self, user, send_message, mod_action, reason=None):
         # Warnings = db("SELECT warning FROM user WHERE user id?",
         # user["id"])
         warning = 0
         try:
-            warning = self.warning_users[user]
-            self.warning_users[user] += 1
+            warning = self.warning_users[user][reason]
+            self.warning_users[user][reason] += 1
         except KeyError:
-            self.warning_users[user] = 1
+            self.warning_users[user] = {}
+            self.warning_users[user][reason] = 1
         if warning < len(self.warning_timers):
             timeout_mins = self.warning_timers[warning]
             await mod_action.timeout(user, timeout_mins * 60, f"คำพูดไม่น่ารัก เตือนครั้งที่ {self.warning_users[user]}")
@@ -155,5 +160,6 @@ class automod:
             # user["ID"])
 
         else:
+            self.warning_users[user][reason] = 0  # reset counter
             await mod_action.ban(user, f"คำพูดไม่น่ารัก ครบ {self.warning_users[user]} ครั้ง บินไปซะ")
             await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ")
