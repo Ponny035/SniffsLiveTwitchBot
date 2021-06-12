@@ -36,16 +36,36 @@ class EventTrigger:
                     await asyncio.sleep(31)
                     success_callback[0] = 0
 
-    async def check_bits(self, ctx, event_bit):
-        bits = 0
+    async def check_bits(self, rawdata, event_bit):
+        username = ""
+        timestamp = bits = 0
+        tags = result = {}
+        rawdata = rawdata.split(" ")[0].split(";")
+        for element in rawdata:
+            extract = element.split("=")
+            key = extract[0]
+            try:
+                value = extract[1]
+            except IndexError:
+                value = ""
+            tags[key] = value
+        username = tags["display-name"].lower()
+        timestamp = datetime.fromtimestamp(int(tags["tmi-sent-ts"]) / 1000)
         try:
-            bits = re.search(r"(?<=bits=)([0-9]+)", ctx.raw_data)[0]
-            print(f"[BITS] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {bits} bits")
-            await event_bit(ctx, bits)
+            bits = int(tags["bits"])
         except:
             pass
+        if bits > 0:
+            print(f"[BITS] [{timestamp.replace(microsecond=0)}] {username}: {bits} bits")
+            result = {
+                "username": username,
+                "timestamp": timestamp.replace(microsecond=0),
+                "bits": bits
+            }
+            await event_bit(result)
 
     async def parsing_sub_data(self, channel, tags, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
+        username = plan = plan_name = prime = streak_months = recipent = gift_sub_count = sub_month_count = msg_id = ""
         try:
             username = tags["login"]
         except KeyError:

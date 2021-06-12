@@ -117,15 +117,16 @@ class TwitchBot(commands.Bot,):
         if ctx.author.name.lower() != self.NICK:
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
-            await self.event_trigger.check_bits(ctx, self.event_bits)
+            await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
             await self.handle_commands(ctx)
 
-    async def event_bits(self, ctx, bits):
-        response = await self.user_function.add_point_by_bit(ctx.author.name.lower(), bits)
-        if response != "":
+    async def event_bits(self, data):
+        response = await self.user_function.add_point_by_bit(data["username"], data["bits"])
+        print(response)
+        if response is not None:
             await self.send_message(response)
         else:
-            await self.send_message(f"ขอบคุณ @{ctx.author.name.lower()} สำหรับ {bits} บิทค้าาา")
+            await self.send_message(f"ขอบคุณ @{data['username']} สำหรับ {data['bits']} บิทค้าาา")
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()

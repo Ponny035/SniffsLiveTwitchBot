@@ -19,7 +19,7 @@ class UserFunction:
         return datetime.utcnow().replace(microsecond=0)
 
     def sec_to_hms(self, time):
-        hour, min, sec = 0, 0, 0
+        hour = min = sec = 0
         try:
             hour = int(time / 3600)
             min = int((time / 60) - (60 * hour))
@@ -166,7 +166,6 @@ class UserFunction:
     async def add_point_by_bit(self, username, bits):
         response = ""
         point_to_add = int(bits / self.bit_to_point)
-        print(point_to_add)
         if point_to_add > 0:
             self.add_coin(username, point_to_add)
             response = f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit"
