@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import random
+import re
 
 
 class UserFunction:
@@ -9,6 +10,9 @@ class UserFunction:
         self.watchtime_session = {}
         self.user_point = {}
         self.command_cooldown = {}
+        self.song_list = {}
+        self.sorted_song_list = []
+        self.song_playing = None
         self.channel_live = False
         self.coin_join_before_live = 5
         self.sub_to_point = 10  # 1 sub for 10 point
@@ -201,6 +205,54 @@ class UserFunction:
         }
         return data
 
+    # song request system
+    async def user_song_request(self, content, timestamp, username, send_message):
+        song_name = re.search("(?<=\\!request ).+", content)[0]
+        if song_name is not None:
+            try:
+                self.song_list[song_name]["vote"] -= 1
+            except KeyError:
+                self.song_list[song_name] = {}
+                self.song_list[song_name]["vote"] = -1
+                self.song_list[song_name]["timestamp"] = timestamp
+            await send_message(f"@{username} โหวตเพลง {song_name}")
+
+    async def now_playing(self, username, send_message):
+        if self.song_playing is not None:
+            await send_message(f"@{username} สนิฟกำลังร้องเพลง {self.song_playing} น้า")
+
+    async def sorted_song(self):
+        if self.song_list != {}:
+            self.sorted_song_list = sorted(self.song_list.keys(), key=lambda song_name: (self.song_list[song_name]["vote"], self.song_list[song_name]["timestamp"]))
+
+    async def get_song_list(self, send_message):
+        await self.sorted_song()
+        if self.sorted_song_list != []:
+            await send_message("List เพลงจากต้าวๆ")
+            max_song_list = min(len(self.song_list), 5)
+            for i in range(0, max_song_list):
+                await send_message(f"[{i + 1}] {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} คะแนน")
+                print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} point")
+        else:
+            await send_message("ยังไม่มีเพลงในคิวจ้า")
+
+    async def select_song(self, song_id, send_message):
+        song_id = int(song_id)
+        try:
+            self.song_playing = self.sorted_song_list[song_id - 1]
+            self.song_list = self.song_list.pop(self.song_playing)
+            self.sorted_song_list = []
+            await send_message(f"สนิฟเลือกเพลง {self.song_playing}")
+            print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing} Delete this song from list")
+        except IndexError:
+            await send_message("ไม่มีเพลงนี้น้า")
+            print(f"[SONG] [{self.get_timestamp()}] No song in list")
+
+    async def delete_songlist(self):
+        self.song_playing = ""
+        self.song_list = {}
+        self.sorted_song_list = []
+
     # cooldown related system
     def set_cooldown(self, username, command):
         now = self.get_timestamp()
@@ -210,7 +262,9 @@ class UserFunction:
             self.command_cooldown[username] = {}
             self.command_cooldown[username][command] = now
 
-    def check_cooldown(self, username, command):
+    def check_cooldown(self, username, command, cooldown=None):
+        if cooldown is None:
+            cooldown = self.cooldown
         try:
             timestamp = self.command_cooldown[username][command]
             now = self.get_timestamp()
