@@ -126,21 +126,36 @@ import re
 
 class automod:
     def __init__(self):
-        self.CURSES = ("fuck", "poo", "boo", "you are suck")
-        self.warning_timers = (1, 5, 60)
+        # self.CURSES = ("fuck", "poo", "boo", "you are suck")
         self.warning_users = {}
 
     def get_timestamp(self):
         return datetime.utcnow().replace(microsecond=0)
 
-    async def clear(self, user, role, message, send_message, mod_action):
-        if any([curse in message.lower() for curse in self.CURSES]):
-            await self.warn(user, send_message, mod_action, reason="curses")
-        if not role:  # not mod or subscriber
-            if re.match("https?://", message) is not None:
-                await self.warn(user, send_message, mod_action, reason="paste_link_by_non_sub")
+    async def auto_mod(self, user, role, message, raw_data, send_message, mod_action):
+        msg_id = re.search(r"(?<=id=)(.*?)(?=;)", raw_data)[0]
+        await self.auto_cursesword(user, role, message, msg_id, send_message, mod_action)
+        await self.auto_removelink(user, role, message, msg_id, send_message, mod_action)
 
-    async def warn(self, user, send_message, mod_action, reason=None):
+    async def auto_cursesword(self, user, role, message, msg_id, send_message, mod_action):
+        # if any([curse in message.lower() for curse in self.CURSES]):
+        #     warning_curses_timers = (1, 5, 60)
+        #     await self.warn(user, send_message, mod_action, warning_curses_timers, msg_id, reason="curses")
+        pass
+
+    async def auto_removelink(self, user, role, message, msg_id, send_message, mod_action):
+        # if any([curse in message.lower() for curse in self.CURSES]):
+        #     warning_curses_timers = (1, 5, 60)
+        #     await self.warn(user, send_message, mod_action, warning_curses_timers, reason="curses")
+        if not role:  # not mod or subscriber
+            test_url1 = re.match("https?://", message)
+            test_url2 = re.match("[A-z]+\.(com|org|in|co|tv|us)", message)  # need to fine tune regex
+            test_result = bool(test_url1 or test_url2)
+            if test_result:
+                warning_link_timers = (0, 0, 1, 5, 10, 30, 60)
+                await self.warn(user, send_message, mod_action, warning_link_timers, msg_id, reason="paste_link_by_non_sub")
+
+    async def warn(self, user, send_message, mod_action, timers, msg_id=None, reason=None):
         # Warnings = db("SELECT warning FROM user WHERE user id?",
         # user["id"])
         warning = 0
@@ -150,16 +165,21 @@ class automod:
         except KeyError:
             self.warning_users[user] = {}
             self.warning_users[user][reason] = 1
-        if warning < len(self.warning_timers):
-            timeout_mins = self.warning_timers[warning]
-            await mod_action.timeout(user, timeout_mins * 60, f"คำพูดไม่น่ารัก เตือนครั้งที่ {self.warning_users[user]}")
-            print(f"[AMOD] [{self.get_timestamp()}] Timeout: {user} Duration: {timeout_mins} Reason: {reason}")
-            await send_message(f"@{user} คำพูดไม่น่ารัก ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
+        if warning < len(timers):
+            timeout_mins = timers[warning]
+            if timeout_mins == 0:
+                await send_message(f"/delete {msg_id}")
+                print(f"[AMOD] [{self.get_timestamp()}] DeleteMessage: {user} Duration: {timeout_mins} Reason: {reason}")
+                await send_message(f"@{user} เตือนก่อนน้า")
+            else:
+                await mod_action.timeout(user, timeout_mins * 60, f"ไม่ได้น้า เตือนครั้งที่ {self.warning_users[user][reason]}")
+                print(f"[AMOD] [{self.get_timestamp()}] Timeout: {user} Duration: {timeout_mins} Reason: {reason}")
+                await send_message(f"@{user} ไม่เชื่อฟังสนิฟ ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
 
             # db.execute("UPDATE users SET warnings = Warnings +1 WHERE UserID = ?",
             # user["ID"])
 
         else:
             self.warning_users[user][reason] = 0  # reset counter
-            await mod_action.ban(user, f"คำพูดไม่น่ารัก ครบ {self.warning_users[user]} ครั้ง บินไปซะ")
+            await mod_action.ban(user, f"ละเมิดกฎครบ {self.warning_users[user][reason]} ครั้ง บินไปซะ")
             await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ")

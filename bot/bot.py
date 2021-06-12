@@ -119,7 +119,7 @@ class TwitchBot(commands.Bot,):
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
-            await self.automod.clear(ctx.author.name.lower(), (ctx.author.is_mod or ctx.author.is_subscriber == 1), ctx.content, self.send_message, self.channel)
+            await self.automod.auto_mod(ctx.author.name.lower(), (ctx.author.is_mod or ctx.author.is_subscriber == 1), ctx.content, ctx.raw_data, self.send_message, self.channel)
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):
@@ -327,11 +327,11 @@ class TwitchBot(commands.Bot,):
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป....")
 
-    @commands.command(name="commands")
+    @commands.command(name="commands", aliases=["command", "cmd"])
     async def commmands_command(self,ctx):
         if (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
-            await self.send_message(f"นี่คือcommand ทั้งหมดน้า พิมพ์ตกใจcommandเพื่อดูคอมมานทั้งหมด | พิมพ์ตกใจcoinเพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ตกใจwatchtime เพื่อเชคเวลาที่ดูมาแล้ว | พิมพ์ตกใจuptime เพื่อดูเวลาไลฟ์ว่าสนิฟไลฟมากี่ชั่วโมงแล้ว | พิมพ์ตกใจdiscord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ตกใจfacebookเพื่อติดตามสนิฟผ่านทางเพจ!")
+            await self.send_message(f"นี่คือคำสั่งทั้งหมดน้า พิมพ์ !commands เพื่อดูคำสั่งทั้งหมด | พิมพ์ !coin เพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ !watchtime เพื่อเช็คเวลาที่ดูมาแล้ว | พิมพ์ !uptime เพื่อดูเวลาว่าสนิฟไลฟ์มากี่ชั่วโมงแล้ว | พิมพ์ !discord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ !facebook เพื่อติดตามสนิฟผ่านทางเพจ! | พิมพ์ !youtube เพื่อติดตามสนิฟผ่านยูทูป")
     
     @commands.command(name="youtube")
     async def facebook_command(self, ctx):
