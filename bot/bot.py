@@ -114,6 +114,7 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{self.get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
         await self.activate_point_system("stop")
+        await self.user_function.delete_songlist()
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
@@ -347,7 +348,7 @@ class TwitchBot(commands.Bot,):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "song_request")
                 await self.user_function.user_song_request(ctx.content, self.get_timestamp(), ctx.author.name.lower(), self.send_message)
 
-    # !song request on | !song request off | !song list | !song select {song-id}
+    # !song request on | !song request off | !song list | !song select {song-id} | !song list clear
     @commands.command(name="song")
     async def song_request(self, ctx):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
@@ -363,13 +364,15 @@ class TwitchBot(commands.Bot,):
             if command1 == "request":
                 if self.request_status and command2 == "off":
                     self.request_status = False
-                    await self.user_function.delete_songlist()
                     await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ")
                 elif not self.request_status and command2 == "on":
                     self.request_status = True
                     await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !request ตามด้วยชื่อเพลงน้า")
             elif command1 == "list":
-                await self.user_function.get_song_list(self.send_message)
+                if command2 is None:
+                    await self.user_function.get_song_list(self.send_message)
+                elif command2 == "clear":
+                    await self.user_function.delete_songlist()
             elif command1 == "select" and command2 is not None:
                 await self.user_function.select_song(command2, self.send_message)
 
