@@ -11,7 +11,7 @@ class UserFunction:
         self.db_manager = DBManager(environment)
         self.environment = environment
         self.watchtime_session = {}
-        self.user_point = {}
+        # self.user_point = {}
         self.command_cooldown = {}
         self.song_list = {}
         self.sorted_song_list = []
@@ -50,7 +50,7 @@ class UserFunction:
                     self.add_coin(username.lower(), self.coin_join_before_live)
             await self.add_point_by_watchtime()
         else:
-            self.channel_live_on = None
+            self.update_user_watchtime(True)
 
     # watchtime related system
     def user_join_part(self, status, username, timestamp):
@@ -70,21 +70,43 @@ class UserFunction:
             elif status == "part":
                 self.watchtime_session[username]["part_on"] = timestamp
                 self.update_user_watchtime()
-        # TODO: write watchtime to DB when user part
 
-    def update_user_watchtime(self):
-        if self.channel_live:
+    def update_user_watchtime(self, force=False):
+        if self.channel_live and self.watchtime_session != {}:
             for user_stat in self.watchtime_session.values():
                 now = self.get_timestamp()
                 if user_stat["status"] == "join":
-                    user_stat["watchtime_session"] = (now - max(user_stat["join_on"], self.channel_live_on)).total_seconds()
+                    user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], self.channel_live_on)).total_seconds())
                 else:
-                    user_stat["watchtime_session"] = (user_stat["part_on"] - max(user_stat["join_on"], self.channel_live_on)).total_seconds()
-        elif self.watchtime_session != {}:
-            # TODO: write watchtime to DB when live end
+                    user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], self.channel_live_on)).total_seconds())
+        if force and self.watchtime_session != {}:
+            for user_stat in self.watchtime_session.values():
+                now = self.get_timestamp()
+                if user_stat["status"] == "join":
+                    user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], self.channel_live_on)).total_seconds())
+                else:
+                    user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], self.channel_live_on)).total_seconds())
+        if (not self.channel_live) and (self.watchtime_session != {}):
             self.print_to_console("write watchtime to DB")
-            self.print_to_console(f"[_LOG] {self.watchtime_session}")
-            self.watchtime_session = {}
+            for username, user_stat in self.watchtime_session.items():
+                try:
+                    if user_stat["watchtime_session"] != 0:
+                        if self.db_manager.check_exist(username):
+                            userdata = self.db_manager.retrieve(username)
+                            userdata["watchtime"] += int(user_stat["watchtime_session"])
+                            self.db_manager.update(userdata)
+                        else:
+                            userdata = {
+                                "username": username,
+                                "coin": 0,
+                                "watchtime": int(user_stat["watchtime"]),
+                                "submonth": 0
+                            }
+                            self.db_manager.insert(userdata)
+                            self.print_to_console(f"[_LOG] {self.watchtime_session}")
+                            self.watchtime_session = {}
+                except KeyError:
+                    pass
 
     async def add_point_by_watchtime(self):
         while self.channel_live:
@@ -102,36 +124,57 @@ class UserFunction:
                 point_to_add = int((watchtime_session - watchtime_redeem) / watchtime_to_point)
                 watchtime_redeem += point_to_add * watchtime_to_point
                 user_stat["watchtime_redeem"] = watchtime_redeem
-                self.add_coin(username, point_to_add)
-                # print(f"User: {username} ได้รับ {point_to_add} sniffscoin จากการดูไลฟ์ครบ {str(int((point_to_add * watchtime_to_point) / 60))} นาที")
+                if point_to_add > 0:
+                    self.add_coin(username, point_to_add)
             await asyncio.sleep(self.watchtime_to_point * 60)
-        self.print_to_console("write point to DB")
-        self.print_to_console(f"[_LOG] {self.user_point}")
+        # self.print_to_console("write point to DB")
+        # self.print_to_console(f"[_LOG] {self.user_point}")
 
-    def get_user_watchtime(self, username):
-        self.update_user_watchtime()
+    def get_user_watchtime(self, username, live):
+        if live:
+            self.update_user_watchtime()
         try:
-            watchtime = self.watchtime_session[username]["watchtime_session"]
-            # TODO: fetch watchtime from DB
+            watchtime_session = self.watchtime_session[username]["watchtime_session"]
         except KeyError:
-            watchtime = 0
+            watchtime_session = 0
+        if self.db_manager.check_exist(username):
+            watchtime_past = self.db_manager.retrieve(username)["watchtime"]
+        else:
+            watchtime_past = 0
+        watchtime = watchtime_past + watchtime_session
         watchtime_hms = self.sec_to_hms(watchtime)
         print(f"[TIME] [{self.get_timestamp()}] Watchtime checked by {username}: {watchtime_hms[0]} hours {watchtime_hms[1]} mins {watchtime_hms[2]} secs")
         return watchtime_hms
 
     # coin related system
     def add_coin(self, username, coin, nolog=False):
-        try:
-            self.user_point[username] += coin
-        except KeyError:
-            self.user_point[username] = coin
+        # try:
+        #     self.user_point[username] += coin
+        # except KeyError:
+        #     self.user_point[username] = coin
+        if self.db_manager.check_exist(username):
+            userdata = self.db_manager.retrieve(username)
+            userdata['coin'] += coin
+            self.db_manager.update(userdata)
+        else:
+            userdata = {
+                "username": username,
+                "coin": coin,
+                "watchtime": 0,
+                "submonth": 0
+            }
+            self.db_manager.insert(userdata)
         if not nolog:
             print(f"[COIN] [{self.get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
     def get_coin(self, username):
-        try:
-            coin = self.user_point[username]
-        except KeyError:
+        # try:
+        #     coin = self.user_point[username]
+        # except KeyError:
+        #     coin = 0
+        if self.db_manager.check_exist(username):
+            coin = self.db_manager.retrieve(username)['coin']
+        else:
             coin = 0
         print(f"[COIN] [{self.get_timestamp()}] Coin checked by {username}: {coin} sniffscoin")
         return coin
@@ -141,17 +184,32 @@ class UserFunction:
             self.add_coin(username.lower(), coin, nolog)
         print(f"[COIN] [{self.get_timestamp()}] All {len(usernames)} users receive {coin} sniffscoin")
 
-    def subscription_payout(self, username, usernames):
-        self.add_coin(username, self.sub_to_point)
+    def subscription_payout(self, username, sub_month_count, usernames):
+        self.add_coin(username, self.sub_to_point, True)
         self.payday(usernames, 1, True)
+        try:
+            if self.db_manager.check_exist(username):
+                userdata = self.db_manager.retrieve(username)
+                userdata["submonth"] = int(sub_month_count)
+                self.db_manager.update(userdata)
+            else:
+                userdata = {
+                    "username": username,
+                    "coin": 0,
+                    "watchtime": 0,
+                    "submonth": int(sub_month_count)
+                }
+                self.db_manager.insert(userdata)
+        except:
+            print(f"[_ERR] [{self.get_timestamp()}] Cannot update db for user {username} with {sub_month_count} submonth")
         response1 = f"ยินดีต้อนรับ @{username} มาเป็นต้าวๆของสนิฟ"
         response2 = f"@{username} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
         print(f"[COIN] [{self.get_timestamp()}] {username} receive {self.sub_to_point} sniffscoin by sub")
         return [response1, response2]
 
     def gift_subscription_payout(self, username, recipent, usernames):
-        self.add_coin(username, self.sub_to_point)
-        self.add_coin(recipent, self.sub_to_point)
+        self.add_coin(username, self.sub_to_point, True)
+        self.add_coin(recipent, self.sub_to_point, True)
         self.payday(usernames, 1, True)
         response1 = f"@{username} ได้รับ {self.sub_to_point} sniffscoin จากการ Gift ให้ {recipent}"
         response2 = f"@{recipent} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
@@ -159,27 +217,27 @@ class UserFunction:
         return [response1, response2]
 
     def giftmystery_subscription_payout(self, username, gift_count, usernames):
-        self.add_coin(username, self.sub_to_point * gift_count)
+        self.add_coin(username, self.sub_to_point * gift_count, True)
         self.payday(usernames, 1, True)
         response1 = f"@{username} ได้รับ {self.sub_to_point * gift_count} sniffscoin จากการ Gift ให้สมาชิก {gift_count} คน"
         print(f"[COIN] [{self.get_timestamp()}] {username} receive {self.sub_to_point * gift_count} sniffscoin by giftmysterysub")
         return [response1]
 
     def anongift_subscription_payout(self, recipent, usernames):
-        self.add_coin(recipent, self.sub_to_point)
+        self.add_coin(recipent, self.sub_to_point, True)
         self.payday(usernames, 1, True)
         response1 = f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามค่าา"
         response2 = f"@{recipent} ได้รับ {self.sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin"
         print(f"[COIN] [{self.get_timestamp()}] {recipent} receive {self.sub_to_point} sniffscoin by anongiftsub")
         return [response1, response2]
 
-    async def add_point_by_bit(self, username, bits):
-        response = ""
+    async def add_point_by_bit(self, username, bits, send_message):
         point_to_add = int(bits / self.bit_to_point)
         if point_to_add > 0:
             self.add_coin(username, point_to_add)
-            response = f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit"
-            return response
+            send_message(f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit")
+        else:
+            send_message(f"ขอบคุณ @{username} สำหรับ {bits} บิทค้าาา")
 
     # mod function
     async def call_to_hell(self, usernames, exclude_list, timeout):

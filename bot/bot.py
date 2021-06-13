@@ -125,23 +125,18 @@ class TwitchBot(commands.Bot,):
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):
-        response = await self.user_function.add_point_by_bit(data["username"], data["bits"])
-        print(response)
-        if response is not None:
-            await self.send_message(response)
-        else:
-            await self.send_message(f"ขอบคุณ @{data['username']} สำหรับ {data['bits']} บิทค้าาา")
+        await self.user_function.add_point_by_bit(data["username"], data["bits"], self.send_message)
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()
-        response = self.user_function.subscription_payout(data["username"], usernames)
+        response = self.user_function.subscription_payout(data["username"], data["sub_month_count"], usernames)
         for msg in response:
             await self.send_message(msg)
         self.print_to_console(f"sub: {data}")
 
     async def event_resub(self, channel, data):
         usernames = await self.get_users_list()
-        response = self.user_function.subscription_payout(data["username"], usernames)
+        response = self.user_function.subscription_payout(data["username"], data["sub_month_count"], usernames)
         for msg in response:
             await self.send_message(msg)
         self.print_to_console(f"resub: {data}")
@@ -258,13 +253,14 @@ class TwitchBot(commands.Bot,):
             except:
                 coin = 1
             usernames = await self.get_users_list()
+            print(usernames)
             if (username is not None) and (username in usernames):
                 self.user_function.add_coin(username, coin)
                 await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
-        if (self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.environment == "dev"):
+        if (self.market_open or ctx.author.is_subscriber == 1 or ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS):
             if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "coin")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "coin")
                 coin = self.user_function.get_coin(ctx.author.name.lower())
@@ -274,7 +270,7 @@ class TwitchBot(commands.Bot,):
     async def check_user_watchtime(self, ctx):
         if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "watchtime")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             self.user_function.set_cooldown(ctx.author.name.lower(), "watchtime")
-            watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower())
+            watchtime = self.user_function.get_user_watchtime(ctx.author.name.lower(), self.channel_live)
             if any(time > 0 for time in watchtime):
                 response_string = f"@{ctx.author.name.lower()} ดูไลฟ์มาแล้ว"
                 if watchtime[0] > 0:
