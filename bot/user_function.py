@@ -3,9 +3,12 @@ from datetime import datetime
 import random
 import re
 
+from .db_function import DBManager
+
 
 class UserFunction:
     def __init__(self, environment):
+        self.db_manager = DBManager(environment)
         self.environment = environment
         self.watchtime_session = {}
         self.user_point = {}
@@ -198,7 +201,7 @@ class UserFunction:
             casualtie += 1
             print(f"[HELL] [{self.get_timestamp()}] Timeout: {username} Duration: {callhell_timeout} Reason: โดนสนิฟดีดนิ้ว")
             await timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
         data = {
             "casualtie": casualtie,
             "poor_users": poor_users
@@ -207,7 +210,7 @@ class UserFunction:
 
     # song request system
     async def user_song_request(self, content, timestamp, username, send_message):
-        song_name = re.search("(?<=\\!request ).+", content)[0]
+        song_name = re.search("(?<=\\!sr ).+", content)[0]
         if song_name is not None:
             song_name = song_name.strip().lower()
             try:
@@ -258,6 +261,17 @@ class UserFunction:
         self.song_playing = ""
         self.song_list = {}
         self.sorted_song_list = []
+
+    async def delete_song(self, song_id, send_message):
+        song_id = int(song_id)
+        if self.sorted_song_list != []:
+            try:
+                del_song = self.sorted_song_list[song_id - 1]
+                del self.song_list[del_song]
+                await send_message(f"ลบเพลง {del_song} เรียบร้อยแล้วจ้า")
+                await self.get_song_list(send_message)
+            except:
+                print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {song_id} from list")
 
     # cooldown related system
     def set_cooldown(self, username, command):

@@ -329,11 +329,11 @@ class TwitchBot(commands.Bot,):
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป....")
 
-    @commands.command(name="commands", aliases=["command", "cmd"])
-    async def commmands_command(self,ctx):
-        if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
-            self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
-            await self.send_message(f"นี่คือคำสั่งทั้งหมดน้า พิมพ์ !commands เพื่อดูคำสั่งทั้งหมด | พิมพ์ !coin เพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ !watchtime เพื่อเช็คเวลาที่ดูมาแล้ว | พิมพ์ !uptime เพื่อดูเวลาว่าสนิฟไลฟ์มากี่ชั่วโมงแล้ว | พิมพ์ !discord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ !facebook เพื่อติดตามสนิฟผ่านทางเพจ! | พิมพ์ !youtube เพื่อติดตามสนิฟผ่านยูทูป")
+    # @commands.command(name="commands", aliases=["command", "cmd"])
+    # async def commmands_command(self,ctx):
+    #     if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+    #         self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
+    #         await self.send_message(f"นี่คือคำสั่งทั้งหมดน้า พิมพ์ !commands เพื่อดูคำสั่งทั้งหมด | พิมพ์ !coin เพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ !watchtime เพื่อเช็คเวลาที่ดูมาแล้ว | พิมพ์ !uptime เพื่อดูเวลาว่าสนิฟไลฟ์มากี่ชั่วโมงแล้ว | พิมพ์ !discord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ !facebook เพื่อติดตามสนิฟผ่านทางเพจ! | พิมพ์ !youtube เพื่อติดตามสนิฟผ่านยูทูป")
     
     @commands.command(name="youtube")
     async def facebook_command(self, ctx):
@@ -341,10 +341,10 @@ class TwitchBot(commands.Bot,):
             self.user_function.set_cooldown(ctx.author.name.lower(), "youtube")
             await self.send_message(f"@{ctx.author.name.lower()} {self.youtube_link}")
 
-    @commands.command(name="request")
+    @commands.command(name="sr")
     async def user_song_request(self, ctx):
         if self.request_status:
-            if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "song_request"), 300) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "song_request", 300)) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "song_request")
                 await self.user_function.user_song_request(ctx.content, self.get_timestamp(), ctx.author.name.lower(), self.send_message)
 
@@ -373,10 +373,13 @@ class TwitchBot(commands.Bot,):
                     await self.user_function.get_song_list(self.send_message)
                 elif command2 == "clear":
                     await self.user_function.delete_songlist()
+            elif command1 == "delete":
+                if command2 is not None:
+                    await self.user_function.delete_song(command2, self.send_message)
             elif command1 == "select" and command2 is not None:
                 await self.user_function.select_song(command2, self.send_message)
 
-    @commands.command(name="nowplaying")
+    @commands.command(name="np")
     async def get_song(self, ctx):
         if self.request_status:
             if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "song")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
