@@ -219,7 +219,7 @@ class UserFunction:
                 self.song_list[song_name] = {}
                 self.song_list[song_name]["vote"] = -1
                 self.song_list[song_name]["timestamp"] = timestamp
-            await send_message(f"@{username} โหวตเพลง {song_name}")
+            await send_message(f"@{username} โหวตเพลง {song_name} คะแนนรวม {-self.song_list[song_name]['vote']} คะแนน")
 
     async def now_playing(self, username, send_message):
         if self.song_playing is not None:
