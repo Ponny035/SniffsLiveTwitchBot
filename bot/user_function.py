@@ -209,6 +209,7 @@ class UserFunction:
     async def user_song_request(self, content, timestamp, username, send_message):
         song_name = re.search("(?<=\\!request ).+", content)[0]
         if song_name is not None:
+            song_name = song_name.strip()
             try:
                 self.song_list[song_name]["vote"] -= 1
             except KeyError:
