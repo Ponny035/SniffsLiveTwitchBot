@@ -222,8 +222,10 @@ class UserFunction:
             await send_message(f"@{username} สนิฟกำลังร้องเพลง {self.song_playing} น้า")
 
     async def sorted_song(self):
-        if self.song_list != {}:
+        try:
             self.sorted_song_list = sorted(self.song_list.keys(), key=lambda song_name: (self.song_list[song_name]["vote"], self.song_list[song_name]["timestamp"]))
+        except:
+            self.sorted_song_list = []
 
     async def get_song_list(self, send_message):
         await self.sorted_song()
@@ -240,7 +242,10 @@ class UserFunction:
         song_id = int(song_id)
         try:
             self.song_playing = self.sorted_song_list[song_id - 1]
-            self.song_list = self.song_list.pop(self.song_playing)
+            try:
+                del self.song_list[self.song_playing]
+            except KeyError:
+                print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {self.song_playing} from list")
             self.sorted_song_list = []
             await send_message(f"สนิฟเลือกเพลง {self.song_playing}")
             print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing} Delete this song from list")
