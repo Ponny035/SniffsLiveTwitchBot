@@ -13,22 +13,22 @@ class DBManager:
             if(environment == "dev"):
                 print("Connect db on DEVELOPMENT environment")
                 with open("./data/dev_db", "r", encoding="utf-8") as f:
-                    HOST, USERNAME, PASSWORD = (l.strip() for l in f.readlines())
+                    HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
                 self.connect_db = connect(
                     host=HOST,
                     username=USERNAME,
                     password=PASSWORD,
-                    database="User_Info"
+                    database=DATABASE
                 )
             elif(environment == "prod"):
                 print("Connect db on PRODUCTION environment")
                 with open("./data/db", "r", encoding="utf-8") as f:
-                    HOST, USERNAME, PASSWORD = (l.strip() for l in f.readlines())
+                    HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
                 self.connect_db = connect(
                     host=HOST,
                     username=USERNAME,
                     password=PASSWORD,
-                    database="User_Info"
+                    database=DATABASE
                 )
             self.cursor = self.connect_db.cursor()
         except Error as e:
