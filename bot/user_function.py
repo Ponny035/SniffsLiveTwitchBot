@@ -1,7 +1,9 @@
 import asyncio
 from datetime import datetime
+import json
 import random
 import re
+import requests
 
 from .db_function import DBManager
 
@@ -13,10 +15,15 @@ class UserFunction:
         self.watchtime_session = {}
         # self.user_point = {}
         self.command_cooldown = {}
-        self.song_list = {}
+        # self.song_list = {}
         self.sorted_song_list = []
         self.song_playing = None
         self.channel_live = False
+        self.list_url = 'http://localhost:8000/api/v1/songlist'
+        self.vote_url = 'http://localhost:8000/api/v1/vote'
+        self.select_url = 'http://localhost:8000/api/v1/select'
+        self.delete_url = 'http://localhost:8000/api/v1/del'
+        self.clear_url = 'http://localhost:8000/api/v1/clear'
         self.coin_join_before_live = 5
         self.sub_to_point = 10  # 1 sub for 10 point
         self.bit_to_point = 50  # 50 bits for 1 point
@@ -271,65 +278,165 @@ class UserFunction:
         song_name = re.search("(?<=\\!sr ).+", content)[0]
         if song_name is not None:
             song_name = song_name.strip().lower()
-            try:
-                self.song_list[song_name]["vote"] -= 1
-            except KeyError:
-                self.song_list[song_name] = {}
-                self.song_list[song_name]["vote"] = -1
-                self.song_list[song_name]["timestamp"] = timestamp
-            await send_message(f"@{username} โหวตเพลง {song_name} คะแนนรวม {-self.song_list[song_name]['vote']} คะแนน")
+            song_request = {
+                "songName": song_name,
+                "vote": 1,
+                "ts": datetime.timestamp(timestamp)
+            }
+            response = requests.post(self.vote_url, json=song_request)
+            if response.status_code == 200:
+                response_json = json.loads(response.content)
+                self.sorted_song_list = response_json["songlist"]
+                try:
+                    self.song_playing = response_json["nowplaying"]
+                except KeyError:
+                    self.song_playing = None
+                await send_message(f"@{username} โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
+            elif response.status_code == 404:
+                print(f"[SONG] [{self.get_timestamp()}] {song_name} Error connecting to API")
+            # try:
+            #     self.song_list[song_name]["vote"] -= 1
+            # except KeyError:
+            #     self.song_list[song_name] = {}
+            #     self.song_list[song_name]["vote"] = -1
+            #     self.song_list[song_name]["timestamp"] = timestamp
+            # await send_message(f"@{username} โหวตเพลง {song_name} คะแนนรวม {-self.song_list[song_name]['vote']} คะแนน")
 
     async def now_playing(self, username, send_message):
+        self.sorted_song_list, self.song_playing = self.get_song_list_api()
         if self.song_playing is not None:
-            await send_message(f"@{username} สนิฟกำลังร้องเพลง {self.song_playing} น้า")
+            await send_message(f"@{username} สนิฟกำลังร้องเพลง {self.song_playing['songName']} น้า")
 
-    async def sorted_song(self):
-        try:
-            self.sorted_song_list = sorted(self.song_list.keys(), key=lambda song_name: (self.song_list[song_name]["vote"], self.song_list[song_name]["timestamp"]))
-        except:
-            self.sorted_song_list = []
+    # async def sorted_song(self):
+    #     try:
+    #         self.sorted_song_list = sorted(self.song_list.keys(), key=lambda song_name: (self.song_list[song_name]["vote"], self.song_list[song_name]["timestamp"]))
+    #     except:
+    #         self.sorted_song_list = []
+
+    def get_song_list_api(self):
+        response = requests.get(self.list_url)
+        if response.status_code == 200:
+            response_json = json.loads(response.content)
+            try:
+                sorted_song_list = response_json["songlist"]
+            except KeyError:
+                sorted_song_list = None
+            try:
+                song_playing = response_json["nowplaying"]
+            except KeyError:
+                song_playing = None
+        else:
+            sorted_song_list = None
+            song_playing = None
+        return sorted_song_list, song_playing
 
     async def get_song_list(self, send_message):
-        await self.sorted_song()
+        self.sorted_song_list, self.song_playing = self.get_song_list_api()
         if self.sorted_song_list != []:
-            await send_message("List เพลงจากต้าวๆ")
-            max_song_list = min(len(self.song_list), 5)
+            max_song_list = min(len(self.sorted_song_list), 5)
             for i in range(0, max_song_list):
-                await send_message(f"[{i + 1}] {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} คะแนน")
-                print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} point")
+                await send_message(f"[{i + 1}] {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} คะแนน")
+                print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} point")
         else:
             await send_message("ยังไม่มีเพลงในคิวจ้า")
+        # await self.sorted_song()
+        # if self.sorted_song_list != []:
+        #     await send_message("List เพลงจากต้าวๆ")
+        #     max_song_list = min(len(self.song_list), 5)
+        #     for i in range(0, max_song_list):
+        #         await send_message(f"[{i + 1}] {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} คะแนน")
+        #         print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} point")
+        # else:
+        #     await send_message("ยังไม่มีเพลงในคิวจ้า")
 
     async def select_song(self, song_id, send_message):
         song_id = int(song_id)
         try:
-            self.song_playing = self.sorted_song_list[song_id - 1]
-            try:
-                del self.song_list[self.song_playing]
-            except KeyError:
-                print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {self.song_playing} from list")
-            self.sorted_song_list = []
-            await send_message(f"สนิฟเลือกเพลง {self.song_playing}")
-            print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing} Delete this song from list")
+            # if we have front end, we need to fetch new list
+            # self.sorted_song_list, self.song_playing = self.get_song_list_api()
+            song_select = self.sorted_song_list[song_id - 1]["songName"]
+            response = requests.post(self.select_url, json={"songName": song_select})
+            if response.status_code == 200:
+                response_json = json.loads(response.content)
+                self.sorted_song_list = response_json["songlist"]
+                self.song_playing = response_json["nowplaying"]
+                await send_message(f"สนิฟเลือกเพลง {self.song_playing['songName']}")
+                print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing['songName']} Delete this song from list")
+            elif response.status_code == 404:
+                response_json = json.loads(response.content)
+                self.sorted_song_list = response_json["songlist"]
+                try:
+                    self.song_playing = response_json["nowplaying"]
+                except KeyError:
+                    self.song_playing = None
+                await send_message("ไม่มีเพลงนี้น้า")
+                print(f"[SONG] [{self.get_timestamp()}] No song in list // error from api")
         except IndexError:
             await send_message("ไม่มีเพลงนี้น้า")
-            print(f"[SONG] [{self.get_timestamp()}] No song in list")
+            print(f"[SONG] [{self.get_timestamp()}] No song in list // out of range")
+        # try:
+        #     self.song_playing = self.sorted_song_list[song_id - 1]
+        #     try:
+        #         del self.song_list[self.song_playing]
+        #     except KeyError:
+        #         print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {self.song_playing} from list")
+        #     self.sorted_song_list = []
+        #     await send_message(f"สนิฟเลือกเพลง {self.song_playing}")
+        #     print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing} Delete this song from list")
+        # except IndexError:
+        #     await send_message("ไม่มีเพลงนี้น้า")
+        #     print(f"[SONG] [{self.get_timestamp()}] No song in list")
 
-    async def delete_songlist(self):
-        self.song_playing = ""
-        self.song_list = {}
-        self.sorted_song_list = []
+    async def delete_songlist(self, send_message):
+        response = requests.post(self.clear_url, json={"confirm": True})
+        if response.status_code == 200:
+            self.sorted_song_list = []
+            try:
+                response_json = json.loads(response.content)
+                self.song_playing = response_json["nowplaying"]
+            except KeyError:
+                self.song_playing = None
+            await send_message(f"ล้าง List เพลงให้แล้วต้าวสนิฟ")
+        elif response.status_code == 404:
+            print(f"[SONG] [{self.get_timestamp()}] Error deleting from api")
+        # self.song_playing = ""
+        # self.song_list = {}
+        # self.sorted_song_list = []
 
     async def delete_song(self, song_id, send_message):
         song_id = int(song_id)
-        if self.sorted_song_list != []:
-            try:
-                del_song = self.sorted_song_list[song_id - 1]
-                del self.song_list[del_song]
-                await send_message(f"ลบเพลง {del_song} เรียบร้อยแล้วจ้า")
-                await self.get_song_list(send_message)
-            except:
-                print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {song_id} from list")
+        try:
+            # if we have front end, we need to fetch new list
+            # self.sorted_song_list, self.song_playing = self.get_song_list_api()
+            song_select = self.sorted_song_list[song_id - 1]["songName"]
+            response = requests.post(self.delete_url, json={"songName": song_select})
+            if response.status_code == 200:
+                response_json = json.loads(response.content)
+                self.sorted_song_list = response_json["songlist"]
+                self.song_playing = response_json["nowplaying"]
+                await send_message(f"สนิฟลบเพลง {song_select}")
+                print(f"[SONG] [{self.get_timestamp()}] Sniffs delete {song_select} from list")
+            elif response.status_code == 404:
+                response_json = json.loads(response.content)
+                try:
+                    self.sorted_song_list = response_json["songlist"]
+                    self.song_playing = response_json["nowplaying"]
+                except KeyError:
+                    self.sorted_song_list = []
+                    self.song_playing = None
+                await send_message("ไม่มีเพลงนี้น้า")
+                print(f"[SONG] [{self.get_timestamp()}] No song in list // error from api")
+        except IndexError:
+            await send_message("ไม่มีเพลงนี้น้า")
+            print(f"[SONG] [{self.get_timestamp()}] No song in list // out of range")
+        # if self.sorted_song_list != []:
+        #     try:
+        #         del_song = self.sorted_song_list[song_id - 1]
+        #         del self.song_list[del_song]
+        #         await send_message(f"ลบเพลง {del_song} เรียบร้อยแล้วจ้า")
+        #         await self.get_song_list(send_message)
+        #     except:
+        #         print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {song_id} from list")
 
     # cooldown related system
     def set_cooldown(self, username, command):

@@ -368,10 +368,9 @@ class TwitchBot(commands.Bot,):
                 if command2 is None:
                     await self.user_function.get_song_list(self.send_message)
                 elif command2 == "clear":
-                    await self.user_function.delete_songlist()
-            elif command1 == "delete":
-                if command2 is not None:
-                    await self.user_function.delete_song(command2, self.send_message)
+                    await self.user_function.delete_songlist(self.send_message)
+            elif command1 == "delete" and command2 is not None:
+                await self.user_function.delete_song(command2, self.send_message)
             elif command1 == "select" and command2 is not None:
                 await self.user_function.select_song(command2, self.send_message)
 
