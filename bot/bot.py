@@ -357,7 +357,7 @@ class TwitchBot(commands.Bot,):
                 command2 = commands_split[2]
             except:
                 command2 = None
-            if command1 == "request":
+            if command1 == "req":
                 if self.request_status and command2 == "off":
                     self.request_status = False
                     await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ")
@@ -365,13 +365,12 @@ class TwitchBot(commands.Bot,):
                     self.request_status = True
                     await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !request ตามด้วยชื่อเพลงน้า")
             elif command1 == "list":
-                if command2 is None:
                     await self.user_function.get_song_list(self.send_message)
-                elif command2 == "clear":
-                    await self.user_function.delete_songlist(self.send_message)
-            elif command1 == "delete" and command2 is not None:
+            elif command1 == "clear":
+                await self.user_function.delete_songlist(self.send_message)
+            elif command1 == "del" and command2 is not None:
                 await self.user_function.delete_song(command2, self.send_message)
-            elif command1 == "select" and command2 is not None:
+            elif command1 == "sel" and command2 is not None:
                 await self.user_function.select_song(command2, self.send_message)
 
     @commands.command(name="np")
