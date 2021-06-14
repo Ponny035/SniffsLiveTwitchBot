@@ -344,7 +344,7 @@ class TwitchBot(commands.Bot,):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "song_request")
                 await self.user_function.user_song_request(ctx.content, self.get_timestamp(), ctx.author.name.lower(), self.send_message)
 
-    # !song request on | !song request off | !song list | !song select {song-id} | !song list clear
+    # !song req on | !song req off | !song list | !song sel {song-id} | !song clear | !song del {song-id}
     @commands.command(name="song")
     async def song_request(self, ctx):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
@@ -379,3 +379,13 @@ class TwitchBot(commands.Bot,):
             if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "song")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "song")
                 await self.user_function.now_playing(ctx.author.name.lower(), self.send_message)
+
+    @commands.command(name="kill")
+    async def kill_user(self, ctx):
+        commands_split = ctx.content.split()
+        try:
+            target = commands_split[1].lower()
+        except:
+            target = None
+        if target is not None:
+            await self.user_function.shooter(ctx.author.name.lower(), target, self.send_message, self.channel.timeout)

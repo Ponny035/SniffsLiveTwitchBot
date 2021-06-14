@@ -273,27 +273,74 @@ class UserFunction:
         }
         return data
 
+    async def shooter(self, employer, target, send_message, timeout):
+        payrate = 5
+        shooter_timeout = random.randint(15, 60)
+        exclude_target = ["sniffslive", "sirju001", "moobot", "sniffs_bot", "sniffsbot"]
+        if self.environment == "dev":
+            exclude_target += ["bosssoq"]
+        cooldown = 1200
+        command = "shooter"
+        try:
+            timestamp = self.command_cooldown[command]
+            now = self.get_timestamp()
+            diff = (now - timestamp).total_seconds()
+            if diff > cooldown:
+                available = True
+            else:
+                available = False
+        except KeyError:
+            available = True
+        if available:
+            self.command_cooldown[command] = self.get_timestamp()
+            if self.db_manager.check_exist(employer):
+                userdata = self.db_manager.retrieve(employer)
+                if userdata["coin"] >= payrate:
+                    self.add_coin(employer, -payrate)
+                    if target in exclude_target:
+                        await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
+                        await send_message(f"@{employer} บังอาจนักนะ บินไปเองซะ {shooter_timeout} วินาที")
+                        print(f"[SHOT] [{self.get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
+                    else:
+                        await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
+                        await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที")
+                        print(f"[SHOT] [{self.get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
+            else:
+                if target in exclude_target:
+                    await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")
+                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม บินไปซะ {int(shooter_timeout * 2)} วินาที")
+                    print(f"[SHOT] [{self.get_timestamp()}] Shooter: {employer} hit by sniffsbot for {int(shooter_timeout * 2)} sec")
+                else:
+                    await timeout(employer, shooter_timeout, f"ไม่มีเงินจ้างมือปืนงั้นรึ โดนยิงเองซะ {shooter_timeout} วินาที")
+                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน โดนมือปืนยิงตาย {shooter_timeout} วินาที")
+                    print(f"[SHOT] [{self.get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
+
     # song request system
     async def user_song_request(self, content, timestamp, username, send_message):
+        cost = 1
         song_name = re.search("(?<=\\!sr ).+", content)[0]
         if song_name is not None:
-            song_name = song_name.strip().lower()
-            song_request = {
-                "songName": song_name,
-                "vote": 1,
-                "ts": datetime.timestamp(timestamp)
-            }
-            response = requests.post(self.vote_url, json=song_request)
-            if response.status_code == 200:
-                response_json = json.loads(response.content)
-                self.sorted_song_list = response_json["songlist"]
-                try:
-                    self.song_playing = response_json["nowplaying"]
-                except KeyError:
-                    self.song_playing = None
-                await send_message(f"@{username} โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
-            elif response.status_code == 404:
-                print(f"[SONG] [{self.get_timestamp()}] {song_name} Error connecting to API")
+            if self.db_manager.check_exist(username):
+                userdata = self.db_manager.retrieve(username)
+                if userdata["coin"] >= cost:
+                    self.add_coin(username, -cost)
+                    song_name = song_name.strip().lower()
+                    song_request = {
+                        "songName": song_name,
+                        "vote": 1,
+                        "ts": datetime.timestamp(timestamp)
+                    }
+                    response = requests.post(self.vote_url, json=song_request)
+                    if response.status_code == 200:
+                        response_json = json.loads(response.content)
+                        self.sorted_song_list = response_json["songlist"]
+                        try:
+                            self.song_playing = response_json["nowplaying"]
+                        except KeyError:
+                            self.song_playing = None
+                        await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
+                    elif response.status_code == 404:
+                        print(f"[SONG] [{self.get_timestamp()}] {song_name} Error connecting to API")
             # try:
             #     self.song_list[song_name]["vote"] -= 1
             # except KeyError:
@@ -413,8 +460,12 @@ class UserFunction:
             if response.status_code == 200:
                 response_json = json.loads(response.content)
                 self.sorted_song_list = response_json["songlist"]
-                self.song_playing = response_json["nowplaying"]
+                try:
+                    self.song_playing = response_json["nowplaying"]
+                except KeyError:
+                    self.song_playing = None
                 await send_message(f"สนิฟลบเพลง {song_select}")
+                await self.get_song_list(send_message)
                 print(f"[SONG] [{self.get_timestamp()}] Sniffs delete {song_select} from list")
             elif response.status_code == 404:
                 response_json = json.loads(response.content)
