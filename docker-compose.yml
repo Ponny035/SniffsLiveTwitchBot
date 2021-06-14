@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+    web:
+        build: .
+        container_name: api-server
+        ports:
+            - "8000:8000"
