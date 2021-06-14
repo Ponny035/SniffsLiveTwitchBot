@@ -180,15 +180,15 @@ class TwitchBot(commands.Bot,):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
-        if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
-            self.user_function.user_join_part("join", user.name.lower(), self.get_timestamp())
+            if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
+                self.user_function.user_join_part("join", user.name.lower(), self.get_timestamp())
 
     async def event_part(self, user):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
-        if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
-            self.user_function.user_join_part("part", user.name.lower(), self.get_timestamp())
+            if user.name.lower() not in [self.NICK, self.NICK+"\r"]:
+                self.user_function.user_join_part("part", user.name.lower(), self.get_timestamp())
 
     # TODO (1.1): write watchtime to db after live end
 
@@ -253,7 +253,7 @@ class TwitchBot(commands.Bot,):
             except:
                 coin = 1
             usernames = await self.get_users_list()
-            print(usernames)
+            # print(usernames)
             if (username is not None) and (username in usernames):
                 self.user_function.add_coin(username, coin)
                 await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
