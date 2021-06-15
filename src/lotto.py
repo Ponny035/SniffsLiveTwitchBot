@@ -1,8 +1,8 @@
 import random
 
-def get_win_number(lak=5):
+def get_win_number(digit=5):
     win_number = random.random()
-    for i in range(lak):
+    for i in range(digit):
         win_number = win_number * 10
     
     return int(win_number)
