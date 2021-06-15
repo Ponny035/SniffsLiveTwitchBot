@@ -330,7 +330,7 @@ class UserFunction:
                         "songKey": song_key,
                         "songName": song_name,
                         "vote": 1,
-                        "ts": datetime.timestamp(timestamp)
+                        "ts": datetime.timestamp(timestamp) * 1000
                     }
                     response = requests.post(self.vote_url, json=song_request)
                     if response.status_code == 200:
