@@ -1,6 +1,6 @@
 import random
 
-def get_win_number(digit=5):
+def get_wining_number(digit=5):
     win_number = random.random()
     for i in range(digit):
         win_number = win_number * 10
@@ -8,7 +8,7 @@ def get_win_number(digit=5):
     return int(win_number)
 
 def check_winner(lotto_list):
-    win_number = get_win_number()
+    win_number = get_wining_number()
     last_two_digits = win_number%100
     last_three_digits = win_number%1000
     winning_list = []
