@@ -6,19 +6,16 @@ import re
 import requests
 
 from .db_function import DBManager
-import lotto
+from .lotto import check_winner
 
 
 class UserFunction:
     def __init__(self, environment):
         self.db_manager = DBManager(environment)
-        self.lotto = lotto()
         self.environment = environment
 
         self.watchtime_session = {}
-        # self.user_point = {}
         self.command_cooldown = {}
-        # self.song_list = {}
         self.sorted_song_list = []
         self.player_lotto_list = []
         self.song_playing = None
@@ -140,8 +137,6 @@ class UserFunction:
                 if point_to_add > 0:
                     self.add_coin(username, point_to_add)
             await asyncio.sleep(self.watchtime_to_point * 60)
-        # self.print_to_console("write point to DB")
-        # self.print_to_console(f"[_LOG] {self.user_point}")
 
     def get_user_watchtime(self, username, live):
         if live:
@@ -161,10 +156,6 @@ class UserFunction:
 
     # coin related system
     def add_coin(self, username, coin, nolog=False):
-        # try:
-        #     self.user_point[username] += coin
-        # except KeyError:
-        #     self.user_point[username] = coin
         if self.db_manager.check_exist(username):
             userdata = self.db_manager.retrieve(username)
             userdata['coin'] += coin
@@ -181,10 +172,6 @@ class UserFunction:
             print(f"[COIN] [{self.get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
     def get_coin(self, username):
-        # try:
-        #     coin = self.user_point[username]
-        # except KeyError:
-        #     coin = 0
         if self.db_manager.check_exist(username):
             coin = self.db_manager.retrieve(username)['coin']
         else:
@@ -349,24 +336,11 @@ class UserFunction:
                         await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
                     elif response.status_code == 404:
                         print(f"[SONG] [{self.get_timestamp()}] {song_name} Error connecting to API")
-            # try:
-            #     self.song_list[song_name]["vote"] -= 1
-            # except KeyError:
-            #     self.song_list[song_name] = {}
-            #     self.song_list[song_name]["vote"] = -1
-            #     self.song_list[song_name]["timestamp"] = timestamp
-            # await send_message(f"@{username} โหวตเพลง {song_name} คะแนนรวม {-self.song_list[song_name]['vote']} คะแนน")
 
     async def now_playing(self, username, send_message):
         self.sorted_song_list, self.song_playing = self.get_song_list_api()
         if self.song_playing is not None:
             await send_message(f"@{username} สนิฟกำลังร้องเพลง {self.song_playing['songName']} น้า")
-
-    # async def sorted_song(self):
-    #     try:
-    #         self.sorted_song_list = sorted(self.song_list.keys(), key=lambda song_name: (self.song_list[song_name]["vote"], self.song_list[song_name]["timestamp"]))
-    #     except:
-    #         self.sorted_song_list = []
 
     def get_song_list_api(self):
         response = requests.get(self.list_url)
@@ -394,15 +368,6 @@ class UserFunction:
                 print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} point")
         else:
             await send_message("ยังไม่มีเพลงในคิวจ้า")
-        # await self.sorted_song()
-        # if self.sorted_song_list != []:
-        #     await send_message("List เพลงจากต้าวๆ")
-        #     max_song_list = min(len(self.song_list), 5)
-        #     for i in range(0, max_song_list):
-        #         await send_message(f"[{i + 1}] {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} คะแนน")
-        #         print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]} {-self.song_list[self.sorted_song_list[i]]['vote']} point")
-        # else:
-        #     await send_message("ยังไม่มีเพลงในคิวจ้า")
 
     async def select_song(self, song_id, send_message):
         song_id = int(song_id)
@@ -429,18 +394,6 @@ class UserFunction:
         except IndexError:
             await send_message("ไม่มีเพลงนี้น้า")
             print(f"[SONG] [{self.get_timestamp()}] No song in list // out of range")
-        # try:
-        #     self.song_playing = self.sorted_song_list[song_id - 1]
-        #     try:
-        #         del self.song_list[self.song_playing]
-        #     except KeyError:
-        #         print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {self.song_playing} from list")
-        #     self.sorted_song_list = []
-        #     await send_message(f"สนิฟเลือกเพลง {self.song_playing}")
-        #     print(f"[SONG] [{self.get_timestamp()}] Sniffs choose {self.song_playing} Delete this song from list")
-        # except IndexError:
-        #     await send_message("ไม่มีเพลงนี้น้า")
-        #     print(f"[SONG] [{self.get_timestamp()}] No song in list")
 
     async def delete_songlist(self, send_message):
         response = requests.post(self.clear_url, json={"confirm": True})
@@ -454,9 +407,6 @@ class UserFunction:
             await send_message(f"ล้าง List เพลงให้แล้วต้าวสนิฟ")
         elif response.status_code == 404:
             print(f"[SONG] [{self.get_timestamp()}] Error deleting from api")
-        # self.song_playing = ""
-        # self.song_list = {}
-        # self.sorted_song_list = []
 
     async def delete_song(self, song_id, send_message):
         song_id = int(song_id)
@@ -488,14 +438,6 @@ class UserFunction:
         except IndexError:
             await send_message("ไม่มีเพลงนี้น้า")
             print(f"[SONG] [{self.get_timestamp()}] No song in list // out of range")
-        # if self.sorted_song_list != []:
-        #     try:
-        #         del_song = self.sorted_song_list[song_id - 1]
-        #         del self.song_list[del_song]
-        #         await send_message(f"ลบเพลง {del_song} เรียบร้อยแล้วจ้า")
-        #         await self.get_song_list(send_message)
-        #     except:
-        #         print(f"[SONG] [{self.get_timestamp()}] Failed to delete song {song_id} from list")
 
     # cooldown related system
     def set_cooldown(self, username, command):
@@ -524,7 +466,7 @@ class UserFunction:
     # lotto system
     async def buy_lotto(self, username, lotto, send_message):
         lotto_cost = 5
-        if re.match(r"[0-9]{4}", lotto) is not None:
+        if (re.match(r"[0-9]{5}", lotto) is not None) and (len(lotto) == 5):
             if self.db_manager.check_exist(username):
                 userstat = self.db_manager.retrieve(username)
                 if userstat["coin"] >= lotto_cost:
@@ -544,13 +486,15 @@ class UserFunction:
                     print(f"[LOTO] [{self.get_timestamp()}] {username} coin insufficient")
 
     async def draw_lotto(self, send_message):
-        print(f"[LOTO] All player list : {self.player_lotto_list}")
-        lotto_winners = self.lotto.check_winner(self.player_lotto_list)
-        # lotto_winners = [["bosssoq", 1110], ["ponny", 110], ["franess", 10]]
-        count_winners = len(lotto_winners)
-        payout = 0
-        for winner in lotto_winners:
-            self.add_coin(winner[0], int(winner[1]))
-            payout += int(winner[1])
-        await send_message(f"ประกาศผลรางวัล SniffsLotto แล้ว มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin")
-        print(f"[LOTO] [{self.get_timestamp()}] LOTTO winners: {count_winners} users | payout: {payout} coin")
+        if self.player_lotto_list != []:
+            print(f"[LOTO] All player list : {self.player_lotto_list}")
+            win_number, lotto_winners = check_winner(self.player_lotto_list)
+            win_number_string = f"{win_number:05d}"
+            count_winners = len(lotto_winners)
+            payout = 0
+            for winner in lotto_winners:
+                self.add_coin(winner[0], int(winner[1]))
+                payout += int(winner[1])
+            await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin")
+            print(f"[LOTO] [{self.get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
+            self.player_lotto_list = []

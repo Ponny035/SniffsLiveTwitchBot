@@ -26,4 +26,4 @@ def check_winner(lotto_list):
         
         elif last_two_digits == player_last_two_digits:
             winning_list.append([lotto[0],10])
-    return winning_list
+    return win_number, winning_list
