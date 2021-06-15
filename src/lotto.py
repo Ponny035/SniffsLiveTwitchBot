@@ -1,14 +1,14 @@
 import random
 
-def get_wining_number(digit=5):
-    win_number = random.random()
+def get_winning_number(digit=5):
+    winning_number = random.random()
     for i in range(digit):
-        win_number = win_number * 10
+        winning_number = winning_number * 10
     
-    return int(win_number)
+    return int(winning_number)
 
 def check_winner(lotto_list):
-    win_number = get_wining_number()
+    win_number = get_winning_number()
     last_two_digits = win_number%100
     last_three_digits = win_number%1000
     winning_list = []
