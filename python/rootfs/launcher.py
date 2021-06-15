@@ -1,4 +1,4 @@
-from bot import TwitchBot, UserFunction, automod, EventTrigger
+from src import TwitchBot, UserFunction, automod, EventTrigger
 import sys
 
 def main(environment, dryrun):

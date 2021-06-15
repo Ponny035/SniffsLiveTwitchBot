@@ -1,3 +1,4 @@
-body {
-    color: white !important;
+.nowrap-text {
+    white-space: nowrap;
+    overflow: hidden;
 }
