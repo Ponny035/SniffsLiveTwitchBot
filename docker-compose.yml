@@ -2,7 +2,19 @@ version: '3'
 
 services:
     web:
-        build: .
+        build: ./api
         container_name: api-server
         ports:
             - "8000:8000"
+        networks:
+            sniffs.bot:
+    backend:
+        build: ./python
+        container_name: py-backend
+        networks:
+            sniffs.bot:
+        depends_on:
+            - web
+
+networks:
+    sniffs.bot:
