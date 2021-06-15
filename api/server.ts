@@ -1,4 +1,4 @@
-import { Application, Router } from "https://deno.land/x/oak@v7.5.0/mod.ts"
+import { Application, Router, send } from "https://deno.land/x/oak@v7.5.0/mod.ts"
 
 const port = 8000
 const app = new Application()
@@ -24,6 +24,7 @@ app.use(router.allowedMethods())
 
 // declare type of Song
 interface Song {
+    songKey: string,
     songName: string,
     vote: number,
     ts: Date
@@ -31,7 +32,7 @@ interface Song {
 
 // declare type of song request
 interface Req {
-    songName: string
+    songKey: string
 }
 
 // declare type of list clear request
@@ -41,6 +42,7 @@ interface Confirm {
 
 // declare nowPlaying variable
 let nowPlaying: Song = {
+    songKey: "",
     songName: "",
     vote: 0,
     ts: new Date()
@@ -87,7 +89,7 @@ router.post("/api/v1/vote", async({request, response}: {request: any, response: 
         const body = request.body()
         const song: Song = await body.value
         let vote = 1
-        let index: number | undefined = songList.findIndex(name => name.songName === song["songName"])
+        let index: number | undefined = songList.findIndex(name => name.songKey === song.songKey)
         if(index !== -1){
             songList[index].vote += song.vote
             vote = songList[index].vote
@@ -130,11 +132,11 @@ router.post("/api/v1/select", async({request, response}: {request: any, response
     if(request.hasBody){
         const body = request.body()
         const req: Req = await body.value
-        console.log(req.songName)
-        const index: number | undefined = songList.findIndex(name => name.songName === req.songName)
+        console.log(req.songKey)
+        const index: number | undefined = songList.findIndex(name => name.songKey === req.songKey)
         if(index !== -1){
             nowPlaying = songList[index]
-            songList = songList.filter(name => name.songName !== req.songName)
+            songList = songList.filter(name => name.songKey !== req.songKey)
             const sortedSongList = sortSongList(songList)
             response.status = 200
             response.body = {
@@ -143,7 +145,7 @@ router.post("/api/v1/select", async({request, response}: {request: any, response
                 nowplaying: nowPlaying
             }
         }else{
-            console.log("[SEL] not found "+req.songName)
+            console.log("[SEL] not found "+req.songKey)
             const sortedSongList = sortSongList(songList)
             response.status = 404
             if(nowPlaying.songName !== ""){
@@ -175,9 +177,9 @@ router.post("/api/v1/del", async({request, response}: {request: any, response: a
     if(request.hasBody){
         const body = request.body()
         const req: Req = await body.value
-        const index: number | undefined = songList.findIndex(name => name.songName === req.songName)
+        const index: number | undefined = songList.findIndex(name => name.songKey === req.songKey)
         if(index !== -1){
-            songList = songList.filter(name => name.songName !== req.songName)
+            songList = songList.filter(name => name.songKey !== req.songKey)
             const sortedSongList = sortSongList(songList)
             response.status = 200
             if(nowPlaying.songName !== ""){
@@ -193,7 +195,7 @@ router.post("/api/v1/del", async({request, response}: {request: any, response: a
                 }
             }
         }else{
-            console.log("[DEL] not found "+req.songName)
+            console.log("[DEL] not found "+req.songKey)
             const sortedSongList = sortSongList(songList)
             response.status = 404
             if(nowPlaying.songName !== ""){

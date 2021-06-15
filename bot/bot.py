@@ -363,7 +363,7 @@ class TwitchBot(commands.Bot,):
                     await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ")
                 elif not self.request_status and command2 == "on":
                     self.request_status = True
-                    await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !request ตามด้วยชื่อเพลงน้า")
+                    await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
             elif command1 == "list":
                     await self.user_function.get_song_list(self.send_message)
             elif command1 == "clear":
@@ -382,10 +382,11 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="kill")
     async def kill_user(self, ctx):
-        commands_split = ctx.content.split()
-        try:
-            target = commands_split[1].lower()
-        except:
-            target = None
-        if target is not None:
-            await self.user_function.shooter(ctx.author.name.lower(), target, self.send_message, self.channel.timeout)
+        if self.channel_live:
+            commands_split = ctx.content.split()
+            try:
+                target = commands_split[1].lower()
+            except:
+                target = None
+            if target is not None:
+                await self.user_function.shooter(ctx.author.name.lower(), target, self.send_message, self.channel.timeout)

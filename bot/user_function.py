@@ -324,8 +324,10 @@ class UserFunction:
                 userdata = self.db_manager.retrieve(username)
                 if userdata["coin"] >= cost:
                     self.add_coin(username, -cost)
-                    song_name = song_name.strip().lower()
+                    song_name = song_name.strip()
+                    song_key = song_name.lower()
                     song_request = {
+                        "songKey": song_key,
                         "songName": song_name,
                         "vote": 1,
                         "ts": datetime.timestamp(timestamp)
@@ -401,8 +403,8 @@ class UserFunction:
         try:
             # if we have front end, we need to fetch new list
             # self.sorted_song_list, self.song_playing = self.get_song_list_api()
-            song_select = self.sorted_song_list[song_id - 1]["songName"]
-            response = requests.post(self.select_url, json={"songName": song_select})
+            song_select = self.sorted_song_list[song_id - 1]["songKey"]
+            response = requests.post(self.select_url, json={"songKey": song_select})
             if response.status_code == 200:
                 response_json = json.loads(response.content)
                 self.sorted_song_list = response_json["songlist"]
@@ -455,8 +457,8 @@ class UserFunction:
         try:
             # if we have front end, we need to fetch new list
             # self.sorted_song_list, self.song_playing = self.get_song_list_api()
-            song_select = self.sorted_song_list[song_id - 1]["songName"]
-            response = requests.post(self.delete_url, json={"songName": song_select})
+            song_select = self.sorted_song_list[song_id - 1]["songKey"]
+            response = requests.post(self.delete_url, json={"songKey": song_select})
             if response.status_code == 200:
                 response_json = json.loads(response.content)
                 self.sorted_song_list = response_json["songlist"]
