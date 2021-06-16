@@ -502,3 +502,26 @@ class UserFunction:
             await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin")
             print(f"[LOTO] [{self.get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
             self.player_lotto_list = []
+
+    # misc function
+    async def update_submonth(self, username, rawdata):
+        submonth = 0
+        try:
+            submonth = int(re.search("(?<=subscriber/)([0-9]+)", rawdata)[0])
+        except:
+            return
+        if submonth > 0:
+            if self.db_manager.check_exist(username):
+                userdata = self.db_manager.retrieve(username)
+                userdata["submonth"] = submonth
+                self.db_manager.update(userdata)
+                print(f"[INFO] [{self.get_timestamp()}] Update {username} submonth to {submonth} months")
+            else:
+                userdata = {
+                    "username": username,
+                    "coin": 0,
+                    "watchtime": 0,
+                    "submonth": submonth
+                }
+                self.db_manager.insert(userdata)
+                print(f"[INFO] [{self.get_timestamp()}] Insert {username} with submonth {submonth} months")
