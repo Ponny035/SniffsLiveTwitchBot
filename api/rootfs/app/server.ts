@@ -228,18 +228,17 @@ router.post("/api/v1/clear", async({request, response}: {request: any, response:
         const req: Confirm = await body.value
         if(req.confirm){
             songList = []
+            nowPlaying = {
+                songKey: "",
+                songName: "",
+                vote: 0,
+                ts: new Date()
+            }
             response.status = 200
-            if(nowPlaying.songName !== ""){
-                response.body = {
-                    success: true,
-                    songlist: [],
-                    nowplaying: nowPlaying
-                }
-            }else{
-                response.body = {
-                    success: true,
-                    songlist: []
-                }
+            response.body = {
+                success: true,
+                songlist: [],
+                nowplaying: nowPlaying
             }
         }
     }else{
