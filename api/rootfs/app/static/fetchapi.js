@@ -1,7 +1,7 @@
 /*jshint esversion: 8 */
 
 // declare variables
-const fetchUrl = "http://34.126.171.69:8000/api/v1/songlist";
+const fetchUrl = "http://songfeed.picturo.us:8000/api/v1/songlist";
 // const fetchUrl = "http://localhost:8000/api/v1/songlist";
 let songList = [];
 let nowPlaying = {};
@@ -22,7 +22,7 @@ async function getSongList(url){
 }
 
 // declares const class name
-const containerClass = "columns is-mobile is-size-5 has-text-weight-semibold";
+const containerClass = "columns is-mobile is-size-5 has-text-weight-semibold mb-3";
 const listClass = "column has-text-centered p-0";
 const nameClass = "column is-three-fifths p-0 nowrap-text";
 const scoreClass = "column is-one-quarter has-text-centered p-0";
@@ -71,11 +71,12 @@ function generateSongList(songList, index){
         }
         var noElement = document.createElement("div");
         noElement.className = containerClass + modClass;
+        noElement.classList.remove("mb-3");
         noElement.id = "emptylist";
 
         var nosongElement = document.createElement("div");
         nosongElement.className = "column has-text-centered p-0";
-        nosongElement.innerHTML = "ยังไม่มีเพลงที่ขอเข้ามา ขอเพลง !sr กันเข้ามา";
+        nosongElement.innerHTML = "ยังไม่มีเพลง ขอเพลง !sr กันเข้ามา";
 
         songListElement.appendChild(noElement);
         noElement.appendChild(nosongElement);
@@ -86,7 +87,7 @@ function generateSongList(songList, index){
 function generateNowPlaying(song){
     var nowPlayingListElement = document.getElementById("nowplaying-title");
 
-    if(song.songName !== ""){
+    if(song !== undefined){
         modnoClass = " is-hidden";
         modSongClass = "";
         songName = song.songName;
@@ -101,9 +102,13 @@ function generateNowPlaying(song){
     containerElement.className = containerClass + modSongClass;
     containerElement.id = "nowplaying";
 
-    var gifElement = document.createElement("div");
-    gifElement.className = listClass+" gif-nowplaying";
-    gifElement.innerHTML = "I>";
+    var imgElement = document.createElement("div");
+    imgElement.className = listClass;
+    var pngElement = document.createElement("img");
+    pngElement.setAttribute("width", "24");
+    pngElement.setAttribute("height", "24");
+    pngElement.src = "/play.png";
+    imgElement.appendChild(pngElement);
 
     var nameElement = document.createElement("div");
     nameElement.className = nameClass;
@@ -116,7 +121,7 @@ function generateNowPlaying(song){
     voteElement.id = "nowplayingVote";
     
     nowPlayingListElement.appendChild(containerElement);
-    containerElement.appendChild(gifElement);
+    containerElement.appendChild(imgElement);
     containerElement.appendChild(nameElement);
     containerElement.appendChild(voteElement);
 
@@ -126,7 +131,7 @@ function generateNowPlaying(song){
 
     var nosongElement = document.createElement("div");
     nosongElement.className = "column has-text-centered p-0";
-    nosongElement.innerHTML = "ยังไม่มีเพลงที่เล่นน้า ขอเพลง !sr กันเข้ามา";
+    nosongElement.innerHTML = "ยังไม่มีเพลงที่เล่นน้า";
 
     nowPlayingListElement.appendChild(noElement);
     noElement.appendChild(nosongElement);
@@ -171,7 +176,7 @@ function refreshNowPlaying(song){
     var nameElement = document.getElementById("nowplayingName");
     var voteElement = document.getElementById("nowplayingVote");
     var noElement = document.getElementById("noplaying");
-    if(song.songName !== ""){
+    if(song !== undefined){
         nameElement.innerHTML = song.songName;
         voteElement.innerHTML = song.vote.toString()+" คะแนน";
         if(containerElement.classList.contains("is-hidden")){
@@ -209,8 +214,8 @@ setInterval(function(){
     promise = promise.then(getSongList(fetchUrl).then(response =>{
         songList = response.songlist;
         nowPlaying = response.nowplaying;
-        console.log(songList);
-        console.log(nowPlaying);
+        // console.log(songList);
+        // console.log(nowPlaying);
         refreshSongList(songList);
         refreshNowPlaying(nowPlaying);
     }));
