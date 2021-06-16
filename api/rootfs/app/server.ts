@@ -234,17 +234,46 @@ router.post("/api/v1/clear", async({request, response}: {request: any, response:
         const req: Confirm = await body.value
         if(req.confirm){
             songList = []
+            response.status = 200
+            if(nowPlaying.songName !== ""){
+                response.body = {
+                    success: true,
+                    songlist: [],
+                    nowplaying: nowPlaying    
+                }
+            }else{
+                response.body = {
+                    success: true,
+                    songlist: []
+                }
+            }
+        }
+    }else{
+        response.status = 404
+        response.body = {
+            success: false,
+            msg: "no data input"
+        }
+    }
+})
+
+// @desc POST rem now playing
+router.post("/api/v1/rem", async({request, response}: {request: any, response: any}) =>{
+    if(request.hasBody){
+        const body = request.body()
+        const req: Confirm = await body.value
+        if(req.confirm){
             nowPlaying = {
                 songKey: "",
                 songName: "",
                 vote: 0,
                 ts: new Date()
             }
+            const sortedSongList = sortSongList(songList)
             response.status = 200
             response.body = {
                 success: true,
-                songlist: [],
-                nowplaying: nowPlaying
+                songlist: sortedSongList
             }
         }
     }else{
