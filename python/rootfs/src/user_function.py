@@ -239,9 +239,9 @@ class UserFunction:
         point_to_add = int((bits / self.bit_to_point) * (1 + mod_rate))
         if point_to_add > 0:
             self.add_coin(username, point_to_add)
-            send_message(f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit")
+            await send_message(f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit")
         else:
-            send_message(f"ขอบคุณ @{username} สำหรับ {bits} บิทค้าาา")
+            await send_message(f"ขอบคุณ @{username} สำหรับ {bits} บิทค้าาา")
 
     # mod function
     async def call_to_hell(self, usernames, exclude_list, timeout):
