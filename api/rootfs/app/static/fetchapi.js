@@ -86,7 +86,7 @@ function generateSongList(songList, index){
 function generateNowPlaying(song){
     var nowPlayingListElement = document.getElementById("nowplaying-title");
 
-    if(song){
+    if(song.songName !== ""){
         modnoClass = " is-hidden";
         modSongClass = "";
         songName = song.songName;
@@ -171,7 +171,7 @@ function refreshNowPlaying(song){
     var nameElement = document.getElementById("nowplayingName");
     var voteElement = document.getElementById("nowplayingVote");
     var noElement = document.getElementById("noplaying");
-    if(song){
+    if(song.songName !== ""){
         nameElement.innerHTML = song.songName;
         voteElement.innerHTML = song.vote.toString()+" คะแนน";
         if(containerElement.classList.contains("is-hidden")){
