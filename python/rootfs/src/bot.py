@@ -120,6 +120,7 @@ class TwitchBot(commands.Bot,):
         if ctx.author.name.lower() != self.NICK:
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
+            await self.user_function.update_submonth(ctx.author.name.lower(), ctx.raw_data)
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
             await self.automod.auto_mod(ctx.author.name.lower(), (ctx.author.is_mod or ctx.author.is_subscriber == 1), ctx.content, ctx.raw_data, self.send_message, self.channel)
             await self.handle_commands(ctx)
