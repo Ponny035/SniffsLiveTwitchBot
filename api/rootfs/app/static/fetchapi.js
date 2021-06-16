@@ -1,7 +1,7 @@
 /*jshint esversion: 8 */
 
 // declare variables
-const fetchUrl = "http://34.126.171.69:8000/api/v1/songlist";
+const fetchUrl = "http://songfeed.picturo.us:8000/api/v1/songlist";
 // const fetchUrl = "http://localhost:8000/api/v1/songlist";
 let songList = [];
 let nowPlaying = {};
@@ -214,8 +214,8 @@ setInterval(function(){
     promise = promise.then(getSongList(fetchUrl).then(response =>{
         songList = response.songlist;
         nowPlaying = response.nowplaying;
-        console.log(songList);
-        console.log(nowPlaying);
+        // console.log(songList);
+        // console.log(nowPlaying);
         refreshSongList(songList);
         refreshNowPlaying(nowPlaying);
     }));
