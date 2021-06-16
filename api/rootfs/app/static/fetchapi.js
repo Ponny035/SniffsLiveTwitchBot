@@ -22,10 +22,10 @@ async function getSongList(url){
 }
 
 // declares const class name
-const containerClass = "columns is-mobile is-size-6 has-text-weight-semibold";
+const containerClass = "columns is-mobile is-size-5 has-text-weight-semibold";
 const listClass = "column has-text-centered p-0";
 const nameClass = "column is-three-fifths p-0 nowrap-text";
-const scoreClass = "column is-one-quarter has-text-right p-0";
+const scoreClass = "column is-one-quarter has-text-centered p-0";
 
 // generate song list element
 function generateSongList(songList, index){

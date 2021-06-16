@@ -66,6 +66,14 @@ function sortSongList(songList: Song[]): Song[] {
     return sortedList
 }
 
+// serve static
+app.use(async(ctx) =>{
+    await send(ctx, ctx.request.url.pathname, {
+        root: `${Deno.cwd()}/static`,
+        index: "index.html",
+    })
+})
+
 // @desc GET all sorted song list
 router.get("/api/v1/songlist", ({response}: {response: any}) =>{
     const sortedSongList = sortSongList(songList)
@@ -117,7 +125,6 @@ router.post("/api/v1/vote", async({request, response}: {request: any, response: 
                 songlist: sortedSongList
             }
         }
-        console.log(response.body)
     }else{
         response.status = 404
         response.body = {
@@ -133,7 +140,6 @@ router.post("/api/v1/select", async({request, response}: {request: any, response
     if(request.hasBody){
         const body = request.body()
         const req: Req = await body.value
-        console.log(req.songKey)
         const index: number | undefined = songList.findIndex(name => name.songKey === req.songKey)
         if(index !== -1){
             nowPlaying = songList[index]

@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
 <html>
     <head>
         <meta charset="utf-8">
@@ -10,22 +6,21 @@
         <title>Sniffslive Song Request Feed</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.css" />
-        <link rel="stylesheet" href="songfeed.css" />
+        <link rel="stylesheet" href="/songfeed.css" />
     </head>
     <body>
-        <!--[if lt IE 7]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-        <div id="song-list" class="columns mb-0">
-            <div id="list-title" class="column">
-                <p class="has-text-centered is-size-3 has-text-weight-bold mb-4"><u>List เพลงจากต้าวๆ</u></p>
+        <div class="stickynote">
+            <div id="song-list" class="columns mb-0">
+                <div id="list-title" class="column">
+                    <p class="has-text-centered is-size-3 has-text-weight-bold mb-4"><u>List เพลงจากต้าวๆ</u></p>
+                </div>
+            </div>
+            <div id="nowplaying-list" class="columns">
+                <div id="nowplaying-title" class="column">
+                    <p class="has-text-centered is-size-3 has-text-weight-bold mb-4"><u>Now Playing</u></p>
+                </div>
             </div>
         </div>
-        <div id="nowplaying-list" class="columns">
-            <div id="nowplaying-title" class="column">
-                <p class="has-text-centered is-size-3 has-text-weight-bold mb-4"><u>Now Playing</u></p>
-            </div>
-        </div>
-        <script src="fetchapi.js"></script>
+        <script src="/fetchapi.js"></script>
     </body>
 </html>
