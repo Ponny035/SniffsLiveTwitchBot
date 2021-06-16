@@ -178,7 +178,7 @@ function refreshNowPlaying(song){
             containerElement.classList.remove("is-hidden");
         }
         if(!(noElement.classList.contains("is-hidden"))){
-            containerElement.classList.add("is-hidden");
+            noElement.classList.add("is-hidden");
         }
     }else{
         nameElement.innerHTML = "No Song";
@@ -187,7 +187,7 @@ function refreshNowPlaying(song){
             containerElement.classList.add("is-hidden");
         }
         if(noElement.classList.contains("is-hidden")){
-            containerElement.classList.remove("is-hidden");
+            noElement.classList.remove("is-hidden");
         }
     }
 }
