@@ -125,7 +125,7 @@ class TwitchBot(commands.Bot,):
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):
-        await self.user_function.add_point_by_bit(data["username"], data["bits"], self.send_message)
+        await self.user_function.add_point_by_bit(data["username"], data["bits"], data["submonth"], self.send_message)
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()

@@ -55,12 +55,17 @@ class EventTrigger:
             bits = int(tags["bits"])
         except:
             pass
+        try:
+            submonth = int(tags["@badge-info"].split("subscriber/")[1])
+        except:
+            submonth = 0
         if bits > 0:
             print(f"[BITS] [{timestamp.replace(microsecond=0)}] {username}: {bits} bits")
             result = {
                 "username": username,
                 "timestamp": timestamp.replace(microsecond=0),
-                "bits": bits
+                "bits": bits,
+                "submonth": submonth
             }
             await event_bit(result)
 
