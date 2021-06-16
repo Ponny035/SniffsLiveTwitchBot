@@ -30,7 +30,7 @@ class UserFunction:
         self.coin_join_before_live = 5
         self.sub_to_point = 10  # 1 sub for 10 point
         self.bit_to_point = 50  # 50 bits for 1 point
-        self.watchtime_to_point = 10  # 10 min to 1 point
+        self.watchtime_to_point = 60  # 10 min to 1 point
         self.cooldown = 20
 
     def get_timestamp(self):
@@ -231,8 +231,12 @@ class UserFunction:
         print(f"[COIN] [{self.get_timestamp()}] {recipent} receive {self.sub_to_point} sniffscoin by anongiftsub")
         return [response1, response2]
 
-    async def add_point_by_bit(self, username, bits, send_message):
-        point_to_add = int(bits / self.bit_to_point)
+    async def add_point_by_bit(self, username, bits, submonth, send_message):
+        if submonth > 0:
+            mod_rate = min(submonth, 6) / 100
+        else:
+            mod_rate = 0
+        point_to_add = int((bits / self.bit_to_point) * (1 + mod_rate))
         if point_to_add > 0:
             self.add_coin(username, point_to_add)
             send_message(f"@{username} ได้รับ {point_to_add} sniffscoin จากการ Bit จำนวน {bits} bit")

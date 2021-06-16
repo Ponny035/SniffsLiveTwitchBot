@@ -17,6 +17,7 @@ app.use(async (ctx, next) =>{
     await next()
     const ms = Date.now() - start
     ctx.response.headers.set("X-Response-Time", `${ms}ms`)
+    ctx.response.headers.append("Access-Control-Allow-Origin", "*")
 })
 
 app.use(router.routes())
