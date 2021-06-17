@@ -3,6 +3,8 @@
 // declare variables
 const fetchUrl = "http://songfeed.picturo.us:8000/api/v1/songlist";
 // const fetchUrl = "http://localhost:8000/api/v1/songlist";
+const websocketUrl = "ws://songfeed.picturo.us:8000/ws";
+// const websocketUrl = "ws://localhost:8000/ws";
 let songList = [];
 let nowPlaying = "nothing";
 let oldSongList = [];
@@ -196,7 +198,7 @@ function refreshNowPlaying(song){
     }
 }
 
-const ws = new WebSocket("ws://localhost:8000/ws");
+const ws = new WebSocket(websocketUrl);
 let firstConnect = true;
 ws.addEventListener("message", function(event){
     response = (JSON.parse(event.data));
