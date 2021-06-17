@@ -15,6 +15,9 @@ services:
             sniffs.bot:
         depends_on:
             - web
+        environment:
+            - env
+            - msg
 
 networks:
     sniffs.bot:
