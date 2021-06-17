@@ -493,7 +493,7 @@ class UserFunction:
     # lotto system
     async def buy_lotto(self, username, lotto, send_message):
         lotto_cost = 5
-        if (re.match(r"[0-9]{5}", lotto) is not None) and (len(lotto) == 5):
+        if (re.match(r"[0-9]{4}", lotto) is not None) and (len(lotto) == 4):
             if self.db_manager.check_exist(username):
                 userstat = self.db_manager.retrieve(username)
                 if userstat["coin"] >= lotto_cost:
