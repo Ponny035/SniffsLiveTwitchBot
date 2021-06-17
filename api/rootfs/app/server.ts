@@ -1,4 +1,11 @@
 import { Application, Router, send } from "https://deno.land/x/oak@v7.5.0/mod.ts"
+import { queryList,
+         songVote,
+         selectSong,
+         deleteSong,
+         clearList,
+         removeNowPlaying } from "./songselector.ts"
+import { handleSocket } from "./wsServer.ts"
 
 const port = 8000
 const app = new Application()
@@ -41,31 +48,6 @@ interface Confirm {
     confirm: boolean
 }
 
-// declare nowPlaying variable
-let nowPlaying: Song = {
-    songKey: "",
-    songName: "",
-    vote: 0,
-    ts: new Date()
-}
-
-// declare songList variable
-let songList: Song[] = []
-
-// function to return sort song list
-function sortSongList(songList: Song[]): Song[] {
-    var sortedList: Song[] = songList.sort((vote1, vote2) =>{
-        if(vote1.vote > vote2.vote) return -1
-        if(vote1.vote < vote2.vote) return 1
-    
-        if(vote1.ts < vote2.ts) return -1
-        if(vote1.ts > vote2.ts) return 1
-    
-        return 0
-    })
-    return sortedList
-}
-
 // serve static
 app.use(async(ctx) =>{
     await send(ctx, ctx.request.url.pathname, {
@@ -74,22 +56,17 @@ app.use(async(ctx) =>{
     })
 })
 
+// @desc GET handle WS
+router.get("/ws", async (ctx: any) =>{
+    const sock = await ctx.upgrade();
+    handleSocket(sock);
+})
+
 // @desc GET all sorted song list
 router.get("/api/v1/songlist", ({response}: {response: any}) =>{
-    const sortedSongList = sortSongList(songList)
-    response.status = 200
-    if(nowPlaying.songName !== ""){
-        response.body = {
-            success: true,
-            songlist: sortedSongList,
-            nowplaying: nowPlaying
-        }
-    }else{
-        response.body = {
-            success: true,
-            songlist: sortedSongList
-        }
-    }
+    const res = queryList()
+    response.status = res.status
+    response.body = res.response
 })
 
 // @desc POST insert song / vote to song list
@@ -97,42 +74,14 @@ router.post("/api/v1/vote", async({request, response}: {request: any, response: 
     if(request.hasBody){
         const body = request.body()
         const song: Song = await body.value
-        let vote = 1
-        let index: number | undefined = songList.findIndex(name => name.songKey === song.songKey)
-        if(index !== -1){
-            songList[index].vote += song.vote
-            vote = songList[index].vote
-        }else{
-            song.ts = new Date(song.ts)
-            songList.push(song)
-            vote = 1
-        }
-        const sortedSongList = sortSongList(songList)
-        response.status = 200
-        if(nowPlaying.songName !== ""){
-            response.body = {
-                success: true,
-                songname: song.songName,
-                songvote: vote,
-                songlist: sortedSongList,
-                nowplaying: nowPlaying
-            }
-        }else{
-            response.body = {
-                success: true,
-                songname: song.songName,
-                songvote: vote,
-                songlist: sortedSongList
-            }
-        }
+        response.body = songVote(song)
     }else{
         response.status = 404
         response.body = {
             success: false,
             msg: "no data input"
         }
-    }
-    
+    }  
 })
 
 // @desc POST select song
@@ -140,35 +89,9 @@ router.post("/api/v1/select", async({request, response}: {request: any, response
     if(request.hasBody){
         const body = request.body()
         const req: Req = await body.value
-        const index: number | undefined = songList.findIndex(name => name.songKey === req.songKey)
-        if(index !== -1){
-            nowPlaying = songList[index]
-            songList = songList.filter(name => name.songKey !== req.songKey)
-            const sortedSongList = sortSongList(songList)
-            response.status = 200
-            response.body = {
-                success: true,
-                songlist: sortedSongList,
-                nowplaying: nowPlaying
-            }
-        }else{
-            console.log("[SEL] not found "+req.songKey)
-            const sortedSongList = sortSongList(songList)
-            response.status = 404
-            if(nowPlaying.songName !== ""){
-                response.body = {
-                    success: false,
-                    songlist: sortedSongList,
-                    nowplaying: nowPlaying
-                }
-            }else{
-                response.body = {
-                    success: false,
-                    songlist: sortedSongList
-                }
-            }
-            
-        }
+        const res = selectSong(req)
+        response.status = res.status
+        response.body = res.response
     }else{
         response.status = 404
         response.body = {
@@ -176,7 +99,6 @@ router.post("/api/v1/select", async({request, response}: {request: any, response
             msg: "no data input"
         }
     }
-    
 })
 
 // @desc POST delete song by songname
@@ -184,40 +106,9 @@ router.post("/api/v1/del", async({request, response}: {request: any, response: a
     if(request.hasBody){
         const body = request.body()
         const req: Req = await body.value
-        const index: number | undefined = songList.findIndex(name => name.songKey === req.songKey)
-        if(index !== -1){
-            songList = songList.filter(name => name.songKey !== req.songKey)
-            const sortedSongList = sortSongList(songList)
-            response.status = 200
-            if(nowPlaying.songName !== ""){
-                response.body = {
-                    success: true,
-                    songlist: sortedSongList,
-                    nowplaying: nowPlaying
-                }
-            }else{
-                response.body = {
-                    success: true,
-                    songlist: sortedSongList
-                }
-            }
-        }else{
-            console.log("[DEL] not found "+req.songKey)
-            const sortedSongList = sortSongList(songList)
-            response.status = 404
-            if(nowPlaying.songName !== ""){
-                response.body = {
-                    success: false,
-                    songlist: sortedSongList,
-                    nowplaying: nowPlaying
-                }
-            }else{
-                response.body = {
-                    success: false,
-                    songlist: sortedSongList
-                }
-            }
-        }
+        const res = deleteSong(req)
+        response.status = res.status
+        response.body = res.response
     }else{
         response.status = 404
         response.body = {
@@ -232,22 +123,9 @@ router.post("/api/v1/clear", async({request, response}: {request: any, response:
     if(request.hasBody){
         const body = request.body()
         const req: Confirm = await body.value
-        if(req.confirm){
-            songList = []
-            response.status = 200
-            if(nowPlaying.songName !== ""){
-                response.body = {
-                    success: true,
-                    songlist: [],
-                    nowplaying: nowPlaying    
-                }
-            }else{
-                response.body = {
-                    success: true,
-                    songlist: []
-                }
-            }
-        }
+        const res = clearList(req)
+        response.status = res.status
+        response.body = res.response
     }else{
         response.status = 404
         response.body = {
@@ -262,20 +140,9 @@ router.post("/api/v1/rem", async({request, response}: {request: any, response: a
     if(request.hasBody){
         const body = request.body()
         const req: Confirm = await body.value
-        if(req.confirm){
-            nowPlaying = {
-                songKey: "",
-                songName: "",
-                vote: 0,
-                ts: new Date()
-            }
-            const sortedSongList = sortSongList(songList)
-            response.status = 200
-            response.body = {
-                success: true,
-                songlist: sortedSongList
-            }
-        }
+        const res = removeNowPlaying(req)
+        response.status = res.status
+        response.body = res.response
     }else{
         response.status = 404
         response.body = {

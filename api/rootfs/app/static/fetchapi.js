@@ -4,7 +4,7 @@
 const fetchUrl = "http://songfeed.picturo.us:8000/api/v1/songlist";
 // const fetchUrl = "http://localhost:8000/api/v1/songlist";
 let songList = [];
-let nowPlaying = {};
+let nowPlaying = "nothing";
 let oldSongList = [];
 let oldNowPlaying = [];
 
@@ -86,17 +86,16 @@ function generateSongList(songList, index){
 // generate now playing element
 function generateNowPlaying(song){
     var nowPlayingListElement = document.getElementById("nowplaying-title");
-
-    if(song !== undefined){
-        modnoClass = " is-hidden";
-        modSongClass = "";
-        songName = song.songName;
-        vote = song.vote;
-    }else{
+    if(song === "nothing" || song === undefined){
         modnoClass = "";
         modSongClass = " is-hidden";
         songName = "No Song";
         vote = 0;
+    }else{
+        modnoClass = " is-hidden";
+        modSongClass = "";
+        songName = song.songName;
+        vote = song.vote;
     }
     var containerElement = document.createElement("div");
     containerElement.className = containerClass + modSongClass;
@@ -197,7 +196,17 @@ function refreshNowPlaying(song){
     }
 }
 
-// fetch first list
+const ws = new WebSocket("ws://localhost:8000/ws");
+let firstConnect = true;
+ws.addEventListener("message", function(event){
+    response = (JSON.parse(event.data));
+    songList = response.songlist;
+    nowPlaying = response.nowplaying;
+    refreshSongList(songList);
+    refreshNowPlaying(nowPlaying);
+});
+
+// // fetch first list
 getSongList(fetchUrl).then(response =>{
     songList = response.songlist;
     nowPlaying = response.nowplaying;
@@ -206,17 +215,3 @@ getSongList(fetchUrl).then(response =>{
     }
     generateNowPlaying(nowPlaying);
 });
-
-// promise fetch interval
-var promise = Promise.resolve(true);
-
-setInterval(function(){
-    promise = promise.then(getSongList(fetchUrl).then(response =>{
-        songList = response.songlist;
-        nowPlaying = response.nowplaying;
-        // console.log(songList);
-        // console.log(nowPlaying);
-        refreshSongList(songList);
-        refreshNowPlaying(nowPlaying);
-    }));
-}, 1000);
