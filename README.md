@@ -1,5 +1,5 @@
 # SniffsLiveTwitchBot
-This is sniffs twitch bot made only for Sniffslive Chanel
+This is sniffs twitch bot made only for Sniffslive Channel
 
 ## Twitchbot
 
