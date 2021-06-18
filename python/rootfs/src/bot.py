@@ -114,7 +114,6 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{self.get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
         await self.activate_point_system("stop")
-        await self.user_function.delete_songlist()
 
     async def event_message(self, ctx):
         if ctx.author.name.lower() != self.NICK:
@@ -345,7 +344,7 @@ class TwitchBot(commands.Bot,):
                 self.user_function.set_cooldown(ctx.author.name.lower(), "song_request")
                 await self.user_function.user_song_request(ctx.content, self.get_timestamp(), ctx.author.name.lower(), self.send_message)
 
-    # !song req on | !song req off | !song list | !song sel {song-id} | !song clear | !song del {song-id}
+    # !song req on | !song req off | !song sel {song-id} | !song clear | !song del {song-id} | !song delnp
     @commands.command(name="song")
     async def song_request(self, ctx):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
@@ -365,14 +364,16 @@ class TwitchBot(commands.Bot,):
                 elif not self.request_status and command2 == "on":
                     self.request_status = True
                     await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
-            elif command1 == "list":
-                    await self.user_function.get_song_list(self.send_message)
+            # elif command1 == "list":
+            #         await self.user_function.get_song_list(self.send_message)
             elif command1 == "clear":
                 await self.user_function.delete_songlist(self.send_message)
             elif command1 == "del" and command2 is not None:
                 await self.user_function.delete_song(command2, self.send_message)
             elif command1 == "sel" and command2 is not None:
                 await self.user_function.select_song(command2, self.send_message)
+            elif command1 == "delnp":
+                await self.user_function.remove_nowplaying(self.send_message)
 
     @commands.command(name="np")
     async def get_song(self, ctx):
