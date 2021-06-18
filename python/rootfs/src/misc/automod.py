@@ -1,15 +1,14 @@
 # from typing import Dict, Optional, Union
 # from dataclasses import dataclass
 # from contextlib import contextmanager
-from collections import defaultdict #second choice of try
-# from . import db 
+# from collections import defaultdict  # second choice of try
+# from . import db
 # import warnings
 from datetime import datetime
 import re
 # import logging
 
 # log = logging.getLogger(__name__)
-
 
 
 # @dataclass
@@ -40,7 +39,7 @@ import re
 
 #     if a is None:
 #         return b
-    
+
 #     if b is None:
 #         return a
 
@@ -48,9 +47,9 @@ import re
 
 
 # class ModerationActions:
-#     #login -> action excute
+#     # login -> action excute
 #     actions: Dict[str, ModerationAction]
-    
+
 #     def __init__(self) -> None:
 #         super().__init__()
 #         self.actions = {}
@@ -63,39 +62,39 @@ import re
 #         existing_action = self.actions[login]
 
 #         if isinstance(action, Ban):
-#             #combine the two
+#             # combine the two
 #             self.actions[login] = Ban(reason=_combine_resons(existing_action.reason, action.reason))
 #         else:
-#             #ban lower tier action
+#             # ban lower tier action
 #             self.actions[login] = action
 #         return
 
 #         if isinstance(action, Timeout):
 #             if isinstance(existing_action, Ban):
-#                 #Existing action is higher-tier
+#                 # Existing action is higher-tier
 #                 return
-            
+
 #             if isinstance(existing_action,Timeout):
-#                 #combine two
+#                 # combine two
 #                 self.actions[login] = Timeout(
 #                     duration=max(action.duration, existing_action.duration),
 #                     reason=_combine_resons(existing_action.reason, action.reason),
 #                     once=existing_action.once and action.once,
 #                 )
 #             else:
-#                 #timeout lower tier action
+#                 # timeout lower tier action
 #                 self.actions[login] = action
 #             return
 
 #             if isinstance(action, Unban):
 #                 if isinstance(existing_action, Ban) or isinstance(existing_action, Timeout):
-#                     #exist action is higher tier
+#                     # exist action is higher tier
 #                     return
 
 #                 if isinstance(existing_action, Unban):
 #                     pass
 #                 return
-    
+
 #     def execute(self, bot) -> None:
 #         for login, action in self.actions.items():
 #             if isinstance(action, Ban):
@@ -111,7 +110,7 @@ import re
 # @contextmanager
 # def new_message_processing_scope(bot):
 #     bot.thread_locals.moderation_actions = ModerationActions()
-    
+
 #     try:
 #         yield
 #     finally:
@@ -121,7 +120,6 @@ import re
 #             mod_actions.execute(bot)
 #         except:
 #             log.exception("Faild to execute moderation action after messsage process scope end")
-
 
 
 class automod:
@@ -149,7 +147,7 @@ class automod:
         #     await self.warn(user, send_message, mod_action, warning_curses_timers, reason="curses")
         if not role:  # not mod or subscriber
             test_url1 = re.match("https?://", message)
-            test_url2 = re.match("[A-z]+\.(com|org|in|co|tv|us)", message)  # need to fine tune regex
+            test_url2 = re.match(r"[A-z]+\.(com|org|in|co|tv|us)", message)  # need to fine tune regex
             test_result = bool(test_url1 or test_url2)
             if test_result:
                 warning_link_timers = (0, 0, 1, 5, 10, 30, 60)
