@@ -20,6 +20,7 @@ class UserFunction:
         self.player_lotto_list = []
         self.song_playing = None
         self.channel_live = False
+        self.song_feed_on = True
 
         self.list_url = 'http://api-server:8000/api/v1/songlist'
         self.vote_url = 'http://api-server:8000/api/v1/vote'
@@ -364,21 +365,22 @@ class UserFunction:
             song_playing = None
         return sorted_song_list, song_playing
 
-    # async def get_song_list(self, send_message):
-    #     self.sorted_song_list, self.song_playing = self.get_song_list_api()
-    #     if self.sorted_song_list != []:
-    #         max_song_list = min(len(self.sorted_song_list), 5)
-    #         for i in range(0, max_song_list):
-    #             await send_message(f"[{i + 1}] {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} คะแนน")
-    #             print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} point")
-    #     else:
-    #         await send_message("ยังไม่มีเพลงในคิวจ้า")
+    async def get_song_list(self, send_message):
+        self.sorted_song_list, self.song_playing = self.get_song_list_api()
+        if self.sorted_song_list != []:
+            max_song_list = min(len(self.sorted_song_list), 5)
+            for i in range(0, max_song_list):
+                await send_message(f"[{i + 1}] {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} คะแนน")
+                print(f"[SONG] [{self.get_timestamp()}] {i + 1} {self.sorted_song_list[i]['songName']} {self.sorted_song_list[i]['vote']} point")
+        else:
+            await send_message("ยังไม่มีเพลงในคิวจ้า")
 
     async def select_song(self, song_id, send_message):
         song_id = int(song_id)
         try:
             # if we have front end, we need to fetch new list
-            self.sorted_song_list, self.song_playing = self.get_song_list_api()
+            if self.song_feed_on:
+                self.sorted_song_list, self.song_playing = self.get_song_list_api()
             song_select = self.sorted_song_list[song_id - 1]["songKey"]
             response = requests.post(self.select_url, json={"songKey": song_select})
             if response.status_code == 200:
@@ -436,7 +438,8 @@ class UserFunction:
         song_id = int(song_id)
         try:
             # if we have front end, we need to fetch new list
-            self.sorted_song_list, self.song_playing = self.get_song_list_api()
+            if self.song_feed_on:
+                self.sorted_song_list, self.song_playing = self.get_song_list_api()
             song_select = self.sorted_song_list[song_id - 1]["songKey"]
             response = requests.post(self.delete_url, json={"songKey": song_select})
             if response.status_code == 200:
@@ -465,6 +468,14 @@ class UserFunction:
         except IndexError:
             await send_message("ไม่มีเพลงนี้น้า")
             print(f"[SONG] [{self.get_timestamp()}] No song in list // out of range")
+
+    async def song_feed(self, status, send_message):
+        if (not self.song_feed_on) and status:
+            self.song_feed_on = status
+            await send_message("เปิดระบบ Songfeed แล้วจ้า")
+        elif self.song_feed_on and (not status):
+            self.song_feed_on = status
+            await send_message("ปิดระบบ Songfeed แล้วจ้า ใช้ !song list เพื่อดูรายชื่อเพลง")
 
     # cooldown related system
     def set_cooldown(self, username, command):
