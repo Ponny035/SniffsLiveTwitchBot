@@ -1,35 +1,31 @@
+import os
+
 from mysql.connector import connect, Error
 
 
 class DBManager:
-    def __init__(self, environment):
+    def __init__(self):
 
-        self.environment = environment
+        self.environment = os.environ.get("env", "")
         self.table = "User_Info"
         self.connect_db = None
         self.cursor = None
 
         try:
-            if(environment == "dev"):
+            if(self.environment == "dev"):
                 print("Connect db on DEVELOPMENT environment")
-                with open("./data/dev_db", "r", encoding="utf-8") as f:
-                    HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
-                self.connect_db = connect(
-                    host=HOST,
-                    username=USERNAME,
-                    password=PASSWORD,
-                    database=DATABASE
-                )
-            elif(environment == "prod"):
+                # with open("./data/dev_db", "r", encoding="utf-8") as f:
+                #     HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
+            elif(self.environment == "prod"):
                 print("Connect db on PRODUCTION environment")
-                with open("./data/db", "r", encoding="utf-8") as f:
-                    HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
-                self.connect_db = connect(
-                    host=HOST,
-                    username=USERNAME,
-                    password=PASSWORD,
-                    database=DATABASE
-                )
+                # with open("./data/db", "r", encoding="utf-8") as f:
+                #     HOST, USERNAME, PASSWORD, DATABASE = (l.strip() for l in f.readlines())
+            self.connect_db = connect(
+                host=os.environ.get("DB_HOST", ""),
+                username=os.environ.get("DB_USER", ""),
+                password=os.environ.get("DB_PASS", ""),
+                database=os.environ.get("DB_NAME", "")
+            )
             self.cursor = self.connect_db.cursor()
         except Error as e:
             print(e)
@@ -80,7 +76,7 @@ class DBManager:
         except Error as e:
             print(e)
             return None
-    
+
     def update(self, userdata):
         try:
             username = userdata["username"]
@@ -117,7 +113,7 @@ class DBManager:
             return "success"
         except Error as e:
             print(e)
-    
+
     def delete(self, username):
         sql_statement = ('DELETE FROM {} WHERE User_Name = (%s)'.format(self.table))
         try:

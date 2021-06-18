@@ -123,6 +123,9 @@ dev_db
 # Rope project settings
 .ropeproject
 
+# vscode project settings
+.vscode
+
 # mkdocs documentation
 /site
 

@@ -10,4 +10,4 @@ COPY /rootfs /app
 
 RUN pip3 install -r requirements.txt
 
-CMD python3 -u launcher.py $env $msg
+CMD ["python3", "-u", "launcher.py"]

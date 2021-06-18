@@ -1,21 +1,18 @@
-from src import TwitchBot, UserFunction, automod, EventTrigger
-import sys
+import os
 
-def main(environment, dryrun):
-    bot = TwitchBot(environment, dryrun, UserFunction, automod, EventTrigger)
+from src.bot import TwitchBot
+
+
+def main():
+    bot = TwitchBot()
     bot.run()
 
+
 if __name__ == "__main__":
-    environment = sys.argv[1]
+    environment = os.environ.get("env", "")
     try:
         if((environment == "dev") or (environment == "prod")):
-            if environment == "dev":
-                try:
-                    dryrun = sys.argv[2]
-                except IndexError:
-                    dryrun = "msgon"
-            else: dryrun = "msgon"
-            main(environment, dryrun)
+            main()
         else:
             raise TypeError("Only 2 types are allow (dev/production)")
 

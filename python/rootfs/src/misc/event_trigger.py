@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime
-import re
 
 from twitchio.client import Client
 
@@ -53,11 +52,11 @@ class EventTrigger:
         timestamp = datetime.fromtimestamp(int(tags["tmi-sent-ts"]) / 1000)
         try:
             bits = int(tags["bits"])
-        except:
+        except KeyError:
             pass
         try:
             submonth = int(tags["@badge-info"].split("subscriber/")[1])
-        except:
+        except Exception:
             submonth = 0
         if bits > 0:
             print(f"[BITS] [{timestamp.replace(microsecond=0)}] {username}: {bits} bits")
@@ -86,10 +85,7 @@ class EventTrigger:
             plan_name = tags["msg-param-sub-plan-name"].replace("\\s", " ")
         except KeyError:
             plan_name = None
-        try:
-            prime = (plan == "Prime")
-        except:
-            prime = False
+        prime = (plan == "Prime")
         methods = [prime, plan, plan_name]
         try:
             streak_months = tags["msg-param-streak-months"]

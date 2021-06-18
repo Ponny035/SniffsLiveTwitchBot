@@ -18,6 +18,14 @@ services:
         environment:
             - env
             - msg
+            - IRC_TOKEN
+            - API_TOKEN
+            - BOTNICK
+            - CHANNELS
+            - DB_HOST
+            - DB_USER
+            - DB_PASS
+            - DB_NAME
 
 networks:
     sniffs.bot:
