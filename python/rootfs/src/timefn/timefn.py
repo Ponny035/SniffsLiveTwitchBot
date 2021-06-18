@@ -18,9 +18,10 @@ watchtime_to_point = 60
 
 async def activate_point_system(live, starttime=None, usernames=None):
     global channel_live
+    global channel_live_on
+    global watchtime_session
     channel_live = live
     if (live) and (starttime is not None):
-        global channel_live_on
         channel_live_on = starttime
         if usernames is not None:
             for username in usernames:
@@ -84,10 +85,10 @@ def update_user_watchtime(force=False):
                             "submonth": 0
                         }
                         db.insert(userdata)
-                        print(f"[_LOG] {watchtime_session}")
-                        watchtime_session = {}
             except KeyError:
                 pass
+        print(f"[_LOG] {watchtime_session}")
+        watchtime_session = {}
 
 
 async def add_point_by_watchtime():
