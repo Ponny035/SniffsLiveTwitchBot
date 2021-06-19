@@ -1,10 +1,12 @@
 import { WebSocket, isWebSocketCloseEvent } from "https://deno.land/std@0.99.0/ws/mod.ts";
+import { preparedResponse } from "./songselector.ts"
 
 let connections = new Array;
 
 export const handleSocket = async (ws: WebSocket): Promise<void> =>{
     console.log("Websocket connection established")
-    connections.push(ws);
+    connections.push(ws)
+    preparedResponse()
     for await (const event of ws){
         if(isWebSocketCloseEvent(event)){
             connections = connections.filter(websocket => websocket !== ws)
@@ -15,6 +17,6 @@ export const handleSocket = async (ws: WebSocket): Promise<void> =>{
 
 export const broadcastEvents = (event: string) =>{
     for(const websocket of connections){
-        websocket.send(event);
+        websocket.send(event)
     }
 }
