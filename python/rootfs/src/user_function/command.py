@@ -42,6 +42,7 @@ async def call_to_hell(usernames, exclude_list, timeout):
 
 async def shooter(employer, target, dev_list, send_message, timeout):
     global shooter_cooldown
+    dodge_rate = 10
     payrate = 5
     shooter_timeout = random.randint(15, 60)
     exclude_target = [os.environ.get("CHANNELS", ""), os.environ.get("BOTNICK", ""), "sirju001", "moobot", "sniffsbot"] + dev_list
@@ -61,14 +62,20 @@ async def shooter(employer, target, dev_list, send_message, timeout):
             userdata = db.retrieve(employer)
             if userdata["coin"] >= payrate:
                 add_coin(employer, -payrate)
+                if db.check_exist(target):
+                    submonth = db.retrieve(target)["submonth"]
+                    dodge_rate += min(submonth, 6)
                 if target in exclude_target:
                     await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
                     await send_message(f"@{employer} บังอาจนักนะ บินไปเองซะ {shooter_timeout} วินาที")
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
                 else:
-                    await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
-                    await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที")
-                    print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
+                    if random.random() > (dodge_rate / 100):
+                        await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
+                        await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที")
+                        print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
+                    else:
+                        await send_message(f"@{target} หลบมือปืนสนิฟได้ @{employer} เสียใจด้วยนะ (Dodge = {int(dodge_rate)}%)")
             else:
                 if target in exclude_target:
                     await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")

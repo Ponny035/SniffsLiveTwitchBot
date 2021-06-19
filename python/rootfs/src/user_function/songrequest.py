@@ -27,7 +27,20 @@ async def user_song_request(content, timestamp, username, send_message):
     global sorted_song_list
     global song_playing
     cost = 1
-    song_name = re.search("(?<=\\!sr ).+", content)[0]
+    if song_feed_on:
+        sorted_song_list, song_playing = get_song_list_api()
+    try:
+        song_name = re.search("(?<=\\!sr ).+", content)[0]
+    except Exception:
+        song_name = None
+    if (song_name is not None) and (len(song_name) == 1):
+        song_id = re.match("[1-5]", song_name)
+        if song_id is not None:
+            try:
+                song_id = int(song_id[0])
+                song_name = sorted_song_list[song_id - 1]["songKey"]
+            except Exception:
+                return
     if song_name is not None:
         if db.check_exist(username):
             userdata = db.retrieve(username)
