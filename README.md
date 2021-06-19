@@ -23,9 +23,10 @@ DB_NAME=
 
 ```
 
-And use `docker-compose.yml` to start Sniffsbot system `docker-compose up`
+`docker-compose.yml` should have every require parameter to run bot
+
+To start Sniffsbot system use this command `docker-compose up`
 
 ## Songfeed
 
-To access songfeed please edit `api/rootfs/app/static/fetchapi.css` and change `fetchUrl` and `webSocketUrl` to your localserver
-Server is bind on `http://{domain|localhost}:{port|default:8000}/`
+Songfeed Server is bind on `http://{domain|localhost}:{port|default:8000}/`
