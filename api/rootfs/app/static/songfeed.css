@@ -1,13 +1,20 @@
+body {
+    background-color: #00FF00;
+}
 .nowrap-text {
     white-space: nowrap;
     overflow: hidden;
 }
 ::-webkit-scrollbar{
     visibility: hidden;
+    display: none;
 }
 .stickynote{
-    color: black;
+    color: white;
     padding: 0px 20px 0px 20px;
-    height: 310px;
-    background-color: aquamarine;
+    height: 335px;
+    font-weight: 900 !important;
+}
+.text-bolder{
+    font-weight: 900 !important;
 }

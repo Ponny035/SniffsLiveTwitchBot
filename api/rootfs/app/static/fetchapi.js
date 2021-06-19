@@ -24,7 +24,7 @@ async function getSongList(url){
 }
 
 // declares const class name
-const containerClass = "columns is-mobile is-size-5 has-text-weight-semibold mb-3";
+const containerClass = "columns is-mobile is-size-4 text-bolder mb-3";
 const listClass = "column has-text-centered p-0";
 const nameClass = "column is-three-fifths p-0 nowrap-text";
 const scoreClass = "column is-one-quarter has-text-centered p-0";
