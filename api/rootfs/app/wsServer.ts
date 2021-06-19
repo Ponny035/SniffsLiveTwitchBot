@@ -6,17 +6,20 @@ let connections = new Array;
 export const handleSocket = async (ws: WebSocket): Promise<void> =>{
     console.log("Websocket connection established")
     connections.push(ws)
-    preparedResponse()
     for await (const event of ws){
-        if(isWebSocketCloseEvent(event)){
+        if(isWebSocketCloseEvent(event) || event === 'close'){
             connections = connections.filter(websocket => websocket !== ws)
             console.log("Websocket connection closed")
+        }else{
+            preparedResponse()
         }
     }
 }
 
 export const broadcastEvents = (event: string) =>{
     for(const websocket of connections){
-        websocket.send(event)
+        if(!websocket.isClosed){
+            websocket.send(event)
+        }
     }
 }
