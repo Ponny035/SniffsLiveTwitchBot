@@ -75,6 +75,7 @@ async def shooter(employer, target, dev_list, send_message, timeout):
                         await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที")
                         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
                     else:
+                        shooter_cooldown = 0
                         await send_message(f"@{target} หลบมือปืนสนิฟได้ @{employer} เสียใจด้วยนะ (Dodge = {int(dodge_rate)}%)")
             else:
                 if target in exclude_target:

@@ -33,6 +33,13 @@ async def user_song_request(content, timestamp, username, send_message):
         song_name = re.search("(?<=\\!sr ).+", content)[0]
     except Exception:
         song_name = None
+
+    test_url1 = re.match("https?://", song_name)
+    test_url2 = re.match(r"[A-z]+\.(com|org|in|co|tv|us|be)", song_name)
+    test_result = bool(test_url1 or test_url2)
+    if test_result:
+        await send_message(f"@{username} ไม่อนุญาตให้ใส่ลิงค์นะคะ")
+        return False
     if (song_name is not None) and (len(song_name) == 1):
         song_id = re.match("[1-5]", song_name)
         if song_id is not None:
@@ -40,7 +47,7 @@ async def user_song_request(content, timestamp, username, send_message):
                 song_id = int(song_id[0])
                 song_name = sorted_song_list[song_id - 1]["songKey"]
             except Exception:
-                return
+                return False
     if song_name is not None:
         if db.check_exist(username):
             userdata = db.retrieve(username)
@@ -63,8 +70,16 @@ async def user_song_request(content, timestamp, username, send_message):
                     except KeyError:
                         song_playing = None
                     await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
+                    return True
                 elif response.status_code == 404:
                     print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")
+                    return False
+            else:
+                return False
+        else:
+            return False
+    else:
+        return False
 
 
 async def now_playing(username, send_message):

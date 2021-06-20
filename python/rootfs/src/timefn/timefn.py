@@ -69,7 +69,7 @@ def update_user_watchtime(force=False):
             else:
                 user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], channel_live_on)).total_seconds())
     if (not channel_live) and (watchtime_session != {}):
-        print("write watchtime to DB")
+        print(f"[_LOG] [{get_timestamp()}] Write Watchtime to DB")
         for username, user_stat in watchtime_session.items():
             try:
                 if user_stat["watchtime_session"] != 0:
@@ -87,7 +87,7 @@ def update_user_watchtime(force=False):
                         db.insert(userdata)
             except KeyError:
                 pass
-        print(f"[_LOG] {watchtime_session}")
+        print(f"[_LOG] [{get_timestamp()}] Write Watchtime Success")
         watchtime_session = {}
 
 

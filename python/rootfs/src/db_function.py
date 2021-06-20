@@ -30,7 +30,17 @@ class DBManager:
         except Error as e:
             print(e)
 
+    def check_connection(self):
+        if not (self.connect_db.is_connected()):
+            self.connect_db = connect(
+                host=os.environ.get("DB_HOST", ""),
+                username=os.environ.get("DB_USER", ""),
+                password=os.environ.get("DB_PASS", ""),
+                database=os.environ.get("DB_NAME", "")
+            )
+
     def sql_do(self, sql):
+        self.check_connection()
         try:
             self.cursor.execute(sql)
             return self.cursor.fetchall()
@@ -38,6 +48,7 @@ class DBManager:
             print(e)
 
     def check_exist(self, username):
+        self.check_connection()
         sql_statement = 'SELECT 1 FROM {} WHERE User_Name = (%s)'.format(self.table)
         try:
             self.cursor.execute(sql_statement, (username,))
@@ -50,6 +61,7 @@ class DBManager:
             return False
 
     def insert(self, userdata):
+        self.check_connection()
         sql_statement = ('INSERT INTO {} (User_Name, Coin, Watch_Time, Sub_Month, Update_By) VALUES (%(username)s, %(coin)s, %(watchtime)s, %(submonth)s, 1)'.format(self.table))
         try:
             self.cursor.execute(sql_statement, userdata)
@@ -59,6 +71,7 @@ class DBManager:
             print(e)
 
     def retrieve(self, username):
+        self.check_connection()
         sql_statement = 'SELECT * FROM {} WHERE User_Name = (%s)'.format(self.table)
         try:
             self.cursor.execute(sql_statement, (username,))
@@ -78,6 +91,7 @@ class DBManager:
             return None
 
     def update(self, userdata):
+        self.check_connection()
         try:
             username = userdata["username"]
         except KeyError:
@@ -115,6 +129,7 @@ class DBManager:
             print(e)
 
     def delete(self, username):
+        self.check_connection()
         sql_statement = ('DELETE FROM {} WHERE User_Name = (%s)'.format(self.table))
         try:
             self.cursor.execute(sql_statement, (username,))

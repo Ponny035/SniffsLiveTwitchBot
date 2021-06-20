@@ -312,10 +312,11 @@ class TwitchBot(commands.Bot,):
     @commands.command(name="sr")
     async def user_song_request(self, ctx):
         if self.request_status:
-            if (check_cooldown(ctx.author.name.lower(), "song_request", 300)) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+            if (check_cooldown(ctx.author.name.lower(), "song_request", 120)) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                success = await user_song_request(ctx.content, get_timestamp(), ctx.author.name.lower(), self.send_message)
                 if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                    set_cooldown(ctx.author.name.lower(), "song_request")
-                await user_song_request(ctx.content, get_timestamp(), ctx.author.name.lower(), self.send_message)
+                    if success:
+                        set_cooldown(ctx.author.name.lower(), "song_request")
 
     # !song req {on|off} | !song sel {song-id} | !song clear | !song del {song-id} | !song delnp | !song feed {on|off}
     @commands.command(name="song")
