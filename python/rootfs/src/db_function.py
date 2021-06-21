@@ -31,6 +31,7 @@ class DBManager:
             print(e)
 
     def check_connection(self):
+        self.connect_db.close()
         if not (self.connect_db.is_connected()):
             self.connect_db = connect(
                 host=os.environ.get("DB_HOST", ""),
