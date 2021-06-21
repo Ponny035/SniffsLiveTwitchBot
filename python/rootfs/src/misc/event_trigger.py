@@ -68,6 +68,35 @@ class EventTrigger:
             }
             await event_bit(result)
 
+    async def handle_channelpoints(self, rawdata, event_channelpoint):
+        username = ""
+        id_match = "e80c4383-ee96-41cd-94ab-b232adc47f8f"
+        timestamp = 0
+        tags = result = {}
+        rawdata = rawdata.split(" ")[0].split(";")
+        for element in rawdata:
+            extract = element.split("=")
+            key = extract[0]
+            try:
+                value = extract[1]
+            except IndexError:
+                value = ""
+            tags[key] = value
+        username = tags["display-name"].lower()
+        timestamp = datetime.fromtimestamp(int(tags["tmi-sent-ts"]) / 1000)
+        try:
+            custom_reward_id = tags["custom-reward-id"]
+        except KeyError:
+            return
+        if custom_reward_id == id_match:
+            print(f"[COIN] [{timestamp.replace(microsecond=0)}] {username}: redeem 1000 channel points to coin")
+            result = {
+                "username": username,
+                "timestamp": timestamp.replace(microsecond=0),
+                "coin": 1
+            }
+            await event_channelpoint(result)
+
     async def parsing_sub_data(self, channel, tags, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
         username = plan = plan_name = prime = streak_months = recipent = gift_sub_count = sub_month_count = msg_id = ""
         try:

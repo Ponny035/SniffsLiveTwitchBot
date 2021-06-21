@@ -121,12 +121,16 @@ class TwitchBot(commands.Bot,):
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
             await update_submonth(ctx.author.name.lower(), ctx.raw_data)
+            await self.event_trigger.handle_channelpoints(ctx.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
             await self.automod.auto_mod(ctx.author.name.lower(), (ctx.author.is_mod or ctx.author.is_subscriber == 1), ctx.content, ctx.raw_data, self.send_message, self.channel)
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):
         await add_point_by_bit(data["username"], data["bits"], data["submonth"], self.send_message)
+
+    async def event_channelpoint(self, data):
+        add_coin(data["username"], data["coin"])
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()
@@ -218,7 +222,7 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="give")
     async def give_coin_user(self, ctx):
-        if (ctx.author.name.lower() == self.CHANNELS) or (self.author.name.lower() in self.dev_list):
+        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
             commands_split = ctx.content.split()
             try:
                 username = commands_split[1]
