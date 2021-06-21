@@ -101,7 +101,7 @@ async def shooter(employer, target, dev_list, send_message, timeout):
 async def buy_lotto(username, lotto, send_message):
     global player_lotto_list
     lotto_cost = 5
-    if (re.match(r"[0-9]{4}", lotto) is not None) and (len(lotto) == 4):
+    if (re.match(r"[0-9]{3}", lotto) is not None) and (len(lotto) == 3):
         if db.check_exist(username):
             userstat = db.retrieve(username)
             if userstat["coin"] >= lotto_cost:
