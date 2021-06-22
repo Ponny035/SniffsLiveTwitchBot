@@ -127,7 +127,7 @@ async def draw_lotto(send_message):
     if player_lotto_list != []:
         print(f"[LOTO] All player list : {player_lotto_list}")
         win_number, lotto_winners = check_winner(player_lotto_list)
-        win_number_string = f"{win_number:04d}"
+        win_number_string = f"{win_number:03d}"
         count_winners = len(lotto_winners)
         payout = 0
         for winner in lotto_winners:
