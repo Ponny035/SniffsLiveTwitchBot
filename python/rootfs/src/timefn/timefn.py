@@ -1,7 +1,7 @@
 import asyncio
 
 from src.coin.coin import add_coin
-from src.db_function import DBManager
+from src.db_function import check_exist, insert, retrieve, update
 from .timestamp import get_timestamp, sec_to_hms
 
 
@@ -9,7 +9,6 @@ from .timestamp import get_timestamp, sec_to_hms
 channel_live = False
 channel_live_on = None
 watchtime_session = {}
-db = DBManager()
 
 # coin var
 coin_join_before_live = 5
@@ -73,10 +72,10 @@ def update_user_watchtime(force=False):
         for username, user_stat in watchtime_session.items():
             try:
                 if user_stat["watchtime_session"] != 0:
-                    if db.check_exist(username):
-                        userdata = db.retrieve(username)
+                    if check_exist(username):
+                        userdata = retrieve(username)
                         userdata["watchtime"] += int(user_stat["watchtime_session"])
-                        db.update(userdata)
+                        update(userdata)
                     else:
                         userdata = {
                             "username": username,
@@ -84,7 +83,7 @@ def update_user_watchtime(force=False):
                             "watchtime": int(user_stat["watchtime"]),
                             "submonth": 0
                         }
-                        db.insert(userdata)
+                        insert(userdata)
             except KeyError:
                 pass
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime Success")
@@ -120,8 +119,8 @@ async def get_user_watchtime(username, live, channels, send_message):
         session = watchtime_session[username]["watchtime_session"]
     except KeyError:
         session = 0
-    if db.check_exist(username):
-        past = db.retrieve(username)["watchtime"]
+    if check_exist(username):
+        past = retrieve(username)["watchtime"]
     else:
         past = 0
     watchtime = past + session

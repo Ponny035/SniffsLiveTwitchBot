@@ -1,24 +1,21 @@
 from .coin import add_coin, payday
 from src.timefn.timestamp import get_timestamp
-from src.db_function import DBManager
+from src.db_function import check_exist, insert, retrieve, update
 
 
 # const variables
 sub_to_point = 10
 bit_to_point = 50
 
-# init db
-db = DBManager()
-
 
 async def subscription_payout(username, sub_month_count, usernames, send_message):
     add_coin(username, sub_to_point, True)
     payday(usernames, 1, True)
     try:
-        if db.check_exist(username):
-            userdata = db.retrieve(username)
+        if check_exist(username):
+            userdata = retrieve(username)
             userdata["submonth"] = int(sub_month_count)
-            db.update(userdata)
+            update(userdata)
         else:
             userdata = {
                 "username": username,
@@ -26,7 +23,7 @@ async def subscription_payout(username, sub_month_count, usernames, send_message
                 "watchtime": 0,
                 "submonth": int(sub_month_count)
             }
-            db.insert(userdata)
+            insert(userdata)
     except Exception as msg:
         print(f"[_ERR] [{get_timestamp()}] Cannot update db for user {username} with {sub_month_count} submonth {msg}")
     await send_message(f"ยินดีต้อนรับ @{username} มาเป็นต้าวๆของสนิฟ")

@@ -15,7 +15,7 @@ const router = new Router()
 app.use(async (ctx, next) =>{
     await next()
     const rt = ctx.response.headers.get("X-Response-Time")
-    console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`)
+    console.log(`[_API] [${getTimestamp()}] ${ctx.request.method} ${ctx.request.url} - ${rt}`)
 })
 
 // Timing
@@ -151,5 +151,11 @@ router.post("/api/v1/rem", async({request, response}: {request: any, response: a
         }
     }
 })
+
+const getTimestamp = (): string =>{
+    const now = new Date()
+    const timeString = now.toISOString().slice(0, 10)+" "+now.toISOString().slice(11, 19)
+    return timeString
+}
 
 await app.listen({ port: port })

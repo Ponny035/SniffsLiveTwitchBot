@@ -1,15 +1,12 @@
-from src.db_function import DBManager
+from src.db_function import check_exist, insert, retrieve, update
 from src.timefn.timestamp import get_timestamp
 
 
-db = DBManager()
-
-
 def add_coin(username, coin, nolog=False):
-    if db.check_exist(username):
-        userdata = db.retrieve(username)
+    if check_exist(username):
+        userdata = retrieve(username)
         userdata["coin"] += coin
-        db.update(userdata)
+        update(userdata)
     else:
         userdata = {
             "username": username,
@@ -17,14 +14,14 @@ def add_coin(username, coin, nolog=False):
             "watchtime": 0,
             "submonth": 0
         }
-        db.insert(userdata)
+        insert(userdata)
     if not nolog:
         print(f"[COIN] [{get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
 
 async def get_coin(username, send_message):
-    if db.check_exist(username):
-        coin = db.retrieve(username)["coin"]
+    if check_exist(username):
+        coin = retrieve(username)["coin"]
     else:
         coin = 0
     await send_message(f"@{username} มี {coin} sniffscoin")
