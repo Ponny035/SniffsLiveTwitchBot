@@ -46,6 +46,11 @@ async def shooter(employer, target, dev_list, send_message, timeout):
     clean_target = target.split("@")
     if len(clean_target) > 1:
         target = clean_target[1]
+    if target == "me":
+        await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
+        await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที")
+        print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
+        return
     exclude_target = [os.environ.get("CHANNELS", ""), os.environ.get("BOTNICK", ""), "sirju001", "moobot", "sniffsbot"] + dev_list
     cooldown = 1200
     if shooter_cooldown == 0:
