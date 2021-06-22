@@ -4,8 +4,6 @@
 const websocketUrl = `ws://${window.location.hostname}:8000/ws`;
 let songList = [];
 let nowPlaying = "nothing";
-let oldSongList = [];
-let oldNowPlaying = [];
 
 // declares const class name
 const containerClass = "columns is-mobile is-size-4 text-bolder mb-3";
@@ -28,21 +26,21 @@ function generateSongList(songList, index){
 
     var containerElement = document.createElement("div");
     containerElement.className = containerClass + modClass;
-    containerElement.id = "container"+index;
+    containerElement.id = `container${index}`;
 
     var listElement = document.createElement("div");
     listElement.className = listClass;
-    listElement.innerHTML = "["+index.toString()+"]";
+    listElement.innerHTML = `[${index.toString()}]`;
 
     var nameElement = document.createElement("div");
     nameElement.className = nameClass;
     nameElement.innerHTML = songName;
-    nameElement.id = "name"+index;
+    nameElement.id = `name${index}`;
 
     var voteElement = document.createElement("div");
     voteElement.className = scoreClass;
-    voteElement.innerHTML = vote.toString()+" pts";
-    voteElement.id = "vote"+index;
+    voteElement.innerHTML = `${vote.toString()} pts`;
+    voteElement.id = `vote${index}`;
 
     var songListElement = document.getElementById("list-title");
     songListElement.appendChild(containerElement);
@@ -104,7 +102,7 @@ function generateNowPlaying(song){
 
     var voteElement = document.createElement("div");
     voteElement.className = scoreClass;
-    voteElement.innerHTML = vote+" pts";
+    voteElement.innerHTML = `${vote} pts`;
     voteElement.id = "nowplayingVote";
     
     nowPlayingListElement.appendChild(containerElement);
@@ -128,12 +126,12 @@ function generateNowPlaying(song){
 function refreshSongList(songList){
     for(i = 0; i < 5; i++){
         index = i + 1;
-        var containerElement = document.getElementById("container"+index.toString());
-        var nameElement = document.getElementById("name" + index.toString());
-        var voteElement = document.getElementById("vote" + index.toString());
+        var containerElement = document.getElementById(`container${index.toString()}`);
+        var nameElement = document.getElementById(`name${index.toString()}`);
+        var voteElement = document.getElementById(`vote${index.toString()}`);
         if(songList[i] !== undefined){
             nameElement.innerHTML = songList[i].songName;
-            voteElement.innerHTML = songList[i].vote.toString()+" pts";
+            voteElement.innerHTML = `${songList[i].vote.toString()} pts`;
             if(containerElement.classList.contains("is-hidden")){
                 containerElement.classList.remove("is-hidden");
             }
