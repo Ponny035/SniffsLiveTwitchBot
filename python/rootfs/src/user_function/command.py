@@ -43,6 +43,9 @@ async def shooter(employer, target, dev_list, send_message, timeout):
     dodge_rate = 10
     payrate = 5
     shooter_timeout = random.randint(15, 60)
+    clean_target = target.split("@")
+    if len(clean_target) > 1:
+        target = clean_target[1]
     exclude_target = [os.environ.get("CHANNELS", ""), os.environ.get("BOTNICK", ""), "sirju001", "moobot", "sniffsbot"] + dev_list
     cooldown = 1200
     if shooter_cooldown == 0:
