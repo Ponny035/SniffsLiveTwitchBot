@@ -43,6 +43,14 @@ async def shooter(employer, target, dev_list, send_message, timeout):
     dodge_rate = 10
     payrate = 5
     shooter_timeout = random.randint(15, 60)
+    clean_target = target.split("@")
+    if len(clean_target) > 1:
+        target = clean_target[1]
+    if target == "me":
+        await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
+        await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที")
+        print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
+        return
     exclude_target = [os.environ.get("CHANNELS", ""), os.environ.get("BOTNICK", ""), "sirju001", "moobot", "sniffsbot"] + dev_list
     cooldown = 1200
     if shooter_cooldown == 0:
@@ -124,7 +132,7 @@ async def draw_lotto(send_message):
     if player_lotto_list != []:
         print(f"[LOTO] All player list : {player_lotto_list}")
         win_number, lotto_winners = check_winner(player_lotto_list)
-        win_number_string = f"{win_number:04d}"
+        win_number_string = f"{win_number:03d}"
         count_winners = len(lotto_winners)
         payout = 0
         for winner in lotto_winners:
