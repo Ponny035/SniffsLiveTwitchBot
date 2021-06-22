@@ -4,7 +4,7 @@ import re
 import requests
 
 from src.coin.coin import add_coin
-from src.db_function import DBManager
+from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
 
 
@@ -19,8 +19,6 @@ select_url = 'http://api-server:8000/api/v1/select'
 delete_url = 'http://api-server:8000/api/v1/del'
 clear_url = 'http://api-server:8000/api/v1/clear'
 rem_url = 'http://api-server:8000/api/v1/rem'
-
-db = DBManager()
 
 
 async def user_song_request(content, timestamp, username, send_message):
@@ -49,8 +47,8 @@ async def user_song_request(content, timestamp, username, send_message):
             except Exception:
                 return False
     if song_name is not None:
-        if db.check_exist(username):
-            userdata = db.retrieve(username)
+        if check_exist(username):
+            userdata = retrieve(username)
             if userdata["coin"] >= cost:
                 add_coin(username, -cost)
                 song_name = song_name.strip()

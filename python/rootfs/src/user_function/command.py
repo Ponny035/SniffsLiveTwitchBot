@@ -3,17 +3,15 @@ import random
 import re
 import os
 
-# from src.db_function import DBManager
 from .lotto import check_winner
 from src.coin.coin import add_coin
-from src.db_function import DBManager
+from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
 
 
 # init variable
 player_lotto_list = []
 shooter_cooldown = 0
-db = DBManager()
 
 
 # mod function
@@ -58,12 +56,12 @@ async def shooter(employer, target, dev_list, send_message, timeout):
             available = False
     if available:
         shooter_cooldown = get_timestamp()
-        if db.check_exist(employer):
-            userdata = db.retrieve(employer)
+        if check_exist(employer):
+            userdata = retrieve(employer)
             if userdata["coin"] >= payrate:
                 add_coin(employer, -payrate)
-                if db.check_exist(target):
-                    submonth = db.retrieve(target)["submonth"]
+                if check_exist(target):
+                    submonth = retrieve(target)["submonth"]
                     dodge_rate += min(submonth, 6)
                 if target in exclude_target:
                     await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
@@ -102,8 +100,8 @@ async def buy_lotto(username, lotto, send_message):
     global player_lotto_list
     lotto_cost = 5
     if (re.match(r"[0-9]{3}", lotto) is not None) and (len(lotto) == 3):
-        if db.check_exist(username):
-            userstat = db.retrieve(username)
+        if check_exist(username):
+            userstat = retrieve(username)
             if userstat["coin"] >= lotto_cost:
                 lotto_int = int(lotto)
                 if player_lotto_list != []:
