@@ -49,12 +49,12 @@ const generateSongList = (songList) =>{
 
             var selElement = document.createElement("div");
             selElement.className = linkClass;
-            selElement.innerHTML = '<a href="javascript:;" onclick="selectSong(\''+songData.songName+'\')">Select</a>';
+            selElement.innerHTML = `<a href="javascript:;" onclick="selectSong(${index})">Select</a>`;
             selElement.id = `sel${index}`;
 
             var delElement = document.createElement("div");
             delElement.className = linkClass;
-            delElement.innerHTML = '<a href="javascript:;" onclick="deleteSong(\''+songData.songName+'\')">Delete</a>';
+            delElement.innerHTML = `<a href="javascript:;" onclick="deleteSong(${index})">Delete</a>`;
             delElement.id = `del${index}`;
 
             songListElement.appendChild(containerElement);
@@ -153,8 +153,8 @@ const generateNowPlayingEmpty = (delEmpty) =>{
 };
 
 // api function
-const selectSong = (songName) =>{
-    const songKey = songName.toLowerCase();
+const selectSong = (songIndex) =>{
+    const songKey = songList[Number(songIndex) - 1].songKey;
     const url = `http://${window.location.hostname}:8000/api/v1/select`;
 
     var xhr = new XMLHttpRequest();
@@ -168,8 +168,8 @@ const selectSong = (songName) =>{
     }));
 };
 
-const deleteSong = (songName) =>{
-    const songKey = songName.toLowerCase();
+const deleteSong = (songIndex) =>{
+    const songKey = songList[Number(songIndex) - 1].songKey;
     const url = `http://${window.location.hostname}:8000/api/v1/del`;
 
     var xhr = new XMLHttpRequest();
