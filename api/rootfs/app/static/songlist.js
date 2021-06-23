@@ -49,12 +49,12 @@ const generateSongList = (songList) =>{
 
             var selElement = document.createElement("div");
             selElement.className = linkClass;
-            selElement.innerHTML = `<a href="javascript:;" onclick=selectSong("${songData.songName}")>Select</a>`;
+            selElement.innerHTML = '<a href="javascript:;" onclick="selectSong(\''+songData.songName+'\')">Select</a>';
             selElement.id = `sel${index}`;
 
             var delElement = document.createElement("div");
             delElement.className = linkClass;
-            delElement.innerHTML = `<a href="javascript:;" onclick=deleteSong("${songData.songName}")>Delete</a>`;
+            delElement.innerHTML = '<a href="javascript:;" onclick="deleteSong(\''+songData.songName+'\')">Delete</a>';
             delElement.id = `del${index}`;
 
             songListElement.appendChild(containerElement);
