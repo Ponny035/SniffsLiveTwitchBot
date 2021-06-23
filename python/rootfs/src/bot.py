@@ -390,9 +390,10 @@ class TwitchBot(commands.Bot,):
                 lotto = None
             if lotto is not None:
                 if (check_cooldown(ctx.author.name.lower(), "lotto")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    success = await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
                     if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                        set_cooldown(ctx.author.name.lower(), "lotto")
-                    await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
+                        if success:
+                            set_cooldown(ctx.author.name.lower(), "lotto")
 
     @commands.command(name="draw")
     async def draw_lotto(self, ctx):

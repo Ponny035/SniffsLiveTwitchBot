@@ -1,31 +1,29 @@
 import random
 
 
-def get_winning_number(digit=3):
-    winning_number = random.random()
-    for i in range(digit):
-        winning_number = winning_number * 10
-
+def get_winning_number(lotto_list):
+    lotto_number = [player[1] for player in lotto_list]
+    unique_lotto_list = list(set(lotto_number))
+    for i in range(5):
+        winning_number = random.choice(unique_lotto_list)
     return int(winning_number)
 
 
 def check_winner(lotto_list):
-    win_number = get_winning_number()
-    last_two_digits = win_number % 100
-    # last_three_digits = win_number % 1000
-    winning_list = []
+    win_number = get_winning_number(lotto_list)
+    total_income = len(lotto_list) * 5
+    tax = 0.2
+    min_prize = 10
+    win_prize = (total_income * (1 - tax) + (random.random() * 5))
+    winning_dict = {}
     for lotto in lotto_list:
         player_lotto = lotto[1]
-        player_last_two_digits = player_lotto % 100
-        # player_last_three_digits = player_lotto % 1000
         if win_number == player_lotto:
-            winning_list.append([lotto[0], 80])
-            continue
-
-        # elif last_three_digits == player_last_three_digits:
-        #     winning_list.append([lotto[0], 40])
-        #     continue
-
-        elif last_two_digits == player_last_two_digits:
-            winning_list.append([lotto[0], 10])
-    return win_number, winning_list
+            try:
+                winning_dict[lotto[0]] += 1
+            except KeyError:
+                winning_dict[lotto[0]] = 1
+    len_winner = sum(winning_dict.values())
+    final_prize = max(int(win_prize / len_winner), min_prize)
+    winning_dict.update({n: final_prize * winning_dict[n] for n in winning_dict.keys()})
+    return win_number, winning_dict

@@ -107,37 +107,38 @@ async def shooter(employer, target, dev_list, send_message, timeout):
 async def buy_lotto(username, lotto, send_message):
     global player_lotto_list
     lotto_cost = 5
-    if (re.match(r"[0-9]{3}", lotto) is not None) and (len(lotto) == 3):
+    if (re.match(r"[0-9]{2}", lotto) is not None) and (len(lotto) == 2):
         if check_exist(username):
             userstat = retrieve(username)
             if userstat["coin"] >= lotto_cost:
                 lotto_int = int(lotto)
-                if player_lotto_list != []:
-                    for player_lotto in player_lotto_list:
-                        if lotto_int in player_lotto:
-                            await send_message(f"@{username} ไม่สามารถซื้อเลขซ้ำได้")
-                            print(f"[LOTO] [{get_timestamp()}] {username} Duplicate Lotto: {lotto}")
-                            return
+                # if player_lotto_list != []:
+                #     for player_lotto in player_lotto_list:
+                #         if lotto_int in player_lotto:
+                #             await send_message(f"@{username} ไม่สามารถซื้อเลขซ้ำได้")
+                #             print(f"[LOTO] [{get_timestamp()}] {username} Duplicate Lotto: {lotto}")
+                #             return False
                 add_coin(username, -lotto_cost)
                 player_lotto_list += [[username, lotto_int]]
                 await send_message(f"@{username} ซื้อ SniffsLotto หมายเลข {lotto} สำเร็จ")
                 print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} successfully")
+                return True
             else:
                 await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก")
                 print(f"[LOTO] [{get_timestamp()}] {username} coin insufficient")
+                return False
 
 
 async def draw_lotto(send_message):
     global player_lotto_list
     if player_lotto_list != []:
-        print(f"[LOTO] All player list : {player_lotto_list}")
+        print(f"[LOTO] [{get_timestamp()}] All player list : {player_lotto_list}")
         win_number, lotto_winners = check_winner(player_lotto_list)
-        win_number_string = f"{win_number:03d}"
+        win_number_string = f"{win_number:02d}"
         count_winners = len(lotto_winners)
-        payout = 0
-        for winner in lotto_winners:
-            add_coin(winner[0], int(winner[1]))
-            payout += int(winner[1])
+        payout = sum(lotto_winners.values())
+        for username, prize in lotto_winners.items():
+            add_coin(username, int(prize))
         await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin")
         print(f"[LOTO] [{get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
         player_lotto_list = []
