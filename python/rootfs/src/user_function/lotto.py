@@ -4,7 +4,7 @@ import random
 def get_winning_number(lotto_list):
     lotto_number = [player[1] for player in lotto_list]
     unique_lotto_list = list(set(lotto_number))
-    if unique_lotto_list > 1:
+    if len(unique_lotto_list) > 1:
         for i in range(5):
             winning_number = random.choice(unique_lotto_list)
     else:
