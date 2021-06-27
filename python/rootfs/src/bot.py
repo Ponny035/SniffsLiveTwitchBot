@@ -10,7 +10,7 @@ from .misc.automod import automod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
-from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto
+from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_market, send_lotto_msg, check_message
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
 from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
 from .timefn.timestamp import get_timestamp, sec_to_hms
@@ -36,17 +36,19 @@ class TwitchBot(commands.Bot,):
         self.channel_live = False
         self.channel_live_on = None
         self.request_status = False
+        self.first_run = True
         self.discord_link = "https://discord.gg/Q3AMaHQEGU"  # temp link
         self.facebook_link = "https://www.facebook.com/sniffslive/"
         self.youtube_link = "https://www.youtube.com/SniffsLive"
+        self.vip_list = [self.NICK, self.CHANNELS, "sirju001", "mafiamojo", "armzi", "moobot", "sniffsbot"]
 
         try:
             if(self.environment == "dev"):
-                print("Init bot on DEVELOPMENT environment")
+                print(f"[INFO] [{get_timestamp()}] Init bot on DEVELOPMENT environment")
                 self.dev_list = ["ponny35", "bosssoq", "franess"]
 
             elif(self.environment == "prod"):
-                print("Init bot on PRODUCTION environment")
+                print(f"[INFO] [{get_timestamp()}] Init bot on PRODUCTION environment")
                 self.dev_list = []
 
             super().__init__(
@@ -59,7 +61,7 @@ class TwitchBot(commands.Bot,):
             )
             self.event_trigger = EventTrigger(self.CHANNELS)
 
-            print("Done")
+            print(f"[INFO] [{get_timestamp()}] Done")
 
         except (FileNotFoundError):
             msg = "Sorry you DON'T HAVE PERMISSION to run on production."
@@ -73,18 +75,21 @@ class TwitchBot(commands.Bot,):
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
         else:
-            print(f"[INFO] Dry run mode is on \"{msg}\" not sent")
+            print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
 
     def print_to_console(self, msg):
         if self.environment == "dev":
             print(msg)
 
     async def event_ready(self):
-        print("Bot joining channel.")
+        print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
-        asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
+        if self.first_run:
+            self.first_run = False
+            asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
+            asyncio.create_task(send_lotto_msg(self.send_message))
         await self.send_message(self.NICK + " is joined the channels.")
-        print("Joined")
+        print(f"[INFO] [{get_timestamp()}] Joined")
 
     async def event_raw_usernotice(self, channel, tags):
         await self.event_trigger.parsing_sub_data(
@@ -120,6 +125,7 @@ class TwitchBot(commands.Bot,):
         if ctx.author.name.lower() != self.NICK:
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
+            await check_message(ctx.author.name.lower(), ctx.content, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
             await update_submonth(ctx.author.name.lower(), ctx.raw_data)
             await self.event_trigger.handle_channelpoints(ctx.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
@@ -166,6 +172,8 @@ class TwitchBot(commands.Bot,):
         self.print_to_console(f"raid: {data}")
 
     async def event_join(self, user):
+        if user.name.lower() == "sirju001":
+            await self.send_message("ดาบผู้ขี้เกียจ มาแล้ววววววว รอแทงได้เลย")
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
@@ -173,6 +181,8 @@ class TwitchBot(commands.Bot,):
                 user_join_part("join", user.name.lower(), get_timestamp())
 
     async def event_part(self, user):
+        if user.name.lower() == "sirju001":
+            await self.send_message(f"@{user.name.lower()} แอบหนีไปดูแมวอีกแล้ววววว")
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
@@ -198,13 +208,17 @@ class TwitchBot(commands.Bot,):
             except IndexError:
                 status = None
             if status == "open":
-                self.market_open = True
-                print(f"[COIN] [{get_timestamp()}] Market is now open")
-                await self.send_message("เปิดตลาดแล้วจ้าาาา~")
+                if not self.market_open:
+                    self.market_open = True
+                    print(f"[COIN] [{get_timestamp()}] Market is now open")
+                    await update_market(self.market_open)
+                    await self.send_message("เปิดตลาดแล้วจ้าาาา~")
             elif status == "close":
-                self.market_open = False
-                print(f"[COIN] [{get_timestamp()}] Market is now close")
-                await self.send_message("ปิดตลาดแล้วจ้าาาา~")
+                if self.market_open:
+                    self.market_open = False
+                    print(f"[COIN] [{get_timestamp()}] Market is now close")
+                    await update_market(self.market_open)
+                    await self.send_message("ปิดตลาดแล้วจ้าาาา~")
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
@@ -307,7 +321,7 @@ class TwitchBot(commands.Bot,):
         if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
             usernames = await self.get_users_list()
-            exclude_list = [self.NICK, self.CHANNELS, "sirju001"] + self.dev_list
+            exclude_list = self.vip_list + self.dev_list
             data = await call_to_hell(usernames, exclude_list, self.channel.timeout)
             users_string = ", ".join(data["poor_users"])
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
@@ -378,7 +392,7 @@ class TwitchBot(commands.Bot,):
             except IndexError:
                 target = None
             if target is not None:
-                await shooter(ctx.author.name.lower(), target, self.dev_list, self.send_message, self.channel.timeout)
+                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
 
     @commands.command(name="lotto")
     async def sniffs_lotto(self, ctx):
@@ -389,11 +403,12 @@ class TwitchBot(commands.Bot,):
             except IndexError:
                 lotto = None
             if lotto is not None:
-                if (check_cooldown(ctx.author.name.lower(), "lotto")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                    success = await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
-                    if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                        if success:
-                            set_cooldown(ctx.author.name.lower(), "lotto")
+                await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
+                # if (check_cooldown(ctx.author.name.lower(), "lotto")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                #     success = await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
+                #     if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
+                #         if success:
+                #             set_cooldown(ctx.author.name.lower(), "lotto")
 
     @commands.command(name="draw")
     async def draw_lotto(self, ctx):

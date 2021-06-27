@@ -12,6 +12,7 @@ from src.timefn.timestamp import get_timestamp
 # init variable
 player_lotto_list = []
 shooter_cooldown = 0
+market_stats = False
 
 
 # mod function
@@ -38,7 +39,7 @@ async def call_to_hell(usernames, exclude_list, timeout):
     return data
 
 
-async def shooter(employer, target, dev_list, send_message, timeout):
+async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
     global shooter_cooldown
     dodge_rate = 10
     payrate = 5
@@ -51,7 +52,7 @@ async def shooter(employer, target, dev_list, send_message, timeout):
         await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที")
         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
         return
-    exclude_target = [os.environ.get("CHANNELS", ""), os.environ.get("BOTNICK", ""), "sirju001", "moobot", "sniffsbot"] + dev_list
+    exclude_target = vip_list + dev_list
     cooldown = 1200
     if shooter_cooldown == 0:
         available = True
@@ -142,3 +143,27 @@ async def draw_lotto(send_message):
         await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin")
         print(f"[LOTO] [{get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
         player_lotto_list = []
+
+
+async def update_market(status):
+    global market_stats
+    market_stats = status
+
+
+async def send_lotto_msg(send_message):
+    while True:
+        if market_stats:
+            await send_message("เร่เข้ามาเร่เข้ามา SniffsLotto ในละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า")
+        await asyncio.sleep(1800)
+
+
+async def check_message(username, message, vip_list, dev_list, send_message, timeout):
+    restricted_message = ["บอทกาก", "บอทกๅก"]
+    exclude_list = vip_list + dev_list
+    if username not in exclude_list:
+        for res_msg in restricted_message:
+            result = re.search(res_msg, message)
+            if result:
+                await timeout(username, 30, f"@{username} ไหน ใครกาก")
+                await send_message(f"@{username} บังอาจนักนะ")
+                print(f"[_MOD] [{get_timestamp()}] Kill: {username} for 30 secs")
