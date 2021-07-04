@@ -135,7 +135,8 @@ async def get_user_watchtime(username, live, channels, send_message):
             response_string += f" {watchtime_dhms[2]} นาที"
         if watchtime_dhms[3] > 0:
             response_string += f" {watchtime_dhms[3]} วินาที"
+        response_string += " sniffsHeart sniffsHeart sniffsHeart"
         await send_message(response_string)
     else:
-        await send_message(f"@{username} เพิ่งมาดู @{channels} สิน้าาาาา")
+        await send_message(f"@{username} เพิ่งมาดู @{channels} สิน้าาาาา sniffsAH")
     print(f"[TIME] [{get_timestamp()}] Watchtime checked by {username}: {watchtime_dhms[0]} day {watchtime_dhms[1]} hours {watchtime_dhms[2]} mins {watchtime_dhms[3]} secs")
