@@ -141,6 +141,8 @@ async def draw_lotto(send_message):
         for username, prize in lotto_winners.items():
             add_coin(username, int(prize))
         await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} sniffsShock มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin sniffsHeart")
+        if count_winners <= 5:
+            await send_message(f"ผู้โชคดีได้แก่ {'@'+', @'.join(lotto_winners.keys())} คร่า sniffsHeart sniffsHeart sniffsHeart")
         print(f"[LOTO] [{get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
         player_lotto_list = []
 
