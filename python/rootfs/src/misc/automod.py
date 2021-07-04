@@ -168,11 +168,11 @@ class automod:
             if timeout_mins == 0:
                 await send_message(f"/delete {msg_id}")
                 print(f"[AMOD] [{self.get_timestamp()}] DeleteMessage: {user} Duration: {timeout_mins} Reason: {reason}")
-                await send_message(f"@{user} เตือนก่อนน้า")
+                await send_message(f"@{user} เตือนก่อนน้า sniffsAngry sniffsAngry sniffsAngry")
             else:
                 await mod_action.timeout(user, timeout_mins * 60, f"ไม่ได้น้า เตือนครั้งที่ {self.warning_users[user][reason]}")
                 print(f"[AMOD] [{self.get_timestamp()}] Timeout: {user} Duration: {timeout_mins} Reason: {reason}")
-                await send_message(f"@{user} ไม่เชื่อฟังสนิฟ ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
+                await send_message(f"@{user} ไม่เชื่อฟังสนิฟ sniffsAngry sniffsAngry sniffsAngry ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
 
             # db.execute("UPDATE users SET warnings = Warnings +1 WHERE UserID = ?",
             # user["ID"])
@@ -180,4 +180,4 @@ class automod:
         else:
             self.warning_users[user][reason] = 0  # reset counter
             await mod_action.ban(user, f"ละเมิดกฎครบ {self.warning_users[user][reason]} ครั้ง บินไปซะ")
-            await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ")
+            await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ sniffsAngry sniffsAngry sniffsAngry")

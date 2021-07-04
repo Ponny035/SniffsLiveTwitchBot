@@ -67,7 +67,7 @@ async def user_song_request(content, timestamp, username, send_message):
                         song_playing = response_json["nowplaying"]
                     except KeyError:
                         song_playing = None
-                    await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} คะแนนรวม {response_json['songvote']} คะแนน")
+                    await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} sniffsMic คะแนนรวม {response_json['songvote']} คะแนน")
                     return True
                 elif response.status_code == 404:
                     print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")
@@ -85,7 +85,7 @@ async def now_playing(username, send_message):
     global song_playing
     sorted_song_list, song_playing = get_song_list_api()
     if song_playing is not None:
-        await send_message(f"@{username} สนิฟกำลังร้องเพลง {song_playing['songName']} น้า")
+        await send_message(f"@{username} สนิฟกำลังร้องเพลง {song_playing['songName']} น้า sniffsMic sniffsMic sniffsMic")
 
 
 def get_song_list_api():
@@ -116,7 +116,7 @@ async def get_song_list(send_message):
             await send_message(f"[{i + 1}] {sorted_song_list[i]['songName']} {sorted_song_list[i]['vote']} คะแนน")
             print(f"[SONG] [{get_timestamp()}] {i + 1} {sorted_song_list[i]['songName']} {sorted_song_list[i]['vote']} point")
     else:
-        await send_message("ยังไม่มีเพลงในคิวจ้า")
+        await send_message("ยังไม่มีเพลงในคิวจ้า sniffsHeart sniffsHeart sniffsHeart")
 
 
 async def select_song(song_id, send_message):
@@ -135,7 +135,7 @@ async def select_song(song_id, send_message):
             except KeyError:
                 sorted_song_list = []
             song_playing = response_json["nowplaying"]
-            await send_message(f"สนิฟเลือกเพลง {song_playing['songName']}")
+            await send_message(f"สนิฟเลือกเพลง {song_playing['songName']} sniffsMic sniffsMic sniffsMic")
             print(f"[SONG] [{get_timestamp()}] Sniffs choose {song_playing['songName']} Delete this song from list")
         elif response.status_code == 404:
             response_json = json.loads(response.content)
@@ -147,10 +147,10 @@ async def select_song(song_id, send_message):
                 song_playing = response_json["nowplaying"]
             except KeyError:
                 song_playing = None
-            await send_message("ไม่มีเพลงนี้น้า")
+            await send_message("ไม่มีเพลงนี้น้า sniffsAH")
             print(f"[SONG] [{get_timestamp()}] No song in list // error from api")
     except IndexError:
-        await send_message("ไม่มีเพลงนี้น้า")
+        await send_message("ไม่มีเพลงนี้น้า sniffsAH")
         print(f"[SONG] [{get_timestamp()}] No song in list // out of range")
 
 
@@ -165,7 +165,7 @@ async def delete_songlist(send_message):
             song_playing = response_json["nowplaying"]
         except KeyError:
             song_playing = None
-        await send_message("ล้าง List เพลงให้แล้วต้าวสนิฟ")
+        await send_message("ล้าง List เพลงให้แล้วต้าวสนิฟ sniffsHeart")
     elif response.status_code == 404:
         print(f"[SONG] [{get_timestamp()}] Error deleting from api")
 
@@ -181,7 +181,7 @@ async def remove_nowplaying(send_message):
             sorted_song_list = response_json["songlist"]
         except KeyError:
             sorted_song_list = []
-        await send_message("ลบ Now Playing เพลงให้แล้วต้าวสนิฟ")
+        await send_message("ลบ Now Playing เพลงให้แล้วต้าวสนิฟ sniffsHeart")
     elif response.status_code == 404:
         print(f"[SONG] [{get_timestamp()}] Error deleting from api")
 
@@ -206,7 +206,7 @@ async def delete_song(song_id, send_message):
                 song_playing = response_json["nowplaying"]
             except KeyError:
                 song_playing = None
-            await send_message(f"สนิฟลบเพลง {song_select}")
+            await send_message(f"สนิฟลบเพลง {song_select} sniffsHeart")
             # await self.get_song_list(send_message)
             print(f"[SONG] [{get_timestamp()}] Sniffs delete {song_select} from list")
         elif response.status_code == 404:
@@ -217,10 +217,10 @@ async def delete_song(song_id, send_message):
             except KeyError:
                 sorted_song_list = []
                 song_playing = None
-            await send_message("ไม่มีเพลงนี้น้า")
+            await send_message("ไม่มีเพลงนี้น้า sniffsAH")
             print(f"[SONG] [{get_timestamp()}] No song in list // error from api")
     except IndexError:
-        await send_message("ไม่มีเพลงนี้น้า")
+        await send_message("ไม่มีเพลงนี้น้า sniffsAH")
         print(f"[SONG] [{get_timestamp()}] No song in list // out of range")
 
 
@@ -228,7 +228,7 @@ async def song_feed(status, send_message):
     global song_feed_on
     if (not song_feed_on) and status:
         song_feed_on = status
-        await send_message("เปิดระบบ Songfeed แล้วจ้า")
+        await send_message("เปิดระบบ Songfeed แล้วจ้า sniffsHeart")
     elif song_feed_on and (not status):
         song_feed_on = status
-        await send_message("ปิดระบบ Songfeed แล้วจ้า ใช้ !song list เพื่อดูรายชื่อเพลง")
+        await send_message("ปิดระบบ Songfeed แล้วจ้า ใช้ !song list เพื่อดูรายชื่อเพลง sniffsHeart")

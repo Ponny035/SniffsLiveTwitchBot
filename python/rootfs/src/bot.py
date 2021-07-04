@@ -40,6 +40,7 @@ class TwitchBot(commands.Bot,):
         self.discord_link = "https://discord.gg/Q3AMaHQEGU"  # temp link
         self.facebook_link = "https://www.facebook.com/sniffslive/"
         self.youtube_link = "https://www.youtube.com/SniffsLive"
+        self.instagram_link = "https://www.instagram.com/musicsn/"
         self.vip_list = [self.NICK, self.CHANNELS, "sirju001", "mafiamojo", "armzi", "moobot", "sniffsbot"]
 
         try:
@@ -164,28 +165,28 @@ class TwitchBot(commands.Bot,):
         self.print_to_console(f"anonsubgift: {data}")
 
     async def event_anonsubmysterygift(self, channel, data):
-        await self.send_message(f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามจำนวน {data['gift_sub_count']} Gift")
+        await self.send_message(f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามจำนวน {data['gift_sub_count']} Gift sniffsHeart sniffsHeart sniffsHeart")
         self.print_to_console(f"anonsubmysterygift: {data}")
 
     async def event_raid(self, channel, data):
-        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} ค่าา")
+        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} ค่าา sniffsHeart sniffsHeart sniffsHeart")
         self.print_to_console(f"raid: {data}")
 
     async def event_join(self, user):
         if user.name.lower() == "sirju001":
-            await self.send_message("ดาบผู้ขี้เกียจ มาแล้ววววววว รอแทงได้เลย")
+            await self.send_message("ดาบผู้ขี้เกียจ มาแล้ววววววว รอแทงได้เลย sniffsAH")
         if self.channel_live:
             if user.name.lower() == "armzi":
-                await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู")
+                await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู sniffsShock")
             if user.name.lower() not in [self.NICK, self.NICK + "\r"]:
                 user_join_part("join", user.name.lower(), get_timestamp())
 
     async def event_part(self, user):
         if user.name.lower() == "sirju001":
-            await self.send_message(f"@{user.name.lower()} แอบหนีไปดูแมวอีกแล้ววววว")
+            await self.send_message(f"@{user.name.lower()} แอบหนีไปดูแมวอีกแล้ววววว sniffsAH")
         if self.channel_live:
             if user.name.lower() == "armzi":
-                await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา")
+                await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา sniffsBaby")
             if user.name.lower() not in [self.NICK, self.NICK + "\r"]:
                 user_join_part("part", user.name.lower(), get_timestamp())
 
@@ -195,9 +196,9 @@ class TwitchBot(commands.Bot,):
 
     async def greeting_sniffs(self):
         if self.channel_live:
-            await self.send_message(f"@{self.CHANNELS} มาแล้ววววว")
+            await self.send_message(f"sniffsHi sniffsHi sniffsHi @{self.CHANNELS} มาแล้ววววว")
         elif not self.channel_live:
-            await self.send_message(f"@{self.CHANNELS} ไปแล้ววววว")
+            await self.send_message(f"sniffsZzz sniffsZzz sniffsZzz @{self.CHANNELS} ไปแล้ววววว")
 
     @commands.command(name="market")
     async def activate_market(self, ctx):
@@ -212,13 +213,13 @@ class TwitchBot(commands.Bot,):
                     self.market_open = True
                     print(f"[COIN] [{get_timestamp()}] Market is now open")
                     await update_market(self.market_open)
-                    await self.send_message("เปิดตลาดแล้วจ้าาาา~")
+                    await self.send_message("เปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
             elif status == "close":
                 if self.market_open:
                     self.market_open = False
                     print(f"[COIN] [{get_timestamp()}] Market is now close")
                     await update_market(self.market_open)
-                    await self.send_message("ปิดตลาดแล้วจ้าาาา~")
+                    await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
@@ -232,7 +233,7 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             usernames = await self.get_users_list()
             payday(usernames, coin)
-            await self.send_message(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin")
+            await self.send_message(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin sniffsAH")
 
     @commands.command(name="give")
     async def give_coin_user(self, ctx):
@@ -250,7 +251,7 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             if (username is not None):
                 add_coin(username, coin)
-                await self.send_message(f"@{username} ได้รับ {coin} sniffscoin")
+                await self.send_message(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
@@ -273,7 +274,7 @@ class TwitchBot(commands.Bot,):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "uptime")
             if not self.channel_live:
-                return await self.send_message("ยังไม่ถึงเวลาไลฟ์น้าาาา")
+                return await self.send_message("ยังไม่ถึงเวลาไลฟ์น้าาาา sniffsHeart sniffsHeart sniffsHeart")
             uptime = sec_to_hms((get_timestamp() - self.channel_live_on).total_seconds())
             print(f"[TIME] [{get_timestamp()}] Uptime checked by {ctx.author.name.lower()}: {uptime[0]} days {uptime[1]} hours {uptime[2]} mins {uptime[3]} secs")
             if any(time > 0 for time in uptime):
@@ -286,7 +287,7 @@ class TwitchBot(commands.Bot,):
                     response_string += f" {uptime[2]} นาที"
                 if uptime[3] > 0:
                     response_string += f" {uptime[3]} วินาที"
-                response_string += " น้าาา"
+                response_string += " น้าาา sniffsHeart sniffsHeart sniffsHeart"
                 await self.send_message(response_string)
 
     @commands.command(name="discord")
@@ -294,21 +295,28 @@ class TwitchBot(commands.Bot,):
         if (check_cooldown(ctx.author.name.lower(), "discord")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "discord")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.discord_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} มาคุยกันได้ใน Discord {self.discord_link} sniffsBaby")
 
-    @commands.command(name="facebook")
+    @commands.command(name="facebook", aliases=("fb", "Facebook"))
     async def facebook_command(self, ctx):
         if (check_cooldown(ctx.author.name.lower(), "facebook")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "facebook")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.facebook_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} มาตามเพจสนิฟที่นี่ {self.facebook_link} sniffsBaby")
 
-    @commands.command(name="youtube")
+    @commands.command(name="youtube", aliases=("yt", "Youtube"))
     async def youtube_command(self, ctx):
         if (check_cooldown(ctx.author.name.lower(), "youtube")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "youtube")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.youtube_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} Channel ร้างของสนิฟเอง {self.youtube_link} sniffsBaby")
+
+    @commands.command(name="instagram", aliases=("ig", "Instagram"))
+    async def instagram_command(self, ctx):
+        if (check_cooldown(ctx.author.name.lower(), "instagram")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
+                set_cooldown(ctx.author.name.lower(), "instagram")
+            await self.send_message(f"@{ctx.author.name.lower()} IG ของสนิฟ {self.instagram_link} sniffsBaby")
 
     # @commands.command(name="commands", aliases=["command", "cmd"])
     # async def commmands_command(self,ctx):
@@ -325,7 +333,7 @@ class TwitchBot(commands.Bot,):
             data = await call_to_hell(usernames, exclude_list, self.channel.timeout)
             users_string = ", ".join(data["poor_users"])
             await self.send_message(f"บ๊ายบายคุณ {users_string}")
-            await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป....")
+            await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
 
     @commands.command(name="sr")
     async def user_song_request(self, ctx):
@@ -352,10 +360,10 @@ class TwitchBot(commands.Bot,):
             if command1 == "req":
                 if self.request_status and command2 == "off":
                     self.request_status = False
-                    await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ")
+                    await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsAH")
                 elif not self.request_status and command2 == "on":
                     self.request_status = True
-                    await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
+                    await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsMic ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
             elif command1 == "feed" and command2 is not None:
                 if self.song_feed_on and command2 == "off":
                     self.song_feed_on = False

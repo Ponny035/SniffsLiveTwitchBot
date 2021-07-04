@@ -24,7 +24,7 @@ async def get_coin(username, send_message):
         coin = retrieve(username)["coin"]
     else:
         coin = 0
-    await send_message(f"@{username} มี {coin} sniffscoin")
+    await send_message(f"@{username} มี {coin} sniffscoin sniffsAH")
     print(f"[COIN] [{get_timestamp()}] Coin checked by {username}: {coin} sniffscoin")
 
 
