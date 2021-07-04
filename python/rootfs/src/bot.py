@@ -40,6 +40,7 @@ class TwitchBot(commands.Bot,):
         self.discord_link = "https://discord.gg/Q3AMaHQEGU"  # temp link
         self.facebook_link = "https://www.facebook.com/sniffslive/"
         self.youtube_link = "https://www.youtube.com/SniffsLive"
+        self.instagram_link = "https://www.instagram.com/musicsn/"
         self.vip_list = [self.NICK, self.CHANNELS, "sirju001", "mafiamojo", "armzi", "moobot", "sniffsbot"]
 
         try:
@@ -294,21 +295,28 @@ class TwitchBot(commands.Bot,):
         if (check_cooldown(ctx.author.name.lower(), "discord")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "discord")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.discord_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} มาคุยกันได้ใน Discord {self.discord_link} sniffsBaby")
 
-    @commands.command(name="facebook")
+    @commands.command(name="facebook", aliases=("fb", "Facebook"))
     async def facebook_command(self, ctx):
         if (check_cooldown(ctx.author.name.lower(), "facebook")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "facebook")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.facebook_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} มาตามเพจสนิฟที่นี่ {self.facebook_link} sniffsBaby")
 
-    @commands.command(name="youtube")
+    @commands.command(name="youtube", aliases=("yt", "Youtube"))
     async def youtube_command(self, ctx):
         if (check_cooldown(ctx.author.name.lower(), "youtube")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                 set_cooldown(ctx.author.name.lower(), "youtube")
-            await self.send_message(f"@{ctx.author.name.lower()} {self.youtube_link}")
+            await self.send_message(f"@{ctx.author.name.lower()} Channel ร้างของสนิฟเอง {self.youtube_link} sniffsBaby")
+
+    @commands.command(name="instagram", aliases=("ig", "Instagram"))
+    async def instagram_command(self, ctx):
+        if (check_cooldown(ctx.author.name.lower(), "instagram")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
+                set_cooldown(ctx.author.name.lower(), "instagram")
+            await self.send_message(f"@{ctx.author.name.lower()} IG ของสนิฟ {self.instagram_link} sniffsBaby")
 
     # @commands.command(name="commands", aliases=["command", "cmd"])
     # async def commmands_command(self,ctx):
