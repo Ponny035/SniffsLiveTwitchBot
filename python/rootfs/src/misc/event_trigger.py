@@ -71,6 +71,8 @@ class EventTrigger:
     async def handle_channelpoints(self, rawdata, event_channelpoint):
         username = ""
         id_match = "e80c4383-ee96-41cd-94ab-b232adc47f8f"
+        id_match5k = "8b3458b8-f0bf-4218-b046-829c506279e5"
+        id_match10k = "d7c3ca2f-2372-4209-9804-9dd6e28eea34"
         timestamp = 0
         tags = result = {}
         rawdata = rawdata.split(" ")[0].split(";")
@@ -94,6 +96,22 @@ class EventTrigger:
                 "username": username,
                 "timestamp": timestamp.replace(microsecond=0),
                 "coin": 1
+            }
+            await event_channelpoint(result)
+        elif custom_reward_id == id_match5k:
+            print(f"[COIN] [{timestamp.replace(microsecond=0)}] {username}: redeem 5000 channel points to coin")
+            result = {
+                "username": username,
+                "timestamp": timestamp.replace(microsecond=0),
+                "coin": 5
+            }
+            await event_channelpoint(result)
+        elif custom_reward_id == id_match10k:
+            print(f"[COIN] [{timestamp.replace(microsecond=0)}] {username}: redeem 10000 channel points to coin")
+            result = {
+                "username": username,
+                "timestamp": timestamp.replace(microsecond=0),
+                "coin": 10
             }
             await event_channelpoint(result)
 
