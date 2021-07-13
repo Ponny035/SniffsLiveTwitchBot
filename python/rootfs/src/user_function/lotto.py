@@ -32,6 +32,9 @@ def check_winner(lotto_list):
             except KeyError:
                 winning_dict[lotto[0]] = 1
     len_winner = sum(winning_dict.values())
-    final_prize = max(int(win_prize / len_winner), min_prize)
+    try:
+        final_prize = max(int(win_prize / len_winner), min_prize)
+    except ZeroDivisionError:
+        final_prize = 0
     winning_dict.update({n: final_prize * winning_dict[n] for n in winning_dict.keys()})
     return win_number, winning_dict
