@@ -10,7 +10,8 @@ from .misc.automod import automod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
-from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_market, send_lotto_msg, check_message
+from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
+from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
 from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
 from .timefn.timestamp import get_timestamp, sec_to_hms
@@ -31,7 +32,9 @@ class TwitchBot(commands.Bot,):
         nest_asyncio.apply()
 
         # define default variable
-        self.market_open = False
+        self.market_open = True
+        self.lotto_open = False
+        self.raffle_open = False
         self.song_feed_on = True
         self.channel_live = False
         self.channel_live_on = None
@@ -212,13 +215,11 @@ class TwitchBot(commands.Bot,):
                 if not self.market_open:
                     self.market_open = True
                     print(f"[COIN] [{get_timestamp()}] Market is now open")
-                    await update_market(self.market_open)
                     await self.send_message("เปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
             elif status == "close":
                 if self.market_open:
                     self.market_open = False
                     print(f"[COIN] [{get_timestamp()}] Market is now close")
-                    await update_market(self.market_open)
                     await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
 
     @commands.command(name="payday")
@@ -405,21 +406,79 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="lotto")
     async def sniffs_lotto(self, ctx):
-        if self.market_open:
-            commands_split = ctx.content.split()
-            try:
-                lotto = commands_split[1]
-            except IndexError:
-                lotto = None
-            if lotto is not None:
-                await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
-                # if (check_cooldown(ctx.author.name.lower(), "lotto")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                #     success = await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
-                #     if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                #         if success:
-                #             set_cooldown(ctx.author.name.lower(), "lotto")
+        commands_split = ctx.content.split()
+        try:
+            lotto = commands_split[1]
+        except IndexError:
+            lotto = None
+        if lotto is not None:
+            if lotto == "start":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if not self.lotto_open:
+                        self.lotto_open = True
+                        await update_lotto(self.lotto_open)
+                        print(f"[LOTO] [{get_timestamp()}] LOTTO System started")
+                        await self.send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
+            elif lotto == "stop":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if self.lotto_open:
+                        self.lotto_open = False
+                        await update_lotto(self.lotto_open)
+                        print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
+                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
+            elif lotto == "draw":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if self.lotto_open:
+                        self.lotto_open = False
+                        await update_lotto(self.lotto_open)
+                        print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
+                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")                
+                    await draw_lotto(self.send_message)
+            else:
+                if self.lotto_open:
+                    await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
 
-    @commands.command(name="draw")
-    async def draw_lotto(self, ctx):
-        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            await draw_lotto(self.send_message)
+    @commands.command(name="raffle")
+    async def sniffs_raffle(self, ctx):
+        commands_split = ctx.content.split()
+        try:
+            raffle = commands_split[1]
+        except IndexError:
+            raffle = None
+        if raffle == "start":
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                if not self.raffle_open:
+                    self.raffle_open = True
+                    success = raffle_start(self.raffle_open)
+                    if success:
+                        print(f"[RAFL] [{get_timestamp()}] Raffle system started")
+                        await self.send_message("พิมพ์ !raffle เพื่อเข้ามาลุ้นของรางวัลกาชาจากสนิฟเลย! sniffsHeart")
+        elif raffle == "stop":
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                if self.raffle_open:
+                    self.raffle_open = False
+                    success = raffle_stop(self.raffle_open)
+                    if success:
+                        print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
+                        await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
+        elif raffle == "draw":
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                if self.raffle_open:
+                    self.raffle_open = False
+                    success = raffle_stop(self.raffle_open)
+                    if success:
+                        print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
+                        await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
+                await draw_raffle(self.send_message)
+        else:
+            if self.raffle_open:
+                if raffle is not None:
+                    try:
+                        count = int(raffle)
+                        if count < 0:
+                            return
+                    except Exception:
+                        return
+                elif raffle is None:
+                    count = 1
+                await buy_raffle(ctx.author.name.lower(), count, self.send_message, self.channel.timeout)
