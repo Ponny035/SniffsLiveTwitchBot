@@ -73,8 +73,8 @@ async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
                     submonth = retrieve(target)["submonth"]
                     dodge_rate += min(submonth, 6)
                 if target in exclude_target:
-                    await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ sniffsAngry นั่งพักไปก่อน {shooter_timeout} วินาที")
-                    await send_message(f"@{employer} บังอาจนักนะ บินไปเองซะ {shooter_timeout} วินาที")
+                    await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
+                    await send_message(f"@{employer} บังอาจนักนะ sniffsAngry บินไปเองซะ {shooter_timeout} วินาที")
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
                 else:
                     if random.random() > (dodge_rate / 100):

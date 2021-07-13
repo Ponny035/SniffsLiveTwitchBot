@@ -318,11 +318,12 @@ class TwitchBot(commands.Bot,):
                 set_cooldown(ctx.author.name.lower(), "instagram")
             await self.send_message(f"@{ctx.author.name.lower()} IG ของสนิฟ {self.instagram_link} sniffsBaby")
 
-    # @commands.command(name="commands", aliases=["command", "cmd"])
-    # async def commmands_command(self,ctx):
-    #     if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
-    #         self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
-    #         await self.send_message(f"นี่คือคำสั่งทั้งหมดน้า พิมพ์ !commands เพื่อดูคำสั่งทั้งหมด | พิมพ์ !coin เพื่อเช็คจำนวน sniffcoin ที่มีอยู่ | พิมพ์ !watchtime เพื่อเช็คเวลาที่ดูมาแล้ว | พิมพ์ !uptime เพื่อดูเวลาว่าสนิฟไลฟ์มากี่ชั่วโมงแล้ว | พิมพ์ !discord เพื่อเข้าสู่พื้นที่ของต้าวๆ | พิมพ์ !facebook เพื่อติดตามสนิฟผ่านทางเพจ! | พิมพ์ !youtube เพื่อติดตามสนิฟผ่านยูทูป")
+    @commands.command(name="commands", aliases=["command", "cmd"])
+    async def commmands_command(self, ctx):
+        if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
+            self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
+            await self.send_message("!sr ขอเพลง | !coin เช็คเหรียญ | !lotto ซื้อหวย | !kill จ้างมือปืนสนิฟ")
+            await self.send_message("!uptime | !watchtime | !discord | !fb | !yt | !ig")
 
     @commands.command(name="callhell")
     async def callhell(self, ctx):
