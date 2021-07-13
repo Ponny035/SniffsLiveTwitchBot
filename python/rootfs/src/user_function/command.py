@@ -7,12 +7,13 @@ from .lotto import check_winner
 from src.coin.coin import add_coin
 from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
+from .raffle import raffle_save, raffle_winner
 
 
 # init variable
 player_lotto_list = []
 shooter_cooldown = 0
-market_stats = False
+lotto_stats = False
 
 
 # mod function
@@ -147,14 +148,14 @@ async def draw_lotto(send_message):
         player_lotto_list = []
 
 
-async def update_market(status):
-    global market_stats
-    market_stats = status
+async def update_lotto(status):
+    global lotto_stats
+    lotto_stats = status
 
 
 async def send_lotto_msg(send_message):
     while True:
-        if market_stats:
+        if lotto_stats:
             await send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
         await asyncio.sleep(1800)
 
@@ -169,3 +170,26 @@ async def check_message(username, message, vip_list, dev_list, send_message, tim
                 await timeout(username, 30, f"@{username} ไหน ใครกาก")
                 await send_message(f"@{username} บังอาจนักนะ sniffsAngry sniffsAngry")
                 print(f"[_MOD] [{get_timestamp()}] Kill: {username} for 30 secs")
+
+
+async def buy_raffle(username, count, send_message, timeout):
+    raffle_cost = 1
+    if check_exist(username):
+        userstat = retrieve(username)
+        total_raffle = min(int(userstat["coin"] / raffle_cost), count)
+        if total_raffle > 0:
+            success = raffle_save(username, total_raffle)
+            if success:
+                await send_message(f"@{username} ซื้อตั๋วสำเร็จ {total_raffle} ใบ sniffsHeart")
+                print(f"[RAFL] [{get_timestamp()}] {username} buy {total_raffle} tickets")
+                return True
+    else:
+        await timeout(username, 60, "ไม่มีเงินจ่ายค่าตั๋ว")
+        print(f"[RAFL] [{get_timestamp()}] {username} Timeout 60 sec Reason: no money")
+        return False
+
+
+async def draw_raffle(send_message):
+    winner = raffle_winner()
+    print(f"[RAFL] [{get_timestamp()}] Winner: {winner}")
+    await send_message(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
