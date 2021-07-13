@@ -319,7 +319,7 @@ class TwitchBot(commands.Bot,):
             await self.send_message(f"@{ctx.author.name.lower()} IG ของสนิฟ {self.instagram_link} sniffsBaby")
 
     @commands.command(name="commands", aliases=["command", "cmd"])
-    async def commmands_command(self,ctx):
+    async def commmands_command(self, ctx):
         if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
             self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
             await self.send_message("!sr ขอเพลง | !coin เช็คเหรียญ | !lotto ซื้อหวย | !kill จ้างมือปืนสนิฟ")
