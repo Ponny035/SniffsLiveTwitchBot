@@ -180,6 +180,7 @@ async def buy_raffle(username, count, send_message, timeout):
         if total_raffle > 0:
             success = raffle_save(username, total_raffle)
             if success:
+                add_coin(username, -int(total_raffle * raffle_cost))
                 await send_message(f"@{username} ซื้อตั๋วสำเร็จ {total_raffle} ใบ sniffsHeart")
                 print(f"[RAFL] [{get_timestamp()}] {username} buy {total_raffle} tickets")
                 return True
@@ -191,5 +192,9 @@ async def buy_raffle(username, count, send_message, timeout):
 
 async def draw_raffle(send_message):
     winner = raffle_winner()
-    print(f"[RAFL] [{get_timestamp()}] Winner: {winner}")
-    await send_message(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
+    if winner is not None:
+        print(f"[RAFL] [{get_timestamp()}] Winner: {winner}")
+        await send_message(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
+    else:
+        print(f"[RAFL] [{get_timestamp()}] Empty raffle list")
+        await send_message("ตั๋วหมดโหลแล้วสนิฟ sniffsAH")

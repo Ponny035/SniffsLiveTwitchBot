@@ -23,10 +23,12 @@ def raffle_save(username, count):
 
 def raffle_winner():
     global raffle_list
-    rand = random.randint(0, len(raffle_list))
-    winner = raffle_list[rand]
-    del raffle_list[rand]
-    return winner
+    if len(raffle_list) > 0:
+        rand = random.randint(0, len(raffle_list) - 1)
+        winner = raffle_list[rand]
+        del raffle_list[rand]
+        return winner
+    return None
 
 
 def raffle_stop(status):
