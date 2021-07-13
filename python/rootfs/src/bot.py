@@ -321,8 +321,9 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="commands", aliases=["command", "cmd"])
     async def commmands_command(self, ctx):
-        if (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (self.user_function.check_cooldown(ctx.author.name.lower(), "commands")) or (self.environment == "dev" and ctx.author.name.lower() == "bosssoq"):
-            self.user_function.set_cooldown(ctx.author.name.lower(), "commands")
+        if (check_cooldown(ctx.author.name.lower(), "commands")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
+                set_cooldown(ctx.author.name.lower(), "commands")
             await self.send_message("!sr ขอเพลง | !coin เช็คเหรียญ | !lotto ซื้อหวย | !kill จ้างมือปืนสนิฟ")
             await self.send_message("!uptime | !watchtime | !discord | !fb | !yt | !ig")
 
