@@ -172,7 +172,7 @@ class TwitchBot(commands.Bot,):
         self.print_to_console(f"anonsubmysterygift: {data}")
 
     async def event_raid(self, channel, data):
-        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} ค่าา sniffsHeart sniffsHeart sniffsHeart")
+        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} คน ค่าา sniffsHeart sniffsHeart sniffsHeart")
         self.print_to_console(f"raid: {data}")
 
     async def event_join(self, user):

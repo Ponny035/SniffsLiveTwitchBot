@@ -134,6 +134,7 @@ class automod:
         msg_id = re.search(r"(?<=id=)(.*?)(?=;)", raw_data)[0]
         await self.auto_cursesword(user, role, message, msg_id, send_message, mod_action)
         await self.auto_removelink(user, role, message, msg_id, send_message, mod_action)
+        await self.auto_removetwitchlink(user, message, msg_id, send_message, mod_action)
 
     async def auto_cursesword(self, user, role, message, msg_id, send_message, mod_action):
         # if any([curse in message.lower() for curse in self.CURSES]):
@@ -152,6 +153,13 @@ class automod:
             if test_result:
                 warning_link_timers = (0, 0, 1, 5, 10, 30, 60)
                 await self.warn(user, send_message, mod_action, warning_link_timers, msg_id, reason="paste_link_by_non_sub")
+
+    async def auto_removetwitchlink(self, user, message, msg_id, send_message, mod_action):
+        check_url = bool(re.match("https?://(www.)?twitch.tv/", message))
+        check_clipurl = not bool(re.match("https?://(www.)?twitch.tv/.*/clip/.*", message))
+        if check_url and check_clipurl:
+            warning_link_timers = (0, 0, 10, 30, 60)
+            await self.warn(user, send_message, mod_action, warning_link_timers, msg_id, reason="paste_twitch_link")      
 
     async def warn(self, user, send_message, mod_action, timers, msg_id=None, reason=None):
         # Warnings = db("SELECT warning FROM user WHERE user id?",
