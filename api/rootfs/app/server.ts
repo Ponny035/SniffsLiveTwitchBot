@@ -29,7 +29,7 @@ app.use(async(ctx: any, next) =>{
     await next()
     await send(ctx, ctx.request.url.pathname, {
         root: `${Deno.cwd()}/static`,
-        index: "index.html",
+        // index: "index.html",
     })
 })
 
