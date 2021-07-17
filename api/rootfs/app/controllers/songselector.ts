@@ -1,6 +1,6 @@
 import { getTimestamp } from "../functions/gettimestamp.ts"
 import { Song, Req, Confirm, VoteObj } from "../interfaces/Songselector.ts"
-import { socketSongList } from "../routes/wsServer.ts"
+import { socketSend } from "../routes/wsServer.ts"
 
 let songList: Song[] = []
 
@@ -33,7 +33,7 @@ const preparedResponse = () =>{
     if(nowPlaying.songName !== ""){
         Object.assign(response, {nowplaying: nowPlaying})
     }
-    socketSongList(JSON.stringify(response))
+    socketSend("songfeed", JSON.stringify(response))
     return response
 }
 
