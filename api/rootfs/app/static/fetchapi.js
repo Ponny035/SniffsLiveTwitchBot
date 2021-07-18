@@ -190,7 +190,7 @@ function refreshNowPlaying(song){
 
 const ws = new WebSocket(websocketUrl);
 ws.onopen = function(){
-    ws.send("Handshake");
+    ws.send("songfeedHandshake");
 };
 ws.addEventListener("message", function(event){
     response = (JSON.parse(event.data));
