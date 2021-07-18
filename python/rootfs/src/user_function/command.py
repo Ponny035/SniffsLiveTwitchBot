@@ -8,6 +8,7 @@ from src.coin.coin import add_coin
 from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
 from .raffle import raffle_save, raffle_winner
+from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed, draw_lotto_feed, draw_raffle_feed, shooter_dodge_feed, shooter_success_feed, shooter_suicide_feed, shooter_unsuccess_feed, shooter_vip_feed
 
 
 # init variable
@@ -30,6 +31,7 @@ async def call_to_hell(usernames, exclude_list, timeout):
         poor_users += ["sirju001"]
     for username in poor_users:
         casualtie += 1
+        call_to_hell_feed(username, casualtie, len(poor_users))
         print(f"[HELL] [{get_timestamp()}] Timeout: {username} Duration: {callhell_timeout} Reason: โดนสนิฟดีดนิ้ว")
         await timeout(username, callhell_timeout, "โดนสนิฟดีดนิ้ว")
         await asyncio.sleep(1)
@@ -51,6 +53,7 @@ async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
     if target == "me":
         await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
         await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที sniffsAH")
+        shooter_suicide_feed(employer, shooter_timeout)
         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
         return
     exclude_target = vip_list + dev_list
@@ -76,32 +79,39 @@ async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
                 if target in exclude_target:
                     await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
                     await send_message(f"@{employer} บังอาจนักนะ sniffsAngry บินไปเองซะ {shooter_timeout} วินาที")
+                    shooter_vip_feed(employer, shooter_timeout)
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
                 else:
                     if random.random() > (dodge_rate / 100):
                         await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
                         await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที sniffsAH")
+                        shooter_success_feed(employer, target, shooter_timeout, userdata["coin"] - payrate)
                         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
                     else:
                         shooter_cooldown = 0
                         await send_message(f"@{target} หลบมือปืนสนิฟได้ sniffsHeart @{employer} เสียใจด้วยนะ (Dodge = {int(dodge_rate)}%)")
+                        shooter_dodge_feed(target, dodge_rate)
             else:
                 if target in exclude_target:
                     await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")
                     await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม sniffsAngry บินไปซะ {int(shooter_timeout * 2)} วินาที")
+                    shooter_unsuccess_feed(employer, int(shooter_timeout * 2))
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {int(shooter_timeout * 2)} sec")
                 else:
                     await timeout(employer, shooter_timeout, f"ไม่มีเงินจ้างมือปืนงั้นรึ โดนยิงเองซะ {shooter_timeout} วินาที")
                     await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน sniffsAngry โดนมือปืนยิงตาย {shooter_timeout} วินาที")
+                    shooter_unsuccess_feed(employer, shooter_timeout)
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
         else:
             if target in exclude_target:
                 await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")
                 await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม sniffsAngry บินไปซะ {int(shooter_timeout * 2)} วินาที")
+                shooter_unsuccess_feed(employer, int(shooter_timeout * 2))
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {int(shooter_timeout * 2)} sec")
             else:
                 await timeout(employer, shooter_timeout, f"ไม่มีเงินจ้างมือปืนงั้นรึ โดนยิงเองซะ {shooter_timeout} วินาที")
                 await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน sniffsAngry โดนมือปืนยิงตาย {shooter_timeout} วินาที")
+                shooter_unsuccess_feed(employer, shooter_timeout)
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
 
 
@@ -114,15 +124,10 @@ async def buy_lotto(username, lotto, send_message):
             userstat = retrieve(username)
             if userstat["coin"] >= lotto_cost:
                 lotto_int = int(lotto)
-                # if player_lotto_list != []:
-                #     for player_lotto in player_lotto_list:
-                #         if lotto_int in player_lotto:
-                #             await send_message(f"@{username} ไม่สามารถซื้อเลขซ้ำได้")
-                #             print(f"[LOTO] [{get_timestamp()}] {username} Duplicate Lotto: {lotto}")
-                #             return False
                 add_coin(username, -lotto_cost)
                 player_lotto_list += [[username, lotto_int]]
                 await send_message(f"@{username} ซื้อ SniffsLotto หมายเลข {lotto} สำเร็จ sniffsHeart sniffsHeart sniffsHeart")
+                buy_lotto_feed(username, lotto)
                 print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} successfully")
                 return True
             else:
@@ -144,6 +149,7 @@ async def draw_lotto(send_message):
         await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} sniffsShock มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin sniffsHeart")
         if count_winners <= 5:
             await send_message(f"ผู้โชคดีได้แก่ {'@'+', @'.join(lotto_winners.keys())} คร่า sniffsHeart sniffsHeart sniffsHeart")
+        draw_lotto_feed(win_number_string, payout, lotto_winners)
         print(f"[LOTO] [{get_timestamp()}] LOTTO draw: {win_number_string} | winners: {count_winners} users | payout: {payout} coin")
         player_lotto_list = []
 
@@ -182,6 +188,7 @@ async def buy_raffle(username, count, send_message, timeout):
             if success:
                 add_coin(username, -int(total_raffle * raffle_cost))
                 await send_message(f"@{username} ซื้อตั๋วสำเร็จ {total_raffle} ใบ sniffsHeart")
+                buy_raffle_feed(username, total_raffle)
                 print(f"[RAFL] [{get_timestamp()}] {username} buy {total_raffle} tickets")
                 return True
     else:
@@ -190,11 +197,12 @@ async def buy_raffle(username, count, send_message, timeout):
         return False
 
 
-async def draw_raffle(send_message):
+async def draw_raffle(send_message, send_message_feed):
     winner = raffle_winner()
     if winner is not None:
         print(f"[RAFL] [{get_timestamp()}] Winner: {winner}")
-        await send_message(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
+        await send_message_feed(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
+        draw_raffle_feed(winner)
     else:
         print(f"[RAFL] [{get_timestamp()}] Empty raffle list")
         await send_message("ตั๋วหมดโหลแล้วสนิฟ sniffsAH")

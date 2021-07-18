@@ -1,6 +1,6 @@
 import { Application, send } from "https://deno.land/x/oak@v7.5.0/mod.ts"
 import { getTimestamp } from "./functions/gettimestamp.ts"
-import songselectorRouter from "./routes/songselector.ts"
+import webfeedRouter from "./routes/webfeed.ts"
 
 const port: number = 8000
 const app = new Application()
@@ -21,8 +21,8 @@ app.use(async(ctx: any, next) =>{
     ctx.response.headers.append("Access-Control-Allow-Origin", "*")
 })
 
-app.use(songselectorRouter.routes())
-app.use(songselectorRouter.allowedMethods())
+app.use(webfeedRouter.routes())
+app.use(webfeedRouter.allowedMethods())
 
 // serve static
 app.use(async(ctx: any, next) =>{

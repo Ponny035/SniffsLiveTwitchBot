@@ -10,6 +10,7 @@ from .misc.automod import automod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
+from .misc.webfeed import givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
 from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
@@ -32,6 +33,7 @@ class TwitchBot(commands.Bot,):
         nest_asyncio.apply()
 
         # define default variable
+        self.feed_enable = True
         self.market_open = True
         self.lotto_open = False
         self.raffle_open = False
@@ -80,6 +82,10 @@ class TwitchBot(commands.Bot,):
             await self.channel.send(msg)
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
+    
+    async def send_message_feed(self, msg):
+        if not self.feed_enable:
+            await self.channel.send(msg)
 
     def print_to_console(self, msg):
         if self.environment == "dev":
@@ -137,34 +143,34 @@ class TwitchBot(commands.Bot,):
             await self.handle_commands(ctx)
 
     async def event_bits(self, data):
-        await add_point_by_bit(data["username"], data["bits"], data["submonth"], self.send_message)
+        await add_point_by_bit(data["username"], data["bits"], data["submonth"], self.send_message_feed)
 
     async def event_channelpoint(self, data):
         add_coin(data["username"], data["coin"])
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()
-        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message)
+        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"sub: {data}")
 
     async def event_resub(self, channel, data):
         usernames = await self.get_users_list()
-        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message)
+        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"resub: {data}")
 
     async def event_subgift(self, channel, data):
         usernames = await self.get_users_list()
-        await gift_subscription_payout(data["username"], data["recipent"], usernames, self.send_message)
+        await gift_subscription_payout(data["username"], data["recipent"], usernames, self.send_message_feed)
         self.print_to_console(f"subgift: {data}")
 
     async def event_submystergift(self, channel, data):
         usernames = await self.get_users_list()
-        await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], usernames, self.send_message)
+        await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], usernames, self.send_message_feed)
         self.print_to_console(f"submysterygift: {data}")
 
     async def event_anonsubgift(self, channel, data):
         usernames = await self.get_users_list()
-        await anongift_subscription_payout(data["recipent"], data["gift_sub_count"], usernames, self.send_message)
+        await anongift_subscription_payout(data["recipent"], data["gift_sub_count"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"anonsubgift: {data}")
 
     async def event_anonsubmysterygift(self, channel, data):
@@ -172,7 +178,8 @@ class TwitchBot(commands.Bot,):
         self.print_to_console(f"anonsubmysterygift: {data}")
 
     async def event_raid(self, channel, data):
-        await self.send_message(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} คน ค่าา sniffsHeart sniffsHeart sniffsHeart")
+        await self.send_message_feed(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} คน ค่าา sniffsHeart sniffsHeart sniffsHeart")
+        raid_feed(data['username'], data['viewers'])
         self.print_to_console(f"raid: {data}")
 
     async def event_join(self, user):
@@ -234,7 +241,8 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             usernames = await self.get_users_list()
             payday(usernames, coin)
-            await self.send_message(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin sniffsAH")
+            await self.send_message_feed(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin sniffsAH")
+            payday_feed(coin, len(usernames))
 
     @commands.command(name="give")
     async def give_coin_user(self, ctx):
@@ -252,7 +260,8 @@ class TwitchBot(commands.Bot,):
                 coin = 1
             if (username is not None):
                 add_coin(username, coin)
-                await self.send_message(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
+                await self.send_message_feed(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
+                givecoin_feed(username, coin)
 
     @commands.command(name="coin")
     async def check_coin(self, ctx):
@@ -334,15 +343,15 @@ class TwitchBot(commands.Bot,):
             usernames = await self.get_users_list()
             exclude_list = self.vip_list + self.dev_list
             data = await call_to_hell(usernames, exclude_list, self.channel.timeout)
-            users_string = ", ".join(data["poor_users"])
-            await self.send_message(f"บ๊ายบายคุณ {users_string}")
+            # users_string = ", ".join(data["poor_users"])
+            # await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
 
     @commands.command(name="sr")
     async def user_song_request(self, ctx):
         if self.request_status:
             if (check_cooldown(ctx.author.name.lower(), "song_request", 120)) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                success = await user_song_request(ctx.content, get_timestamp(), ctx.author.name.lower(), self.send_message)
+                success = await user_song_request(ctx.content, get_timestamp(), ctx.author.name.lower(), self.send_message_feed)
                 if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
                     if success:
                         set_cooldown(ctx.author.name.lower(), "song_request")
@@ -364,9 +373,11 @@ class TwitchBot(commands.Bot,):
                 if self.request_status and command2 == "off":
                     self.request_status = False
                     await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsAH")
+                    song_request_off_feed()
                 elif not self.request_status and command2 == "on":
                     self.request_status = True
                     await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsMic ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
+                    song_request_on_feed()
             elif command1 == "feed" and command2 is not None:
                 if self.song_feed_on and command2 == "off":
                     self.song_feed_on = False
@@ -403,7 +414,7 @@ class TwitchBot(commands.Bot,):
             except IndexError:
                 target = None
             if target is not None:
-                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
+                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.channel.timeout)
 
     @commands.command(name="lotto")
     async def sniffs_lotto(self, ctx):
@@ -420,6 +431,7 @@ class TwitchBot(commands.Bot,):
                         await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System started")
                         await self.send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
+                        lotto_start_feed()
             elif lotto == "stop":
                 if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                     if self.lotto_open:
@@ -427,6 +439,7 @@ class TwitchBot(commands.Bot,):
                         await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
                         await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
+                        lotto_stop_feed()
             elif lotto == "draw":
                 if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                     if self.lotto_open:
@@ -434,10 +447,11 @@ class TwitchBot(commands.Bot,):
                         await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
                         await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")                
-                    await draw_lotto(self.send_message)
+                        lotto_stop_feed()
+                    await draw_lotto(self.send_message_feed)
             else:
                 if self.lotto_open:
-                    await buy_lotto(ctx.author.name.lower(), lotto, self.send_message)
+                    await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
 
     @commands.command(name="raffle")
     async def sniffs_raffle(self, ctx):
@@ -454,6 +468,7 @@ class TwitchBot(commands.Bot,):
                     if success:
                         print(f"[RAFL] [{get_timestamp()}] Raffle system started")
                         await self.send_message("พิมพ์ !raffle เพื่อเข้ามาลุ้นของรางวัลกาชาจากสนิฟเลย! sniffsHeart")
+                        raffle_start_feed()
         elif raffle == "stop":
             if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                 if self.raffle_open:
@@ -462,6 +477,7 @@ class TwitchBot(commands.Bot,):
                     if success:
                         print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
                         await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
+                        raffle_stop_feed()
         elif raffle == "draw":
             if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                 if self.raffle_open:
@@ -470,7 +486,8 @@ class TwitchBot(commands.Bot,):
                     if success:
                         print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
                         await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
-                await draw_raffle(self.send_message)
+                        raffle_stop_feed()
+                await draw_raffle(self.send_message, self.send_message_feed)
         else:
             if self.raffle_open:
                 if raffle is not None:
@@ -482,4 +499,4 @@ class TwitchBot(commands.Bot,):
                         return
                 elif raffle is None:
                     count = 1
-                await buy_raffle(ctx.author.name.lower(), count, self.send_message, self.channel.timeout)
+                await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.channel.timeout)
