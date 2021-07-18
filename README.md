@@ -27,6 +27,8 @@ DB_NAME=
 
 To start Sniffsbot system use this command `docker-compose up`
 
-## Songfeed
+## Webfeed
 
-Songfeed Server is bind on `http://{domain|localhost}:{port|default:8000}/`
+Killfeed Server is bind on `http://{domain|localhost}:{port|default:8000}/webfeed.html`
+Songfeed Server is bind on `http://{domain|localhost}:{port|default:8000}/songfeed.html`
+Songlist Dashboard Server is bind on `http://{domain|localhost}:{port|default:8000}/songlist.html`
