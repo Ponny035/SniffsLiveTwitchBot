@@ -44,8 +44,9 @@ async def gift_subscription_payout(username, recipent, usernames, send_message):
 
 
 async def giftmystery_subscription_payout(username, gift_count, usernames, send_message):
-    add_coin(username, sub_to_point * gift_count, True)
-    payday(usernames, 1, True)
+    # add_coin(username, sub_to_point * gift_count, True)
+    # payday(usernames, 1, True)
+    # It seems like giftsub call subgift again, so we don't need to add coin here
     await send_message(f"@{username} ได้รับ {sub_to_point * gift_count} sniffscoin จากการ Gift ให้สมาชิก {gift_count} คน sniffsHeart sniffsHeart sniffsHeart")
     giftmystery_subscription_payout_feed(username, sub_to_point * gift_count, gift_count)
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point * gift_count} sniffscoin by giftmysterysub")
