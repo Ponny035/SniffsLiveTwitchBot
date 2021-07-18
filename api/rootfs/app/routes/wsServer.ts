@@ -12,8 +12,10 @@ export const handleSocket = async (ctx: any): Promise<void> =>{
             connections = connections.filter(conn => conn.ws !== ws)
             console.log(`[_API] [${getTimestamp()}] Websocket connection closed`)
         }else if(event === "songfeedHandshake"){
-            connections.push({type: "songfeed", ws})
+            connections.push({ type: "songfeed", ws })
             firstHandShake()
+        }else if(event === "webfeedHandshake"){
+            connections.push({ type: "webfeed", ws })
         }
     }
 }
