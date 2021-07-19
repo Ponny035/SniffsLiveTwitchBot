@@ -2,6 +2,7 @@ import requests
 
 
 webfeed_url = "http://api-server:8000/api/v1/webfeed"
+webfeed_status = True
 
 default_tag_name = "tag is-info has-text-weight-bold ml-2 mr-2"
 default_tag_viewer = "tag is-primary has-text-weight-bold ml-2 mr-2"
@@ -19,6 +20,23 @@ crosshair_icon = "<span class='icon'><i class='fas fa-crosshairs'></i></span>"
 dodge_icon = "<span class='icon'><i class='fas fa-running'></i></span>"
 vip_icon = "<span class='icon'><i class='fas fa-user-secret'></i></span>"
 suicide_icon = "<span class='icon'><i class='fas fa-hand-point-left'></i></span>"
+feed_icon = "<span class='icon'><i class='fas fa-rss'></i></span>"
+
+
+def activate_webfeed_feed(status):
+    global webfeed_status
+    if status:
+        if not webfeed_status:
+            webfeed_status = status
+            feedtext = f"<span class='{default_info}'>{feed_icon}</span>"
+            feedtext += "<span class='text-white'>Webfeed System started</span>"
+            send_feed(feedtext)
+    elif not status:
+        if webfeed_status:
+            webfeed_status = status
+            feedtext = f"<span class='{default_info}'>{feed_icon}</span>"
+            feedtext += "<span class='text-white'>Webfeed System stopped</span>"
+            send_feed(feedtext)
 
 
 def subscription_payout_feed(username, coin, viewer):
