@@ -10,7 +10,7 @@ from .misc.automod import automod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
-from .misc.webfeed import givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
+from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
 from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
@@ -228,6 +228,27 @@ class TwitchBot(commands.Bot,):
                     self.market_open = False
                     print(f"[COIN] [{get_timestamp()}] Market is now close")
                     await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
+
+    @commands.command(name="webfeed")
+    async def activate_webfeed(self, ctx):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+            commands_split = ctx.content.split()
+            try:
+                status = commands_split[1]
+            except IndexError:
+                status = None
+            if status == "on":
+                if not self.feed_enable:
+                    self.feed_enable = True
+                    print(f"[FEED] [{get_timestamp()}] Webfeed System started")
+                    await self.send_message("Webfeed System started sniffsAH")
+                    activate_webfeed_feed(self.feed_enable)
+            elif status == "off":
+                if self.feed_enable:
+                    self.feed_enable = False
+                    print(f"[FEED] [{get_timestamp()}] Webfeed System stopped")
+                    await self.send_message("Webfeed System stopped sniffsAH")
+                    activate_webfeed_feed(self.feed_enable)
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx):
