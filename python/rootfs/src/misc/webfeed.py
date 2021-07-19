@@ -3,6 +3,8 @@ import requests
 
 webfeed_url = "http://api-server:8000/api/v1/webfeed"
 webfeed_status = True
+default_timeout = 10000
+long_timeout = 30000
 
 default_tag_name = "tag is-info has-text-weight-bold ml-2 mr-2"
 default_tag_viewer = "tag is-primary has-text-weight-bold ml-2 mr-2"
@@ -30,13 +32,13 @@ def activate_webfeed_feed(status):
             webfeed_status = status
             feedtext = f"<span class='{default_info}'>{feed_icon}</span>"
             feedtext += "<span class='text-white'>Webfeed System started</span>"
-            send_feed(feedtext)
+            send_feed(feedtext, long_timeout)
     elif not status:
         if webfeed_status:
             webfeed_status = status
             feedtext = f"<span class='{default_info}'>{feed_icon}</span>"
             feedtext += "<span class='text-white'>Webfeed System stopped</span>"
-            send_feed(feedtext)
+            send_feed(feedtext, long_timeout)
 
 
 def subscription_payout_feed(username, coin, viewer):
@@ -112,13 +114,13 @@ def call_to_hell_feed(username, idx, total):
 def song_request_on_feed():
     feedtext = f"<span class='{default_info}'>{music_icon}</span>"
     feedtext += "<span class='text-white'>เปิดระบบขอเพลง (!sr)</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def song_request_off_feed():
     feedtext = f"<span class='{default_info}'>{music_icon}</span>"
     feedtext += "<span class='text-white'>ปิดระบบขอเพลง</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def user_song_request_feed(username, song_name, coinleft):
@@ -162,13 +164,13 @@ def shooter_vip_feed(username, timeout):
 def lotto_start_feed():
     feedtext = f"<span class='{default_info}'>{lotto_icon}</span>"
     feedtext += "<span class='text-white'>เปิดระบบ SniffsLotto (!lotto)</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def lotto_stop_feed():
     feedtext = f"<span class='{default_info}'>{lotto_icon}</span>"
     feedtext += "<span class='text-white'>ปิดระบบ SniffsLotto รอประกาศรางวัล</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def buy_lotto_feed(username, lotto):
@@ -181,29 +183,29 @@ def draw_lotto_feed(win_number_string, payout, lotto_winners):
     feedtext_1 = f"<span class='{default_info}'>SniffsLotto</span>"
     feedtext_1 += f"<span class='text-white'>เลขที่ออก</span><span class='{default_tag_viewer}'>{win_number_string}</span>"
     feedtext_1 += f"<span class='text-white'>เงินรางวัลรวม {coin_icon} {payout} Sniffscoin</span>"
-    send_feed(feedtext_1)
+    send_feed(feedtext_1, long_timeout)
     for username, prize in lotto_winners.items():
         feedtext_2 = f"<span class='{default_tag_name}'>{username}</span>"
         feedtext_2 += f"<span class='text-white'>ได้รับ {coin_icon} {prize} Sniffscoin</span>"
-        send_feed(feedtext_2)
+        send_feed(feedtext_2, long_timeout)
 
 
 def raffle_start_feed():
     feedtext = f"<span class='{default_info}'>{raffle_icon}</span>"
     feedtext += "<span class='text-white'>เปิดให้ซื้อตั๋วชิงโชค (!raffle)</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def raffle_stop_feed():
     feedtext = f"<span class='{default_info}'>{raffle_icon}</span>"
     feedtext += "<span class='text-white'>ปิดการซื้อตั๋วชิงโชค รอจับรางวัล</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def draw_raffle_feed(username):
     feedtext = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext += f"<span class='text-white'>ได้รับรางวัล {raffle_icon}</span>"
-    send_feed(feedtext)
+    send_feed(feedtext, long_timeout)
 
 
 def buy_raffle_feed(username, count):
@@ -212,5 +214,5 @@ def buy_raffle_feed(username, count):
     send_feed(feedtext)
 
 
-def send_feed(feedtext):
-    requests.post(webfeed_url, json={'message': feedtext})
+def send_feed(feedtext, timeout=default_timeout):
+    requests.post(webfeed_url, json={'message': feedtext, 'timeout': timeout})

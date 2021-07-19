@@ -14,11 +14,12 @@ export default {
         const body = request.body()
         const data = await body.value
         console.log(`[_API] [${getTimestamp()}] Webfeed sending message`)
-        socketSend("webfeed", data.message)
+        socketSend("webfeed", JSON.stringify(data))
         response.status = 200
         response.body = {
             success: true,
-            msg: data.message
+            msg: data.message,
+            to: data?.timeout
         }
     }
 }

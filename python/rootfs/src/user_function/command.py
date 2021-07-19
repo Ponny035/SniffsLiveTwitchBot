@@ -197,11 +197,11 @@ async def buy_raffle(username, count, send_message, timeout):
         return False
 
 
-async def draw_raffle(send_message, send_message_feed):
+async def draw_raffle(send_message):
     winner = raffle_winner()
     if winner is not None:
         print(f"[RAFL] [{get_timestamp()}] Winner: {winner}")
-        await send_message_feed(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
+        await send_message(f"ผู้โชคดีได้แก่ {winner} ค่าาาาา sniffsHeart")
         draw_raffle_feed(winner)
     else:
         print(f"[RAFL] [{get_timestamp()}] Empty raffle list")
