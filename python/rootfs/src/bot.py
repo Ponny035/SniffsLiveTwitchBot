@@ -469,7 +469,7 @@ class TwitchBot(commands.Bot,):
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
                         await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")                
                         lotto_stop_feed()
-                    await draw_lotto(self.send_message_feed)
+                    await draw_lotto(self.send_message)
             else:
                 if self.lotto_open:
                     await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
@@ -508,7 +508,7 @@ class TwitchBot(commands.Bot,):
                         print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
                         await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
                         raffle_stop_feed()
-                await draw_raffle(self.send_message, self.send_message_feed)
+                await draw_raffle(self.send_message)
         else:
             if self.raffle_open:
                 if raffle is not None:
