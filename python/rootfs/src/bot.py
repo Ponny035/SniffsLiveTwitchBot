@@ -11,7 +11,7 @@ from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
 from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
-from .user_function.command import call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
+from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
 from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
@@ -82,7 +82,7 @@ class TwitchBot(commands.Bot,):
             await self.channel.send(msg)
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
-    
+
     async def send_message_feed(self, msg):
         if not self.feed_enable:
             await self.channel.send(msg)
@@ -467,7 +467,7 @@ class TwitchBot(commands.Bot,):
                         self.lotto_open = False
                         await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
-                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")                
+                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
                         lotto_stop_feed()
                     await draw_lotto(self.send_message)
             else:
@@ -521,3 +521,21 @@ class TwitchBot(commands.Bot,):
                 elif raffle is None:
                     count = 1
                 await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.channel.timeout)
+
+    @commands.command(name="flip")
+    async def coin_flip(self, ctx):
+        commands_split = ctx.content.split()
+        try:
+            side = commands_split[1]
+            if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
+                await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+                return
+        except IndexError:
+            return
+        try:
+            bet = int(commands_split[2])
+            if bet < 1:
+                return
+        except IndexError:
+            bet = 1
+        await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
