@@ -7,7 +7,7 @@ default_timeout = 10000
 long_timeout = 30000
 
 default_tag_name = "tag is-info has-text-weight-bold ml-2 mr-2"
-default_tag_viewer = "tag is-primary has-text-weight-bold ml-2 mr-2"
+default_tag_viewer = "tag is-black has-text-weight-bold ml-2 mr-2"
 default_snap_name = "tag is-danger has-text-weight-bold ml-2 mr-2"
 default_info = "tag is-warning has-text-weight-bold ml-2 mr-2"
 
