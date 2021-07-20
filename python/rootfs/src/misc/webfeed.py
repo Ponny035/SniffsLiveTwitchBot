@@ -22,6 +22,7 @@ crosshair_icon = "<span class='icon'><i class='fas fa-crosshairs'></i></span>"
 dodge_icon = "<span class='icon'><i class='fas fa-running'></i></span>"
 vip_icon = "<span class='icon'><i class='fas fa-user-secret'></i></span>"
 suicide_icon = "<span class='icon'><i class='fas fa-hand-point-left'></i></span>"
+flip_win_icon = "<span class='icon'><i class='fas fa-hand-holding-usd'></i></span>"
 feed_icon = "<span class='icon'><i class='fas fa-rss'></i></span>"
 
 
@@ -212,6 +213,17 @@ def buy_raffle_feed(username, count):
     feedtext = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext += f"<span class='text-white'>ซื้อตั๋วชิงโชค {raffle_icon} {count} ใบ"
     send_feed(feedtext)
+
+
+def coinflip_feed(username, win_side, coin_left, win, prize=None):
+    if win:
+        feedtext = f"<span class='{default_tag_name}'>{username}</span>"
+        feedtext += f"<span class='text-white'>ได้รับ {prize} Sniffscoin {flip_win_icon} Coinflip ออก{win_side} ({coin_left})</span>"
+        send_feed(feedtext)
+    else:
+        feedtext = f"<span class='{default_snap_name}'>{username}</span>"
+        feedtext += f"<span class='text-white'>เสียใจด้วยนะ Coinflip ออก{win_side} ({coin_left})</span>"
+        send_feed(feedtext)
 
 
 def send_feed(feedtext, timeout=default_timeout):

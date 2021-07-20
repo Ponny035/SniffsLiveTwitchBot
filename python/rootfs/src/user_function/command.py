@@ -3,12 +3,14 @@ import random
 import re
 import os
 
+from src.user_function.games import coinflip
+
 from .lotto import check_winner
 from src.coin.coin import add_coin
 from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
 from .raffle import raffle_save, raffle_winner
-from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed, draw_lotto_feed, draw_raffle_feed, shooter_dodge_feed, shooter_success_feed, shooter_suicide_feed, shooter_unsuccess_feed, shooter_vip_feed
+from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed, coinflip_feed, draw_lotto_feed, draw_raffle_feed, shooter_dodge_feed, shooter_success_feed, shooter_suicide_feed, shooter_unsuccess_feed, shooter_vip_feed
 
 
 # init variable
@@ -206,3 +208,29 @@ async def draw_raffle(send_message):
     else:
         print(f"[RAFL] [{get_timestamp()}] Empty raffle list")
         await send_message("ตั๋วหมดโหลแล้วสนิฟ sniffsAH")
+
+
+# coinflip system
+async def buy_coinflip(username, side, bet, send_message):
+    prize = bet * 2
+    if check_exist(username):
+        userstat = retrieve(username)
+        if userstat["coin"] >= bet:
+            add_coin(username, -bet)
+            result, win_side = coinflip(side)
+            if win_side == "h":
+                win_side = "หัว"
+            else:
+                win_side = "ก้อย"
+            if result:
+                await send_message(f"เหรียญออกที่{win_side}ค่า! sniffsHeart ได้รับ {prize} sniff coin")
+                coinflip_feed(username, win_side, userstat["coin"] - bet, result, prize)
+                add_coin(username, prize)
+                print(f"[FLIP] [{get_timestamp()}] {username} won {prize}")
+            else:
+                await send_message(f"ไม่น้าาาเหรียญออกที่{win_side} sniffsDrop")
+                coinflip_feed(username, win_side, userstat["coin"] - bet, result)
+                print(f"[FLIP] [{get_timestamp()}] {username} lose {bet}")
+        else:
+            await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก sniffsAngry sniffsAngry sniffsAngry")
+            print(f"[FLIP] [{get_timestamp()}] {username} coin insufficient")
