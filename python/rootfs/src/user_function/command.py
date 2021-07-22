@@ -3,13 +3,12 @@ import random
 import re
 import os
 
-from src.user_function.games import coinflip
-
 from .lotto import check_winner
+from .games import coinflip
+from .raffle import raffle_save, raffle_winner
 from src.coin.coin import add_coin
 from src.db_function import check_exist, retrieve
 from src.timefn.timestamp import get_timestamp
-from .raffle import raffle_save, raffle_winner
 from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed, coinflip_feed, draw_lotto_feed, draw_raffle_feed, shooter_dodge_feed, shooter_success_feed, shooter_suicide_feed, shooter_unsuccess_feed, shooter_vip_feed
 
 
@@ -234,3 +233,17 @@ async def buy_coinflip(username, side, bet, send_message):
         else:
             await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก sniffsAngry sniffsAngry sniffsAngry")
             print(f"[FLIP] [{get_timestamp()}] {username} coin insufficient")
+
+
+async def transfer_coin(user, recipent, amount, viewers, send_message):
+    if check_exist(user):
+        userstat = retrieve(user)
+    else:
+        return
+    if not(check_exist(recipent) or (recipent in viewers)):
+        return
+    if userstat["coin"] >= amount:
+        add_coin(user, -amount)
+        add_coin(recipent, amount)
+        print(f"[COIN] [{get_timestamp()}] {user} transfer {amount} sniffscoin to {recipent}")
+        await send_message(f"@{user} โอนเหรียญให้ {recipent} จำนวน {amount} Sniffscoin สำเร็จค่าาา~~")

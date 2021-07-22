@@ -11,7 +11,7 @@ from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
 from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
-from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
+from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
 from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
@@ -539,3 +539,19 @@ class TwitchBot(commands.Bot,):
         except IndexError:
             bet = 1
         await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
+
+    @commands.command(name="transfer")
+    async def transfer(self, ctx):
+        commands_split = ctx.content.split()
+        try:
+            recipent = commands_split[1]
+        except IndexError:
+            return
+        try:
+            amount = int(commands_split[2])
+            if amount < 0:
+                return
+        except Exception:
+            return
+        viewers = await self.get_users_list()
+        await transfer_coin(ctx.author.name.lower(), recipent, amount, viewers, self.send_message)
