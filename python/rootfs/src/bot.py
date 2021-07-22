@@ -524,21 +524,22 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="flip")
     async def coin_flip(self, ctx):
-        commands_split = ctx.content.split()
-        try:
-            side = commands_split[1]
-            if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
-                await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
+            commands_split = ctx.content.split()
+            try:
+                side = commands_split[1]
+                if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
+                    await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+                    return
+            except IndexError:
                 return
-        except IndexError:
-            return
-        try:
-            bet = int(commands_split[2])
-            if bet < 1:
-                return
-        except IndexError:
-            bet = 1
-        await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
+            try:
+                bet = int(commands_split[2])
+                if bet < 1:
+                    return
+            except IndexError:
+                bet = 1
+            await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
 
     @commands.command(name="transfer")
     async def transfer(self, ctx):
