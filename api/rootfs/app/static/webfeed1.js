@@ -1,4 +1,4 @@
-/*jshint esversion: 11 */
+/*jshint esversion: 8 */
 
 const websocketUrl = `ws://${window.location.hostname}:8000/ws`;
 
@@ -34,6 +34,6 @@ ws.onopen = () =>{
 ws.addEventListener("message", function(event){
     const response = JSON.parse(event.data);
     const message = response.message;
-    const timeout = response?.timeout;
+    const timeout = response.timeout;
     addNotificationFeed(message, timeout);
 });
