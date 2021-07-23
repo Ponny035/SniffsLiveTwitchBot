@@ -6,10 +6,10 @@ webfeed_status = True
 default_timeout = 10000
 long_timeout = 30000
 
-default_tag_name = "tag is-info has-text-weight-bold ml-2 mr-2"
-default_tag_viewer = "tag is-black has-text-weight-bold ml-2 mr-2"
-default_snap_name = "tag is-danger has-text-weight-bold ml-2 mr-2"
-default_info = "tag is-warning has-text-weight-bold ml-2 mr-2"
+default_tag_name = "tag is-info has-text-weight-bold ml-2 mr-2 is-medium"
+default_tag_viewer = "tag is-black has-text-weight-bold ml-2 mr-2 is-medium"
+default_snap_name = "tag is-danger has-text-weight-bold ml-2 mr-2 is-medium"
+default_info = "tag is-warning has-text-weight-bold ml-2 mr-2 is-medium"
 
 gift_icon = "<span class='icon'><i class='fas fa-gift'></i></span>"
 lotto_icon = "<span class='icon'><i class='fas fa-cart-plus'></i></span>"

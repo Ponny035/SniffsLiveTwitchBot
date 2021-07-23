@@ -12,7 +12,7 @@ const addNotificationFeed = (message, timeout = messageTimeout) => {
     containerElement.classList.add("fadein");
 
     const baseSpanElement = document.createElement("span");
-    baseSpanElement.className = "icon-text";
+    baseSpanElement.className = "icon-text is-align-items-center";
     baseSpanElement.innerHTML = message;
 
     containerElement.appendChild(baseSpanElement);
@@ -23,7 +23,7 @@ const addNotificationFeed = (message, timeout = messageTimeout) => {
         containerElement.classList.add("fadeout");
         setTimeout(() => {
             parentContainerElement.removeChild(containerElement);
-        }, 500);
+        }, 200);
     }, timeout);
 };
 
