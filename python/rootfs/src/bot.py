@@ -150,27 +150,27 @@ class TwitchBot(commands.Bot,):
 
     async def event_sub(self, channel, data):
         usernames = await self.get_users_list()
-        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message, self.send_message_feed)
+        await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"sub: {data}")
 
     async def event_resub(self, channel, data):
         usernames = await self.get_users_list()
-        await subscription_payout(data["username"], data["sub_month_count"], usernames, self.send_message, self.send_message_feed)
+        await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"resub: {data}")
 
     async def event_subgift(self, channel, data):
         usernames = await self.get_users_list()
-        await gift_subscription_payout(data["username"], data["recipent"], usernames, self.send_message_feed)
+        await gift_subscription_payout(data["username"], data["recipent"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"subgift: {data}")
 
     async def event_submystergift(self, channel, data):
         usernames = await self.get_users_list()
-        await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], usernames, self.send_message_feed)
+        await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"submysterygift: {data}")
 
     async def event_anonsubgift(self, channel, data):
         usernames = await self.get_users_list()
-        await anongift_subscription_payout(data["recipent"], data["gift_sub_count"], usernames, self.send_message, self.send_message_feed)
+        await anongift_subscription_payout(data["recipent"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"anonsubgift: {data}")
 
     async def event_anonsubmysterygift(self, channel, data):
