@@ -223,7 +223,7 @@ async def buy_coinflip(username, side, bet, send_message):
                 win_side = "ก้อย"
             if result:
                 await send_message(f"เหรียญออกที่{win_side}ค่า! sniffsHeart ได้รับ {prize} sniff coin")
-                coinflip_feed(username, win_side, userstat["coin"] - bet, result, prize)
+                coinflip_feed(username, win_side, userstat["coin"] - bet + prize, result, prize)
                 add_coin(username, prize)
                 print(f"[FLIP] [{get_timestamp()}] {username} won {prize}")
             else:

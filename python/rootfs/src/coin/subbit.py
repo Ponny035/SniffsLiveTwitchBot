@@ -5,12 +5,13 @@ from src.misc.webfeed import anongift_subscription_payout_feed, bit_to_coin_feed
 
 
 # const variables
-sub_to_point = 10
+sub_to_point = [5, 10, 25]
 bit_to_point = 50
 
 
-async def subscription_payout(username, sub_month_count, usernames, send_message, send_message_feed):
-    add_coin(username, sub_to_point, True)
+async def subscription_payout(username, sub_month_count, plan, usernames, send_message, send_message_feed):
+    plan_select = int(plan[1] / 1000)
+    add_coin(username, sub_to_point[plan_select], True)
     payday(usernames, 1, True)
     try:
         if check_exist(username):
@@ -28,37 +29,40 @@ async def subscription_payout(username, sub_month_count, usernames, send_message
     except Exception as msg:
         print(f"[_ERR] [{get_timestamp()}] Cannot update db for user {username} with {sub_month_count} submonth {msg}")
     await send_message(f"ยินดีต้อนรับ @{username} มาเป็นต้าวๆของสนิฟ sniffsHeart sniffsHeart sniffsHeart")
-    await send_message_feed(f"@{username} ได้รับ {sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
-    subscription_payout_feed(username, sub_to_point, len(usernames))
-    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point} sniffscoin by sub")
+    await send_message_feed(f"@{username} ได้รับ {sub_to_point[plan_select]} sniffscoin จากการซับระดับ {plan_select} และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
+    subscription_payout_feed(username, sub_to_point[plan_select], plan_select, len(usernames))
+    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select]} sniffscoin by sub tier {plan_select}")
 
 
-async def gift_subscription_payout(username, recipent, usernames, send_message):
-    add_coin(username, sub_to_point, True)
-    add_coin(recipent, sub_to_point, True)
+async def gift_subscription_payout(username, recipent, plan, usernames, send_message):
+    plan_select = int(plan[1] / 1000)
+    add_coin(username, sub_to_point[plan_select], True)
+    add_coin(recipent, sub_to_point[plan_select], True)
     payday(usernames, 1, True)
-    await send_message(f"@{username} ได้รับ {sub_to_point} sniffscoin จากการ Gift ให้ {recipent} sniffsHeart sniffsHeart sniffsHeart")
-    await send_message(f"@{recipent} ได้รับ {sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
-    gift_subscription_payout_feed(username, recipent, sub_to_point, len(usernames))
-    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point} sniffscoin by giftsub to {recipent}")
+    await send_message(f"@{username} ได้รับ {sub_to_point[plan_select]} sniffscoin จากการ Gift ให้ {recipent} ระดับ {plan_select} sniffsHeart sniffsHeart sniffsHeart")
+    await send_message(f"@{recipent} ได้รับ {sub_to_point[plan_select]} sniffscoin จากการได้รับ Gift ระดับ {plan_select} และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
+    gift_subscription_payout_feed(username, recipent, sub_to_point[plan_select], plan_select, len(usernames))
+    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select]} sniffscoin by giftsub to {recipent} tier {plan_select}")
 
 
-async def giftmystery_subscription_payout(username, gift_count, usernames, send_message):
+async def giftmystery_subscription_payout(username, gift_count, plan, usernames, send_message):
+    plan_select = int(plan[1] / 1000)
     # add_coin(username, sub_to_point * gift_count, True)
     # payday(usernames, 1, True)
     # It seems like giftsub call subgift again, so we don't need to add coin here
-    await send_message(f"@{username} ได้รับ {sub_to_point * gift_count} sniffscoin จากการ Gift ให้สมาชิก {gift_count} คน sniffsHeart sniffsHeart sniffsHeart")
-    giftmystery_subscription_payout_feed(username, sub_to_point * gift_count, gift_count)
-    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point * gift_count} sniffscoin by giftmysterysub")
+    await send_message(f"@{username} ได้รับ {sub_to_point[plan_select] * gift_count} sniffscoin จากการ Gift ระดับ {plan_select} ให้สมาชิก {gift_count} คน sniffsHeart sniffsHeart sniffsHeart")
+    giftmystery_subscription_payout_feed(username, sub_to_point[plan_select] * gift_count, gift_count, plan_select)
+    print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select] * gift_count} sniffscoin by giftmysterysub tier {plan_select}")
 
 
-async def anongift_subscription_payout(recipent, usernames, send_message, send_message_feed):
-    add_coin(recipent, sub_to_point, True)
+async def anongift_subscription_payout(recipent, plan, usernames, send_message, send_message_feed):
+    plan_select = int(plan[1] / 1000)
+    add_coin(recipent, sub_to_point[plan_select], True)
     payday(usernames, 1, True)
-    await send_message("ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามค่าา sniffsHeart sniffsHeart sniffsHeart")
-    await send_message_feed(f"@{recipent} ได้รับ {sub_to_point} sniffscoin และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
-    anongift_subscription_payout_feed(recipent, sub_to_point, len(usernames))
-    print(f"[COIN] [{get_timestamp()}] {recipent} receive {sub_to_point} sniffscoin by anongiftsub")
+    await send_message(f"ขอบคุณ Gift ระดับ {plan_select} จากผู้ไม่ประสงค์ออกนามค่าา sniffsHeart sniffsHeart sniffsHeart")
+    await send_message_feed(f"@{recipent} ได้รับ {sub_to_point[plan_select]} sniffscoin จากการได้รับ Gift ระดับ {plan_select} และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
+    anongift_subscription_payout_feed(recipent, sub_to_point[plan_select], plan_select, len(usernames))
+    print(f"[COIN] [{get_timestamp()}] {recipent} receive {sub_to_point[plan_select]} sniffscoin by anongiftsub tier {plan_select}")
 
 
 async def add_point_by_bit(username, bits, submonth, send_message):

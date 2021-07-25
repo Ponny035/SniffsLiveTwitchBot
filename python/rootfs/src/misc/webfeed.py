@@ -42,9 +42,10 @@ def activate_webfeed_feed(status):
             send_feed(feedtext, long_timeout)
 
 
-def subscription_payout_feed(username, coin, viewer):
+def subscription_payout_feed(username, coin, plan, viewer):
     feedtext_1 = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext_1 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin จากการ Subscribe</span>"
+    feedtext_1 += f"<span class='{default_tag_viewer}'>{plan}</span>"
     send_feed(feedtext_1)
     feedtext_2 = f"<span class='text-white'>สมาชิก</span><span class='{default_tag_viewer}'>{viewer}</span>"
     feedtext_2 += f"<span class='text-white'>คน ได้รับ 1 Sniffscoin {coin_icon} จากการ Subscribe ของ</span>"
@@ -52,9 +53,10 @@ def subscription_payout_feed(username, coin, viewer):
     send_feed(feedtext_2)
 
 
-def gift_subscription_payout_feed(username, recipent, coin, viewer):
+def gift_subscription_payout_feed(username, recipent, coin, plan, viewer):
     feedtext_1 = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext_1 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin จากการ {gift_icon} Gift ให้</span><span class='{default_tag_name}'>{recipent}</span>"
+    feedtext_1 += f"<span class='{default_tag_viewer}'>{plan}</span>"
     send_feed(feedtext_1)
     feedtext_2 = f"<span class='{default_tag_name}'>{recipent}</span>"
     feedtext_2 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin</span>"
@@ -64,15 +66,17 @@ def gift_subscription_payout_feed(username, recipent, coin, viewer):
     send_feed(feedtext_3)
 
 
-def giftmystery_subscription_payout_feed(username, coin, gift_count):
+def giftmystery_subscription_payout_feed(username, coin, gift_count, plan):
     feedtext = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin จากการ {gift_icon} Gift Sub x {gift_count}</span>"
+    feedtext += f"<span class='{default_tag_viewer}'>{plan}</span>"
     send_feed(feedtext)
 
 
-def anongift_subscription_payout_feed(recipent, coin, viewer):
+def anongift_subscription_payout_feed(recipent, coin, plan, viewer):
     feedtext_1 = f"<span class='{default_tag_name}'>{recipent}</span>"
     feedtext_1 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin</span>"
+    feedtext_1 += f"<span class='{default_tag_viewer}'>{plan}</span>"
     send_feed(feedtext_1)
     feedtext_2 = f"<span class='text-white'>สมาชิก</span><span class='{default_tag_viewer}'>{viewer}</span>"
     feedtext_2 += f"<span class='text-white'>คน ได้รับ 1 Sniffscoin {coin_icon}</span>"
