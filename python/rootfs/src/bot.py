@@ -58,9 +58,9 @@ class TwitchBot(commands.Bot,):
                 self.dev_list = []
 
             super().__init__(
-                irc_token=os.environ.get("IRC_TOKEN", ""),
-                api_token=os.environ.get("API_TOKEN", ""),
-                client_id="uej04g8lskt59abzr5o50lt67k9kmi",
+                token=os.environ.get("IRC_TOKEN", ""),
+                client_secret=os.environ.get("API_TOKEN", ""),
+                # client_id="uej04g8lskt59abzr5o50lt67k9kmi",
                 prefix="!",
                 nick=self.NICK,
                 initial_channels=[self.CHANNELS],
@@ -135,7 +135,7 @@ class TwitchBot(commands.Bot,):
         if ctx.author.name.lower() != self.NICK:
             print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
 
-            await check_message(ctx.author.name.lower(), ctx.content, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
+            # await check_message(ctx.author.name.lower(), ctx.content, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
             await update_submonth(ctx.author.name.lower(), ctx.raw_data)
             await self.event_trigger.handle_channelpoints(ctx.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)

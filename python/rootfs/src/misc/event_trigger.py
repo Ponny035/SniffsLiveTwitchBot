@@ -10,7 +10,7 @@ class EventTrigger:
         self.channel_live = False
 
         self.twitch_api = Client(
-            client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
+            token="wt9nmvcq4oszo9k4qpswvl7htigg08",
             client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
         )
 

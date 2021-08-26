@@ -107,6 +107,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+twitchio
 env/
 venv/
 ENV/
