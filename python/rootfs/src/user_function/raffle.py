@@ -1,8 +1,8 @@
 import random
 
 
-raffle_list = []
-raffle_status = False
+raffle_list: list = []
+raffle_status: bool = False
 
 
 def raffle_start(status: bool):

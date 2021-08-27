@@ -15,8 +15,8 @@ from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed,
 
 
 # init variable
-player_lotto_list = []
-shooter_cooldown = 0
+player_lotto_list: list = []
+shooter_cooldown: int = 0
 
 
 # mod function
