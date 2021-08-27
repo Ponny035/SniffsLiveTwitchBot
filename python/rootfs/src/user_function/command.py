@@ -3,6 +3,8 @@ import random
 import re
 import os
 
+from twitchio.ext import routines
+
 from .lotto import check_winner
 from .games import coinflip
 from .raffle import raffle_save, raffle_winner
@@ -15,7 +17,6 @@ from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed,
 # init variable
 player_lotto_list = []
 shooter_cooldown = 0
-lotto_stats = False
 
 
 # mod function
@@ -155,16 +156,17 @@ async def draw_lotto(send_message):
         player_lotto_list = []
 
 
-async def update_lotto(status):
-    global lotto_stats
-    lotto_stats = status
-
-
+@routines.routine(minutes=20)
 async def send_lotto_msg(send_message):
-    while True:
-        if lotto_stats:
-            await send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
-        await asyncio.sleep(1800)
+    try:
+        await send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
+    except RuntimeError:
+        raise RuntimeError
+
+
+@send_lotto_msg.error
+async def send_lotto_msg_error(error: Exception):
+    print(f"[_ERR] [{get_timestamp()}] ROUTINES: Lotto Message Error with {error}")
 
 
 async def check_message(username, message, vip_list, dev_list, send_message, timeout):

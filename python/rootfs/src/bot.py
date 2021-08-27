@@ -15,7 +15,7 @@ from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
 from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
-from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, update_lotto, send_lotto_msg, check_message, buy_raffle, draw_raffle
+from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
 from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
@@ -115,7 +115,6 @@ class TwitchBot(commands.Bot,):
         if self.first_run:
             self.first_run = False
             asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
-            asyncio.create_task(send_lotto_msg(self.send_message))
         await self.send_message(self.NICK + " is joined the channels.")
         print(f"[INFO] [{get_timestamp()}] Joined")
 
@@ -442,23 +441,22 @@ class TwitchBot(commands.Bot,):
                 if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                     if not self.lotto_open:
                         self.lotto_open = True
-                        await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System started")
-                        await self.send_message("sniffsHi เร่เข้ามาเร่เข้ามา SniffsLotto ใบละ 5 coins !lotto ตามด้วยเลข 2 หลัก ประกาศรางวัลตอนปิดไลฟ์จ้า sniffsAH")
+                        send_lotto_msg.start(self.send_message, stop_on_error=True)
                         lotto_start_feed()
             elif lotto == "stop":
                 if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                     if self.lotto_open:
                         self.lotto_open = False
-                        await update_lotto(self.lotto_open)
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
+                        send_lotto_msg.cancel()
                         await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
                         lotto_stop_feed()
             elif lotto == "draw":
                 if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
                     if self.lotto_open:
                         self.lotto_open = False
-                        await update_lotto(self.lotto_open)
+                        send_lotto_msg.cancel()
                         print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
                         await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
                         lotto_stop_feed()
@@ -557,7 +555,7 @@ class TwitchBot(commands.Bot,):
         if (ctx.cooldown) and (ctx.command.name not in postpone_cooldown):
             set_cooldown(ctx.author.name.lower(), ctx.command.name)
 
-    async def event_command_error(self, ctx: commands.Context, error):
+    async def event_command_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandNotFound):
             pass
         else:
