@@ -20,7 +20,7 @@ shooter_cooldown = 0
 
 
 # mod function
-async def call_to_hell(usernames, exclude_list, timeout):
+async def call_to_hell(usernames: list[str], exclude_list: list[str], timeout: int):
     print(f"[HELL] [{get_timestamp()}] Wanna go to hell?")
     callhell_timeout = 180
     casualtie = 0
@@ -44,14 +44,12 @@ async def call_to_hell(usernames, exclude_list, timeout):
     return data
 
 
-async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
+async def shooter(employer: str, target: str, vip_list: list[str], dev_list: list[str], send_message, timeout: int):
     global shooter_cooldown
     dodge_rate = 10
     payrate = 5
     shooter_timeout = random.randint(15, 60)
-    clean_target = target.split("@")
-    if len(clean_target) > 1:
-        target = clean_target[1]
+    target = re.sub(r'^@', '', target)
     if target == "me":
         await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
         await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที sniffsAH")
@@ -80,7 +78,7 @@ async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
                     dodge_rate += min(submonth, 6)
                 if target in exclude_target:
                     await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
-                    await send_message(f"@{employer} บังอาจนักนะ sniffsAngry บินไปเองซะ {shooter_timeout} วินาที")
+                    await send_message(f"@{employer} บังอาจนักนะ PunOko บินไปเองซะ {shooter_timeout} วินาที")
                     shooter_vip_feed(employer, shooter_timeout)
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
                 else:
@@ -96,29 +94,29 @@ async def shooter(employer, target, vip_list, dev_list, send_message, timeout):
             else:
                 if target in exclude_target:
                     await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")
-                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม sniffsAngry บินไปซะ {int(shooter_timeout * 2)} วินาที")
+                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม PunOko บินไปซะ {int(shooter_timeout * 2)} วินาที")
                     shooter_unsuccess_feed(employer, int(shooter_timeout * 2))
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {int(shooter_timeout * 2)} sec")
                 else:
                     await timeout(employer, shooter_timeout, f"ไม่มีเงินจ้างมือปืนงั้นรึ โดนยิงเองซะ {shooter_timeout} วินาที")
-                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน sniffsAngry โดนมือปืนยิงตาย {shooter_timeout} วินาที")
+                    await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน PunOko โดนมือปืนยิงตาย {shooter_timeout} วินาที")
                     shooter_unsuccess_feed(employer, shooter_timeout)
                     print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
         else:
             if target in exclude_target:
                 await timeout(employer, int(shooter_timeout * 2), f"ไม่มีเงินจ้างแล้วยังเหิมเกริมอีก รับโทษ 2 เท่า ({shooter_timeout} วินาที)")
-                await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม sniffsAngry บินไปซะ {int(shooter_timeout * 2)} วินาที")
+                await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน ยังจะเหิมเกริม PunOko บินไปซะ {int(shooter_timeout * 2)} วินาที")
                 shooter_unsuccess_feed(employer, int(shooter_timeout * 2))
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {int(shooter_timeout * 2)} sec")
             else:
                 await timeout(employer, shooter_timeout, f"ไม่มีเงินจ้างมือปืนงั้นรึ โดนยิงเองซะ {shooter_timeout} วินาที")
-                await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน sniffsAngry โดนมือปืนยิงตาย {shooter_timeout} วินาที")
+                await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน PunOko โดนมือปืนยิงตาย {shooter_timeout} วินาที")
                 shooter_unsuccess_feed(employer, shooter_timeout)
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
 
 
 # lotto system
-async def buy_lotto(username, lotto, send_message):
+async def buy_lotto(username: str, lotto: str, send_message):
     global player_lotto_list
     lotto_cost = 5
     if (re.match(r"[0-9]{2}", lotto) is not None) and (len(lotto) == 2):
@@ -133,7 +131,7 @@ async def buy_lotto(username, lotto, send_message):
                 print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} successfully")
                 return True
             else:
-                await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก sniffsAngry sniffsAngry sniffsAngry")
+                await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก PunOko PunOko PunOko")
                 print(f"[LOTO] [{get_timestamp()}] {username} coin insufficient")
                 return False
 
@@ -148,7 +146,7 @@ async def draw_lotto(send_message):
         payout = sum(lotto_winners.values())
         for username, prize in lotto_winners.items():
             add_coin(username, int(prize))
-        await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} sniffsShock มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin sniffsHeart")
+        await send_message(f"ประกาศผลรางวัล SniffsLotto เลขที่ออก {win_number_string} sniffsAH มีผู้ชนะทั้งหมด {count_winners} คน ได้รับรางวัลรวม {payout} sniffscoin sniffsHeart")
         if count_winners <= 5:
             await send_message(f"ผู้โชคดีได้แก่ {'@'+', @'.join(lotto_winners.keys())} คร่า sniffsHeart sniffsHeart sniffsHeart")
         draw_lotto_feed(win_number_string, payout, lotto_winners)
@@ -177,7 +175,7 @@ async def check_message(username, message, vip_list, dev_list, send_message, tim
             result = re.search(res_msg, message)
             if result:
                 await timeout(username, 30, f"@{username} ไหน ใครกาก")
-                await send_message(f"@{username} บังอาจนักนะ sniffsAngry sniffsAngry")
+                await send_message(f"@{username} บังอาจนักนะ PunOko PunOko")
                 print(f"[_MOD] [{get_timestamp()}] Kill: {username} for 30 secs")
 
 
@@ -229,11 +227,11 @@ async def buy_coinflip(username, side, bet, send_message):
                 add_coin(username, prize)
                 print(f"[FLIP] [{get_timestamp()}] {username} won {prize}")
             else:
-                await send_message(f"ไม่น้าาาเหรียญออกที่{win_side} sniffsDrop")
+                await send_message(f"ไม่น้าาาเหรียญออกที่{win_side} sniffsCry")
                 coinflip_feed(username, win_side, userstat["coin"] - bet, result)
                 print(f"[FLIP] [{get_timestamp()}] {username} lose {bet}")
         else:
-            await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก sniffsAngry sniffsAngry sniffsAngry")
+            await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก PunOko PunOko PunOko")
             print(f"[FLIP] [{get_timestamp()}] {username} coin insufficient")
 
 
