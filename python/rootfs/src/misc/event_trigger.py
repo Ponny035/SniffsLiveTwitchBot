@@ -1,39 +1,48 @@
-import asyncio
 from datetime import datetime
 
 from twitchio.client import Client
+from twitchio.models import Stream
+from twitchio.ext import routines
+
+from src.timefn.timestamp import get_timestamp
 
 
 class EventTrigger:
-    def __init__(self, channels):
+    def __init__(self, channels: str, token: str, id: str, secret: str):
         self.CHANNELS = channels
+        self.TOKEN = token
+        self.APIID = id
+        self.APISEC = secret
         self.channel_live = False
+        self.success_callback = [0, 0]
 
-        self.twitch_api = Client(
-            token="wt9nmvcq4oszo9k4qpswvl7htigg08",
-            client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
+        self.twitch_api = Client.from_client_credentials(
+            client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
+            client_secret="7uf45fl76gkewvlzjseyngshijki1x"
         )
 
+    @routines.routine(seconds=30)
     async def get_channel_status(self, chan_offline, chan_online):
-        success_callback = [0, 0]
-        while True:
-            if self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is None and success_callback[0] == 0:
-                    self.channel_live = False
-                    success_callback = [1, 1]
-                    await chan_offline()
-                    await asyncio.sleep(31)
-                    success_callback[1] = 0
-            elif not self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is not None and success_callback[1] == 0:
-                    self.channel_live = (channel_status["type"] == "live")
-                    self.channel_live_on = datetime.strptime(channel_status["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-                    success_callback = [1, 1]
-                    await chan_online(self.channel_live_on)
-                    await asyncio.sleep(31)
-                    success_callback[0] = 0
+        if self.channel_live:
+            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+            if channel_status == [] and self.success_callback[0] == 0:
+                self.channel_live = False
+                self.success_callback = [1, 1]
+                await chan_offline()
+                self.success_callback[1] = 0
+        elif not self.channel_live:
+            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+            if channel_status != [] and self.success_callback[1] == 0:
+                self.channel_live = True
+                self.channel_live_on = channel_status[0].started_at
+                # self.channel_live_on = datetime.strptime(channel_status[0].started_at, "%Y-%m-%dT%H:%M:%SZ")
+                self.success_callback = [1, 1]
+                await chan_online(self.channel_live_on)
+                self.success_callback[0] = 0
+
+    @get_channel_status.error
+    async def get_channel_status_error(error: Exception):
+        print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {error}")
 
     async def check_bits(self, rawdata, event_bit):
         username = ""

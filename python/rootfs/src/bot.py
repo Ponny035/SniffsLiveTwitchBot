@@ -3,7 +3,9 @@ import os
 import traceback
 
 import nest_asyncio
+import requests
 from twitchio.channel import Channel
+from twitchio.chatter import Chatter
 from twitchio.message import Message
 from twitchio.user import User
 from twitchio.ext import commands
@@ -30,6 +32,9 @@ class TwitchBot(commands.Bot,):
         self.dryrun = os.environ.get("msg", "msgon")
         self.NICK = os.environ.get("BOTNICK", "")
         self.CHANNELS = os.environ.get("CHANNELS", "")
+        self.TOKEN = os.environ.get("IRC_TOKEN", "")
+        self.APIID = os.environ.get("API_ID", "")
+        self.APISEC = os.environ.get("API_TOKEN", "")
 
         # init external function
         self.automod = automod()  # need to fixed
@@ -63,14 +68,14 @@ class TwitchBot(commands.Bot,):
                 self.dev_list = []
 
             super().__init__(
-                token=os.environ.get("IRC_TOKEN", ""),
-                client_secret=os.environ.get("API_TOKEN", ""),
-                # client_id="uej04g8lskt59abzr5o50lt67k9kmi",
+                token=self.TOKEN,
+                client_secret=self.APISEC,
+                client_id=self.APIID,
                 prefix="!",
                 nick=self.NICK,
                 initial_channels=[self.CHANNELS],
             )
-            self.event_trigger = EventTrigger(self.CHANNELS)
+            self.event_trigger = EventTrigger(self.CHANNELS, self.TOKEN, self.APIID, self.APISEC)
 
             print(f"[INFO] [{get_timestamp()}] Done")
 
@@ -114,7 +119,7 @@ class TwitchBot(commands.Bot,):
             self.channel = self.get_channel(self.CHANNELS)
         if self.first_run:
             self.first_run = False
-            asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
+            self.event_trigger.get_channel_status.start(self.event_offline, self.event_live, stop_on_error=False)
         await self.send_message(self.NICK + " is joined the channels.")
         print(f"[INFO] [{get_timestamp()}] Joined")
 
@@ -137,7 +142,7 @@ class TwitchBot(commands.Bot,):
         self.channel_live_on = starttime
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
         await self.greeting_sniffs()
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         asyncio.create_task(activate_point_system(self.channel_live, self.channel_live_on, usernames))
 
     # custome event to trigger when channel is offline
@@ -166,27 +171,27 @@ class TwitchBot(commands.Bot,):
         add_coin(data["username"], data["coin"])
 
     async def event_sub(self, channel: Channel, data: dict):
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"sub: {data}")
 
     async def event_resub(self, channel: Channel, data: dict):
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"resub: {data}")
 
     async def event_subgift(self, channel: Channel, data: dict):
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         await gift_subscription_payout(data["username"], data["recipent"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"subgift: {data}")
 
     async def event_submystergift(self, channel: Channel, data: dict):
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"submysterygift: {data}")
 
     async def event_anonsubgift(self, channel: Channel, data: dict):
-        usernames = await self.get_users_list()
+        usernames = self.get_users_list()
         await anongift_subscription_payout(data["recipent"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"anonsubgift: {data}")
 
@@ -213,9 +218,15 @@ class TwitchBot(commands.Bot,):
             if user.name.lower() not in [self.NICK, self.NICK + "\r"]:
                 user_join_part("part", user.name.lower(), get_timestamp())
 
-    async def get_users_list(self):
-        users = await self.get_chatters(self.CHANNELS)
-        return users.all
+    def get_users_list(self):
+        url_endpoint = f"https://tmi.twitch.tv/group/user/{self.CHANNELS}/chatters"
+        resp = requests.get(url_endpoint)
+        if resp.status_code == 200:
+            data = resp.json()
+            users = [name for key in data['chatters'] for name in data['chatters'][key]]
+            return users
+        else:
+            return []
 
     async def greeting_sniffs(self):
         if self.channel_live:
@@ -273,7 +284,7 @@ class TwitchBot(commands.Bot,):
                     coin = 0
             except IndexError:
                 coin = 1
-            usernames = await self.get_users_list()
+            usernames = self.get_users_list()
             payday(usernames, coin)
             await self.send_message_feed(f"ผู้ชมทั้งหมด {len(usernames)} คน ได้รับ {coin} sniffscoin sniffsAH")
             payday_feed(coin, len(usernames))
@@ -358,7 +369,7 @@ class TwitchBot(commands.Bot,):
     async def callhell(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
-            usernames = await self.get_users_list()
+            usernames = self.get_users_list()
             exclude_list = self.vip_list + self.dev_list
             data = await call_to_hell(usernames, exclude_list, self.send_message_timeout)
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
@@ -546,7 +557,7 @@ class TwitchBot(commands.Bot,):
                 return
         except Exception:
             return
-        viewers = await self.get_users_list()
+        viewers = self.get_users_list()
         await transfer_coin(ctx.author.name.lower(), recipent, amount, viewers, self.send_message)
 
     async def global_before_invoke(self, ctx: commands.Context):
