@@ -57,7 +57,7 @@ const handleSongVote = (votedSong: Song): VoteObj =>{
 }
 
 const handleSongDelete = (req: Req) =>{
-    songList = songList.filter(i => i.songKey === req.songKey.toLowerCase())
+    songList = songList.filter(i => i.songKey !== req.songKey.toLowerCase())
 }
 
 const handleListClear = (req: Confirm) =>{
