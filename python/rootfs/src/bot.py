@@ -88,6 +88,18 @@ class TwitchBot(commands.Bot,):
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
 
+    async def send_message_timeout(self, username, period, reason=""):
+        if self.dryrun != "msgoff":
+            await self.channel.send(f"/timeout {username} {period} {reason}")
+        else:
+            print(f"[INFO] [{get_timestamp()}] Dry run mode is on timeout not sent")
+
+    async def send_message_ban(self, username, reason=""):
+        if self.dryrun != "msgoff":
+            await self.channel.send(f"/ban {username} {reason}")
+        else:
+            print(f"[INFO] [{get_timestamp()}] Dry run mode is on ban not sent")
+
     async def send_message_feed(self, msg: str):
         if not self.feed_enable:
             await self.channel.send(msg)
@@ -141,11 +153,11 @@ class TwitchBot(commands.Bot,):
         if (message.author is not None) and (message.author.name.lower() != self.NICK):
             print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()}: {message.content}")
 
-            # await check_message(message.author.name.lower(), message.message, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
+            await check_message(message.author.name.lower(), message.content, self.vip_list, self.dev_list, self.send_message, self.send_message_timeout)
             await update_submonth(message.author.name.lower(), message.raw_data)
             await self.event_trigger.handle_channelpoints(message.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(message.raw_data, self.event_bits)
-            await self.automod.auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.channel)
+            await self.automod.auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.send_message_timeout, self.send_message_ban)
             await self.handle_commands(message)
 
     async def event_bits(self, data: dict):
@@ -349,7 +361,7 @@ class TwitchBot(commands.Bot,):
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
             usernames = await self.get_users_list()
             exclude_list = self.vip_list + self.dev_list
-            data = await call_to_hell(usernames, exclude_list, self.channel.timeout)
+            data = await call_to_hell(usernames, exclude_list, self.send_message_timeout)
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
 
     @commands.command(name="sr")
@@ -416,7 +428,7 @@ class TwitchBot(commands.Bot,):
             except IndexError:
                 target = None
             if target is not None:
-                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.channel.timeout)
+                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.send_message_timeout)
 
     @commands.command(name="lotto")
     async def sniffs_lotto(self, ctx: commands.Context):
@@ -501,7 +513,7 @@ class TwitchBot(commands.Bot,):
                         return
                 elif raffle is None:
                     count = 1
-                await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.channel.timeout)
+                await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.send_message_timeout)
 
     @commands.command(name="flip")
     async def coin_flip(self, ctx: commands.Context):
