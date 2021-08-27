@@ -114,6 +114,7 @@ env.bak/
 venv.bak/
 env
 dev_env
+dev_db
 
 # Spyder project settings
 .spyderproject
@@ -121,6 +122,9 @@ dev_env
 
 # Rope project settings
 .ropeproject
+
+# vscode project settings
+.vscode
 
 # mkdocs documentation
 /site
@@ -132,3 +136,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+python/rootfs/src/misc/webfeed.py
