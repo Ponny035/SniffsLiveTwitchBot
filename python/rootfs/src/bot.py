@@ -1,5 +1,6 @@
 import asyncio
 import os
+import time
 import traceback
 
 import nest_asyncio
@@ -116,6 +117,9 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
         while self.channel is None:
             self.channel = self.get_channel(self.CHANNELS)
+            if self.channel is None:
+                time.sleep(10)
+                await self.join_channels([self.CHANNELS])
         if self.first_run:
             self.first_run = False
             self.event_trigger.get_channel_status.start(self.event_offline, self.event_live, stop_on_error=False)
