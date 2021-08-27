@@ -1,7 +1,7 @@
 import random
 
 
-def get_winning_number(lotto_list):
+def get_winning_number(lotto_list: list):
     lotto_number = [player[1] for player in lotto_list]
     unique_lotto_list = list(set(lotto_number))
     if len(unique_lotto_list) > 1:
@@ -14,7 +14,7 @@ def get_winning_number(lotto_list):
     return int(winning_number)
 
 
-def check_winner(lotto_list):
+def check_winner(lotto_list: list):
     win_number = get_winning_number(lotto_list)
     total_income = len(lotto_list) * 5
     tax = 0.2
@@ -36,5 +36,5 @@ def check_winner(lotto_list):
         final_prize = max(int(win_prize / len_winner), min_prize)
     except ZeroDivisionError:
         final_prize = 0
-    winning_dict.update({n: final_prize * winning_dict[n] for n in winning_dict.keys()})
+    winning_dict.update({key: final_prize * winning_dict[key] for key in winning_dict.keys()})
     return win_number, winning_dict
