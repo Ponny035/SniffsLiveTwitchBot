@@ -1,7 +1,11 @@
 import asyncio
 import os
+import traceback
 
 import nest_asyncio
+from twitchio.channel import Channel
+from twitchio.message import Message
+from twitchio.user import User
 from twitchio.ext import commands
 
 from .coin.coin import add_coin, get_coin, payday
@@ -38,6 +42,7 @@ class TwitchBot(commands.Bot,):
         self.lotto_open = False
         self.raffle_open = False
         self.song_feed_on = True
+        self.channel = None
         self.channel_live = False
         self.channel_live_on = None
         self.request_status = False
@@ -51,7 +56,7 @@ class TwitchBot(commands.Bot,):
         try:
             if(self.environment == "dev"):
                 print(f"[INFO] [{get_timestamp()}] Init bot on DEVELOPMENT environment")
-                self.dev_list = ["ponny35", "bosssoq", "franess"]
+                self.dev_list = ["ponny35", "bosssoq", "franess", "foxzapop"]
 
             elif(self.environment == "prod"):
                 print(f"[INFO] [{get_timestamp()}] Init bot on PRODUCTION environment")
@@ -77,23 +82,24 @@ class TwitchBot(commands.Bot,):
             msg = "start bot fail with error \"" + str(e) + "\" try check your ... first "
             raise TypeError(msg)
 
-    async def send_message(self, msg):
+    async def send_message(self, msg: str):
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
 
-    async def send_message_feed(self, msg):
+    async def send_message_feed(self, msg: str):
         if not self.feed_enable:
             await self.channel.send(msg)
 
-    def print_to_console(self, msg):
+    def print_to_console(self, msg: str):
         if self.environment == "dev":
             print(msg)
 
     async def event_ready(self):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
-        self.channel = self.get_channel(self.CHANNELS)
+        while self.channel is None:
+            self.channel = self.get_channel(self.CHANNELS)
         if self.first_run:
             self.first_run = False
             asyncio.create_task(self.event_trigger.get_channel_status(self.event_offline, self.event_live))
@@ -101,7 +107,7 @@ class TwitchBot(commands.Bot,):
         await self.send_message(self.NICK + " is joined the channels.")
         print(f"[INFO] [{get_timestamp()}] Joined")
 
-    async def event_raw_usernotice(self, channel, tags):
+    async def event_raw_usernotice(self, channel: Channel, tags: list):
         await self.event_trigger.parsing_sub_data(
             channel,
             tags,
@@ -115,7 +121,7 @@ class TwitchBot(commands.Bot,):
         )
 
     # custom event to trigger when channel is live and return channel start time
-    async def event_live(self, starttime):
+    async def event_live(self, starttime: str):
         self.channel_live = True
         self.channel_live_on = starttime
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
@@ -131,69 +137,65 @@ class TwitchBot(commands.Bot,):
         await self.greeting_sniffs()
         asyncio.create_task(activate_point_system(self.channel_live))
 
-    async def event_message(self, ctx):
-        if ctx.author.name.lower() != self.NICK:
-            print(f"[_MSG] [{ctx.timestamp.replace(microsecond=0)}] {ctx.author.name.lower()}: {ctx.content}")
+    async def event_message(self, message: Message):
+        if (message.author is not None) and (message.author.name.lower() != self.NICK):
+            print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()}: {message.content}")
 
-            # await check_message(ctx.author.name.lower(), ctx.content, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
-            await update_submonth(ctx.author.name.lower(), ctx.raw_data)
-            await self.event_trigger.handle_channelpoints(ctx.raw_data, self.event_channelpoint)
-            await self.event_trigger.check_bits(ctx.raw_data, self.event_bits)
-            await self.automod.auto_mod(ctx.author.name.lower(), (ctx.author.is_mod or ctx.author.is_subscriber == 1), ctx.content, ctx.raw_data, self.send_message, self.channel)
-            await self.handle_commands(ctx)
+            # await check_message(message.author.name.lower(), message.message, self.vip_list, self.dev_list, self.send_message, self.channel.timeout)
+            await update_submonth(message.author.name.lower(), message.raw_data)
+            await self.event_trigger.handle_channelpoints(message.raw_data, self.event_channelpoint)
+            await self.event_trigger.check_bits(message.raw_data, self.event_bits)
+            await self.automod.auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.channel)
+            await self.handle_commands(message)
 
-    async def event_bits(self, data):
+    async def event_bits(self, data: dict):
         await add_point_by_bit(data["username"], data["bits"], data["submonth"], self.send_message_feed)
 
-    async def event_channelpoint(self, data):
+    async def event_channelpoint(self, data: dict):
         add_coin(data["username"], data["coin"])
 
-    async def event_sub(self, channel, data):
+    async def event_sub(self, channel: Channel, data: dict):
         usernames = await self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"sub: {data}")
 
-    async def event_resub(self, channel, data):
+    async def event_resub(self, channel: Channel, data: dict):
         usernames = await self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"resub: {data}")
 
-    async def event_subgift(self, channel, data):
+    async def event_subgift(self, channel: Channel, data: dict):
         usernames = await self.get_users_list()
         await gift_subscription_payout(data["username"], data["recipent"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"subgift: {data}")
 
-    async def event_submystergift(self, channel, data):
+    async def event_submystergift(self, channel: Channel, data: dict):
         usernames = await self.get_users_list()
         await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"submysterygift: {data}")
 
-    async def event_anonsubgift(self, channel, data):
+    async def event_anonsubgift(self, channel: Channel, data: dict):
         usernames = await self.get_users_list()
         await anongift_subscription_payout(data["recipent"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"anonsubgift: {data}")
 
-    async def event_anonsubmysterygift(self, channel, data):
+    async def event_anonsubmysterygift(self, channel: Channel, data: dict):
         await self.send_message(f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามจำนวน {data['gift_sub_count']} Gift sniffsHeart sniffsHeart sniffsHeart")
         self.print_to_console(f"anonsubmysterygift: {data}")
 
-    async def event_raid(self, channel, data):
+    async def event_raid(self, channel: Channel, data: dict):
         await self.send_message_feed(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} คน ค่าา sniffsHeart sniffsHeart sniffsHeart")
         raid_feed(data['username'], data['viewers'])
         self.print_to_console(f"raid: {data}")
 
-    async def event_join(self, user):
-        if user.name.lower() == "sirju001":
-            await self.send_message("ดาบผู้ขี้เกียจ มาแล้ววววววว รอแทงได้เลย sniffsAH")
+    async def event_join(self, channel: Channel, user: User):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} มาแล้วววววว ไกปู sniffsShock")
             if user.name.lower() not in [self.NICK, self.NICK + "\r"]:
                 user_join_part("join", user.name.lower(), get_timestamp())
 
-    async def event_part(self, user):
-        if user.name.lower() == "sirju001":
-            await self.send_message(f"@{user.name.lower()} แอบหนีไปดูแมวอีกแล้ววววว sniffsAH")
+    async def event_part(self, channel: Channel, user: User):
         if self.channel_live:
             if user.name.lower() == "armzi":
                 await self.send_message(f"พ่อ @{user.name} ไปแล้วววววว บะบายค้าาา sniffsBaby")
@@ -211,9 +213,9 @@ class TwitchBot(commands.Bot,):
             await self.send_message(f"sniffsZzz sniffsZzz sniffsZzz @{self.CHANNELS} ไปแล้ววววว")
 
     @commands.command(name="market")
-    async def activate_market(self, ctx):
+    async def activate_market(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 status = commands_split[1]
             except IndexError:
@@ -230,9 +232,9 @@ class TwitchBot(commands.Bot,):
                     await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
 
     @commands.command(name="webfeed")
-    async def activate_webfeed(self, ctx):
+    async def activate_webfeed(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 status = commands_split[1]
             except IndexError:
@@ -251,9 +253,9 @@ class TwitchBot(commands.Bot,):
                     activate_webfeed_feed(self.feed_enable)
 
     @commands.command(name="payday")
-    async def give_coin_allusers(self, ctx):
+    async def give_coin_allusers(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 coin = int(commands_split[1])
                 if coin < 0:
@@ -266,9 +268,9 @@ class TwitchBot(commands.Bot,):
             payday_feed(coin, len(usernames))
 
     @commands.command(name="give")
-    async def give_coin_user(self, ctx):
+    async def give_coin_user(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 username = commands_split[1]
             except IndexError:
@@ -285,25 +287,19 @@ class TwitchBot(commands.Bot,):
                 givecoin_feed(username, coin)
 
     @commands.command(name="coin")
-    async def check_coin(self, ctx):
-        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
-            if (check_cooldown(ctx.author.name.lower(), "coin")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                    set_cooldown(ctx.author.name.lower(), "coin")
+    async def check_coin(self, ctx: commands.Context):
+        if ctx.cooldown:
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
                 await get_coin(ctx.author.name.lower(), self.send_message)
 
     @commands.command(name="watchtime")
-    async def check_user_watchtime(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "watchtime")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "watchtime")
+    async def check_user_watchtime(self, ctx: commands.Context):
+        if ctx.cooldown:
             await get_user_watchtime(ctx.author.name.lower(), self.channel_live, self.CHANNELS, self.send_message)
 
     @commands.command(name="uptime")  # getting live stream time
-    async def uptime_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "uptime")) or (ctx.author.is_mod or ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "uptime")
+    async def uptime_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             if not self.channel_live:
                 return await self.send_message("ยังไม่ถึงเวลาไลฟ์น้าาาา sniffsHeart sniffsHeart sniffsHeart")
             uptime = sec_to_hms((get_timestamp() - self.channel_live_on).total_seconds())
@@ -321,67 +317,54 @@ class TwitchBot(commands.Bot,):
                 response_string += " น้าาา sniffsHeart sniffsHeart sniffsHeart"
                 await self.send_message(response_string)
 
-    @commands.command(name="discord")
-    async def discord_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "discord")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "discord")
+    @commands.command(name="discord", aliases=("dis"))
+    async def discord_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             await self.send_message(f"@{ctx.author.name.lower()} มาคุยกันได้ใน Discord {self.discord_link} sniffsBaby")
 
     @commands.command(name="facebook", aliases=("fb", "Facebook"))
-    async def facebook_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "facebook")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "facebook")
+    async def facebook_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             await self.send_message(f"@{ctx.author.name.lower()} มาตามเพจสนิฟที่นี่ {self.facebook_link} sniffsBaby")
 
     @commands.command(name="youtube", aliases=("yt", "Youtube"))
-    async def youtube_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "youtube")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "youtube")
+    async def youtube_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             await self.send_message(f"@{ctx.author.name.lower()} Channel ร้างของสนิฟเอง {self.youtube_link} sniffsBaby")
 
     @commands.command(name="instagram", aliases=("ig", "Instagram"))
-    async def instagram_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "instagram")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "instagram")
+    async def instagram_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             await self.send_message(f"@{ctx.author.name.lower()} IG ของสนิฟ {self.instagram_link} sniffsBaby")
 
     @commands.command(name="commands", aliases=["command", "cmd"])
-    async def commmands_command(self, ctx):
-        if (check_cooldown(ctx.author.name.lower(), "commands")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                set_cooldown(ctx.author.name.lower(), "commands")
+    async def commmands_command(self, ctx: commands.Context):
+        if ctx.cooldown:
             await self.send_message("!sr ขอเพลง | !coin เช็คเหรียญ | !lotto ซื้อหวย | !kill จ้างมือปืนสนิฟ")
             await self.send_message("!uptime | !watchtime | !discord | !fb | !yt | !ig")
 
     @commands.command(name="callhell")
-    async def callhell(self, ctx):
+    async def callhell(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
             usernames = await self.get_users_list()
             exclude_list = self.vip_list + self.dev_list
             data = await call_to_hell(usernames, exclude_list, self.channel.timeout)
-            # users_string = ", ".join(data["poor_users"])
-            # await self.send_message(f"บ๊ายบายคุณ {users_string}")
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
 
     @commands.command(name="sr")
-    async def user_song_request(self, ctx):
-        if self.request_status:
-            if (check_cooldown(ctx.author.name.lower(), "song_request", 120)) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                success = await user_song_request(ctx.content, get_timestamp(), ctx.author.name.lower(), self.send_message_feed)
-                if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                    if success:
-                        set_cooldown(ctx.author.name.lower(), "song_request")
+    async def user_song_request(self, ctx: commands.Context):
+        if ctx.cooldown:
+            if self.request_status:
+                success = await user_song_request(ctx.message.content, get_timestamp(), ctx.author.name.lower(), self.send_message_feed)
+                if success:
+                    set_cooldown(ctx.author.name.lower(), "sr")
 
     # !song req {on|off} | !song sel {song-id} | !song clear | !song del {song-id} | !song delnp | !song feed {on|off}
     @commands.command(name="song")
-    async def song_request(self, ctx):
+    async def song_request(self, ctx: commands.Context):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 command1 = commands_split[1]
             except IndexError:
@@ -419,17 +402,15 @@ class TwitchBot(commands.Bot,):
                 await remove_nowplaying(self.send_message)
 
     @commands.command(name="np")
-    async def get_song(self, ctx):
-        if self.request_status:
-            if (check_cooldown(ctx.author.name.lower(), "song")) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                if not ((ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)):
-                    set_cooldown(ctx.author.name.lower(), "song")
+    async def get_song(self, ctx: commands.Context):
+        if ctx.cooldown:
+            if self.request_status:
                 await now_playing(ctx.author.name.lower(), self.send_message)
 
     @commands.command(name="kill")
-    async def kill_user(self, ctx):
+    async def kill_user(self, ctx: commands.Context):
         if self.channel_live:
-            commands_split = ctx.content.split()
+            commands_split = ctx.message.content.split()
             try:
                 target = commands_split[1].lower()
             except IndexError:
@@ -438,8 +419,8 @@ class TwitchBot(commands.Bot,):
                 await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.channel.timeout)
 
     @commands.command(name="lotto")
-    async def sniffs_lotto(self, ctx):
-        commands_split = ctx.content.split()
+    async def sniffs_lotto(self, ctx: commands.Context):
+        commands_split = ctx.message.content.split()
         try:
             lotto = commands_split[1]
         except IndexError:
@@ -475,8 +456,8 @@ class TwitchBot(commands.Bot,):
                     await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
 
     @commands.command(name="raffle")
-    async def sniffs_raffle(self, ctx):
-        commands_split = ctx.content.split()
+    async def sniffs_raffle(self, ctx: commands.Context):
+        commands_split = ctx.message.content.split()
         try:
             raffle = commands_split[1]
         except IndexError:
@@ -523,27 +504,28 @@ class TwitchBot(commands.Bot,):
                 await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.channel.timeout)
 
     @commands.command(name="flip")
-    async def coin_flip(self, ctx):
-        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
-            commands_split = ctx.content.split()
-            try:
-                side = commands_split[1]
-                if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
-                    await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+    async def coin_flip(self, ctx: commands.Context):
+        if ctx.cooldown:
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
+                commands_split = ctx.message.content.split()
+                try:
+                    side = commands_split[1]
+                    if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
+                        await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+                        return
+                except IndexError:
                     return
-            except IndexError:
-                return
-            try:
-                bet = int(commands_split[2])
-                if bet < 1:
-                    return
-            except IndexError:
-                bet = 1
-            await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
+                try:
+                    bet = int(commands_split[2])
+                    if bet < 1:
+                        return
+                except IndexError:
+                    bet = 1
+                await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
 
     @commands.command(name="transfer")
-    async def transfer(self, ctx):
-        commands_split = ctx.content.split()
+    async def transfer(self, ctx: commands.Context):
+        commands_split = ctx.message.content.split()
         try:
             recipent = commands_split[1]
         except IndexError:
@@ -556,3 +538,15 @@ class TwitchBot(commands.Bot,):
             return
         viewers = await self.get_users_list()
         await transfer_coin(ctx.author.name.lower(), recipent, amount, viewers, self.send_message)
+
+    async def global_before_invoke(self, ctx: commands.Context):
+        postpone_cooldown = ["market", "webfeed", "payday", "give", "callhell", "sr", "song", "kill", "lotto", "raffle", "flip", "transfer"]
+        ctx.cooldown = check_cooldown(ctx.author.name.lower(), ctx.command.name) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)
+        if (ctx.cooldown) and (ctx.command.name not in postpone_cooldown):
+            set_cooldown(ctx.author.name.lower(), ctx.command.name)
+
+    async def event_command_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.CommandNotFound):
+            pass
+        else:
+            print(''.join(traceback.format_exception(type(error), error, error.__traceback__)))
