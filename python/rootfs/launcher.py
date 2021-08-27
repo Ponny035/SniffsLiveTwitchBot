@@ -9,7 +9,7 @@ def main():
 
 
 if __name__ == "__main__":
-    environment = os.environ.get("env", "")
+    environment: str = os.environ.get("env", "")
     try:
         if((environment == "dev") or (environment == "prod")):
             main()

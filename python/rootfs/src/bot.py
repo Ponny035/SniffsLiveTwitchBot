@@ -5,7 +5,6 @@ import traceback
 import nest_asyncio
 import requests
 from twitchio.channel import Channel
-from twitchio.chatter import Chatter
 from twitchio.message import Message
 from twitchio.user import User
 from twitchio.ext import commands
@@ -28,13 +27,13 @@ class TwitchBot(commands.Bot,):
     def __init__(self):
 
         # get os environ
-        self.environment = os.environ.get("env", "")
-        self.dryrun = os.environ.get("msg", "msgon")
-        self.NICK = os.environ.get("BOTNICK", "")
-        self.CHANNELS = os.environ.get("CHANNELS", "")
-        self.TOKEN = os.environ.get("IRC_TOKEN", "")
-        self.APIID = os.environ.get("API_ID", "")
-        self.APISEC = os.environ.get("API_TOKEN", "")
+        self.environment: str = os.environ.get("env", "")
+        self.dryrun: str = os.environ.get("msg", "msgon")
+        self.NICK: str = os.environ.get("BOTNICK", "")
+        self.CHANNELS: str = os.environ.get("CHANNELS", "")
+        self.TOKEN: str = os.environ.get("IRC_TOKEN", "")
+        self.APIID: str = os.environ.get("API_ID", "")
+        self.APISEC: str = os.environ.get("API_TOKEN", "")
 
         # init external function
         self.automod = automod()  # need to fixed
@@ -42,30 +41,30 @@ class TwitchBot(commands.Bot,):
         nest_asyncio.apply()
 
         # define default variable
-        self.feed_enable = True
-        self.market_open = True
-        self.lotto_open = False
-        self.raffle_open = False
-        self.song_feed_on = True
+        self.feed_enable: bool = True
+        self.market_open: bool = True
+        self.lotto_open: bool = False
+        self.raffle_open: bool = False
+        self.song_feed_on: bool = True
         self.channel = None
-        self.channel_live = False
+        self.channel_live: bool = False
         self.channel_live_on = None
-        self.request_status = False
-        self.first_run = True
-        self.discord_link = "https://discord.gg/Q3AMaHQEGU"  # temp link
-        self.facebook_link = "https://www.facebook.com/sniffslive/"
-        self.youtube_link = "https://www.youtube.com/SniffsLive"
-        self.instagram_link = "https://www.instagram.com/musicsn/"
-        self.vip_list = [self.NICK, self.CHANNELS, "sirju001", "mafiamojo", "armzi", "moobot", "sniffsbot"]
+        self.request_status: bool = False
+        self.first_run: bool = True
+        self.discord_link: str = "https://discord.gg/Q3AMaHQEGU"  # temp link
+        self.facebook_link: str = "https://www.facebook.com/sniffslive/"
+        self.youtube_link: str = "https://www.youtube.com/SniffsLive"
+        self.instagram_link: str = "https://www.instagram.com/musicsn/"
+        self.vip_list: list[str] = [self.NICK, self.CHANNELS, "sirju001", "mafiamojo", "armzi", "moobot", "sniffsbot"]
 
         try:
             if(self.environment == "dev"):
                 print(f"[INFO] [{get_timestamp()}] Init bot on DEVELOPMENT environment")
-                self.dev_list = ["ponny35", "bosssoq", "franess", "foxzapop"]
+                self.dev_list: list[str] = ["ponny35", "bosssoq", "franess", "foxzapop"]
 
             elif(self.environment == "prod"):
                 print(f"[INFO] [{get_timestamp()}] Init bot on PRODUCTION environment")
-                self.dev_list = []
+                self.dev_list: list[str] = []
 
             super().__init__(
                 token=self.TOKEN,
@@ -93,13 +92,13 @@ class TwitchBot(commands.Bot,):
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
 
-    async def send_message_timeout(self, username, period, reason=""):
+    async def send_message_timeout(self, username: str, period: int, reason=""):
         if self.dryrun != "msgoff":
             await self.channel.send(f"/timeout {username} {period} {reason}")
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on timeout not sent")
 
-    async def send_message_ban(self, username, reason=""):
+    async def send_message_ban(self, username: str, reason=""):
         if self.dryrun != "msgoff":
             await self.channel.send(f"/ban {username} {reason}")
         else:
@@ -145,7 +144,7 @@ class TwitchBot(commands.Bot,):
         usernames = self.get_users_list()
         asyncio.create_task(activate_point_system(self.channel_live, self.channel_live_on, usernames))
 
-    # custome event to trigger when channel is offline
+    # custom event to trigger when channel is offline
     async def event_offline(self):
         self.channel_live = False
         self.channel_live_on = None
@@ -240,18 +239,19 @@ class TwitchBot(commands.Bot,):
             commands_split = ctx.message.content.split()
             try:
                 status = commands_split[1]
+                match status:
+                    case "open":
+                        if not self.market_open:
+                            self.market_open = True
+                            print(f"[COIN] [{get_timestamp()}] Market is now open")
+                            await self.send_message("เปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
+                    case "close":
+                        if self.market_open:
+                            self.market_open = False
+                            print(f"[COIN] [{get_timestamp()}] Market is now close")
+                            await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
             except IndexError:
-                status = None
-            if status == "open":
-                if not self.market_open:
-                    self.market_open = True
-                    print(f"[COIN] [{get_timestamp()}] Market is now open")
-                    await self.send_message("เปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
-            elif status == "close":
-                if self.market_open:
-                    self.market_open = False
-                    print(f"[COIN] [{get_timestamp()}] Market is now close")
-                    await self.send_message("ปิดตลาดแล้วจ้าาาา~ sniffsBaby sniffsBaby")
+                return
 
     @commands.command(name="webfeed")
     async def activate_webfeed(self, ctx: commands.Context):
@@ -259,20 +259,21 @@ class TwitchBot(commands.Bot,):
             commands_split = ctx.message.content.split()
             try:
                 status = commands_split[1]
+                match status:
+                    case "on":
+                        if not self.feed_enable:
+                            self.feed_enable = True
+                            print(f"[FEED] [{get_timestamp()}] Webfeed System started")
+                            await self.send_message("Webfeed System started sniffsAH")
+                            activate_webfeed_feed(self.feed_enable)
+                    case "off":
+                        if self.feed_enable:
+                            self.feed_enable = False
+                            print(f"[FEED] [{get_timestamp()}] Webfeed System stopped")
+                            await self.send_message("Webfeed System stopped sniffsAH")
+                            activate_webfeed_feed(self.feed_enable)
             except IndexError:
-                status = None
-            if status == "on":
-                if not self.feed_enable:
-                    self.feed_enable = True
-                    print(f"[FEED] [{get_timestamp()}] Webfeed System started")
-                    await self.send_message("Webfeed System started sniffsAH")
-                    activate_webfeed_feed(self.feed_enable)
-            elif status == "off":
-                if self.feed_enable:
-                    self.feed_enable = False
-                    print(f"[FEED] [{get_timestamp()}] Webfeed System stopped")
-                    await self.send_message("Webfeed System stopped sniffsAH")
-                    activate_webfeed_feed(self.feed_enable)
+                return
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx: commands.Context):
@@ -281,7 +282,7 @@ class TwitchBot(commands.Bot,):
             try:
                 coin = int(commands_split[1])
                 if coin < 0:
-                    coin = 0
+                    return
             except IndexError:
                 coin = 1
             usernames = self.get_users_list()
@@ -296,17 +297,16 @@ class TwitchBot(commands.Bot,):
             try:
                 username = commands_split[1]
             except IndexError:
-                username = None
+                return
             try:
                 coin = int(commands_split[2])
                 if coin < 0:
-                    coin = 0
+                    return
             except IndexError:
                 coin = 1
-            if (username is not None):
-                add_coin(username, coin)
-                await self.send_message_feed(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
-                givecoin_feed(username, coin)
+            add_coin(username, coin)
+            await self.send_message_feed(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
+            givecoin_feed(username, coin)
 
     @commands.command(name="coin")
     async def check_coin(self, ctx: commands.Context):
@@ -388,40 +388,43 @@ class TwitchBot(commands.Bot,):
         if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
             commands_split = ctx.message.content.split()
             try:
-                command1 = commands_split[1]
+                main_command: str = commands_split[1]
             except IndexError:
-                command1 = None
+                return
             try:
-                command2 = commands_split[2]
+                argument: str = commands_split[2]
             except IndexError:
-                command2 = None
-            if command1 == "req":
-                if self.request_status and command2 == "off":
-                    self.request_status = False
-                    await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsAH")
-                    song_request_off_feed()
-                elif not self.request_status and command2 == "on":
-                    self.request_status = True
-                    await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsMic ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
-                    song_request_on_feed()
-            elif command1 == "feed" and command2 is not None:
-                if self.song_feed_on and command2 == "off":
-                    self.song_feed_on = False
-                    await song_feed(False, self.send_message)
-                elif (not self.song_feed_on) and command2 == "on":
-                    self.song_feed_on = True
-                    await song_feed(True, self.send_message)
-            elif command1 == "list":
-                if not self.song_feed_on:
-                    await get_song_list(self.send_message)
-            elif command1 == "clear":
-                await delete_songlist(self.send_message)
-            elif command1 == "del" and command2 is not None:
-                await delete_song(command2, self.send_message)
-            elif command1 == "sel" and command2 is not None:
-                await select_song(command2, self.send_message)
-            elif command1 == "delnp":
-                await remove_nowplaying(self.send_message)
+                argument = None
+            match main_command:
+                case "req":
+                    if self.request_status and argument == "off":
+                        self.request_status = False
+                        await self.send_message("ปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsAH")
+                        song_request_off_feed()
+                    elif not self.request_status and argument == "on":
+                        self.request_status = True
+                        await self.send_message("เปิดระบบขอเพลงแล้วน้าต้าวๆ sniffsMic ส่งเพลงโดยพิมพ์ !sr ตามด้วยชื่อเพลงน้า (cost 1 sniffscoin)")
+                        song_request_on_feed()
+                case "feed":
+                    if self.song_feed_on and argument == "off":
+                        self.song_feed_on = False
+                        await song_feed(False, self.send_message)
+                    elif not self.song_feed_on and argument == "on":
+                        self.song_feed_on = True
+                        await song_feed(True, self.send_message)
+                case "list":
+                    if not self.song_feed_on:
+                        await get_song_list(self.send_message)
+                case "clear":
+                    await delete_songlist(self.send_message)
+                case "del":
+                    if argument is not None:
+                        await delete_song(argument, self.send_message)
+                case "sel":
+                    if argument is not None:
+                        await select_song(argument, self.send_message)
+                case "delnp":
+                    await remove_nowplaying(self.send_message)
 
     @commands.command(name="np")
     async def get_song(self, ctx: commands.Context):
@@ -435,46 +438,45 @@ class TwitchBot(commands.Bot,):
             commands_split = ctx.message.content.split()
             try:
                 target = commands_split[1].lower()
-            except IndexError:
-                target = None
-            if target is not None:
                 await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.send_message_timeout)
+            except IndexError:
+                return
 
     @commands.command(name="lotto")
     async def sniffs_lotto(self, ctx: commands.Context):
         commands_split = ctx.message.content.split()
         try:
             lotto = commands_split[1]
+            match lotto:
+                case "start":
+                    if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                        if not self.lotto_open:
+                            self.lotto_open = True
+                            print(f"[LOTO] [{get_timestamp()}] LOTTO System started")
+                            send_lotto_msg.start(self.send_message, stop_on_error=True)
+                            lotto_start_feed()
+                case "stop":
+                    if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                        if self.lotto_open:
+                            self.lotto_open = False
+                            print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
+                            send_lotto_msg.cancel()
+                            await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
+                            lotto_stop_feed()
+                case "draw":
+                    if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                        if self.lotto_open:
+                            self.lotto_open = False
+                            send_lotto_msg.cancel()
+                            print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
+                            await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
+                            lotto_stop_feed()
+                        await draw_lotto(self.send_message)
+                case _:
+                    if self.lotto_open:
+                        await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
         except IndexError:
-            lotto = None
-        if lotto is not None:
-            if lotto == "start":
-                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                    if not self.lotto_open:
-                        self.lotto_open = True
-                        print(f"[LOTO] [{get_timestamp()}] LOTTO System started")
-                        send_lotto_msg.start(self.send_message, stop_on_error=True)
-                        lotto_start_feed()
-            elif lotto == "stop":
-                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                    if self.lotto_open:
-                        self.lotto_open = False
-                        print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
-                        send_lotto_msg.cancel()
-                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
-                        lotto_stop_feed()
-            elif lotto == "draw":
-                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                    if self.lotto_open:
-                        self.lotto_open = False
-                        send_lotto_msg.cancel()
-                        print(f"[LOTO] [{get_timestamp()}] LOTTO System stopped")
-                        await self.send_message("ปิดการซื้อ SniffsLotto แล้วจ้า รอประกาศผลรางวัลเลย sniffsAH")
-                        lotto_stop_feed()
-                    await draw_lotto(self.send_message)
-            else:
-                if self.lotto_open:
-                    await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
+            return
 
     @commands.command(name="raffle")
     async def sniffs_raffle(self, ctx: commands.Context):
@@ -483,46 +485,47 @@ class TwitchBot(commands.Bot,):
             raffle = commands_split[1]
         except IndexError:
             raffle = None
-        if raffle == "start":
-            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                if not self.raffle_open:
-                    self.raffle_open = True
-                    success = raffle_start(self.raffle_open)
-                    if success:
-                        print(f"[RAFL] [{get_timestamp()}] Raffle system started")
-                        await self.send_message("พิมพ์ !raffle เพื่อเข้ามาลุ้นของรางวัลกาชาจากสนิฟเลย! sniffsHeart")
-                        raffle_start_feed()
-        elif raffle == "stop":
-            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+        match raffle:
+            case "start":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if not self.raffle_open:
+                        self.raffle_open = True
+                        success = raffle_start(self.raffle_open)
+                        if success:
+                            print(f"[RAFL] [{get_timestamp()}] Raffle system started")
+                            await self.send_message("พิมพ์ !raffle เพื่อเข้ามาลุ้นของรางวัลกาชาจากสนิฟเลย! sniffsHeart")
+                            raffle_start_feed()
+            case "stop":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if self.raffle_open:
+                        self.raffle_open = False
+                        success = raffle_stop(self.raffle_open)
+                        if success:
+                            print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
+                            await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
+                            raffle_stop_feed()
+            case "draw":
+                if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
+                    if self.raffle_open:
+                        self.raffle_open = False
+                        success = raffle_stop(self.raffle_open)
+                        if success:
+                            print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
+                            await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
+                            raffle_stop_feed()
+                    await draw_raffle(self.send_message)
+            case _:
                 if self.raffle_open:
-                    self.raffle_open = False
-                    success = raffle_stop(self.raffle_open)
-                    if success:
-                        print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
-                        await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
-                        raffle_stop_feed()
-        elif raffle == "draw":
-            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list):
-                if self.raffle_open:
-                    self.raffle_open = False
-                    success = raffle_stop(self.raffle_open)
-                    if success:
-                        print(f"[RAFL] [{get_timestamp()}] Raffle system stopped")
-                        await self.send_message("ปิดการซื้อตั๋วแล้ว รอสนิฟจับของรางวัลน้าาา sniffsHeart")
-                        raffle_stop_feed()
-                await draw_raffle(self.send_message)
-        else:
-            if self.raffle_open:
-                if raffle is not None:
-                    try:
-                        count = int(raffle)
-                        if count < 0:
+                    if raffle is not None:
+                        try:
+                            count = int(raffle)
+                            if count < 0:
+                                return
+                        except Exception:
                             return
-                    except Exception:
-                        return
-                elif raffle is None:
-                    count = 1
-                await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.send_message_timeout)
+                    elif raffle is None:
+                        count = 1
+                    await buy_raffle(ctx.author.name.lower(), count, self.send_message_feed, self.send_message_timeout)
 
     @commands.command(name="flip")
     async def coin_flip(self, ctx: commands.Context):
@@ -531,8 +534,8 @@ class TwitchBot(commands.Bot,):
                 commands_split = ctx.message.content.split()
                 try:
                     side = commands_split[1]
-                    if (side := side.lower()) not in (opt := ("h", "t", "head", "tails", "หัว", "ก้อย")):
-                        await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ!:" + ", ".join(opt))
+                    if (side := side.lower()) not in (opt := ("h", "t", "head", "tail", "หัว", "ก้อย")):
+                        await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ! " + ", ".join(opt))
                         return
                 except IndexError:
                     return

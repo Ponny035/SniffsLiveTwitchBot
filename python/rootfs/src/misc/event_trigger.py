@@ -35,7 +35,6 @@ class EventTrigger:
             if channel_status != [] and self.success_callback[1] == 0:
                 self.channel_live = True
                 self.channel_live_on = channel_status[0].started_at
-                # self.channel_live_on = datetime.strptime(channel_status[0].started_at, "%Y-%m-%dT%H:%M:%SZ")
                 self.success_callback = [1, 1]
                 await chan_online(self.channel_live_on)
                 self.success_callback[0] = 0
