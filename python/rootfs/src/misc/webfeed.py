@@ -1,7 +1,10 @@
+import os
 import requests
 
 
-webfeed_url = "http://api-server:8000/api/v1/webfeed"
+api_host: str = os.environ.get("API_SERVER", "")
+
+webfeed_url = f"http://{api_host}:8000/api/v1/webfeed"
 webfeed_status = True
 default_timeout = 10000
 long_timeout = 30000

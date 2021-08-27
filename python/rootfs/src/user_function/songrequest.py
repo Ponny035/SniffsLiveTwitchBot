@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 import re
 import requests
 
@@ -10,19 +11,21 @@ from src.timefn.timestamp import get_timestamp
 
 
 # const variables
-sorted_song_list = []
+sorted_song_list: list = []
 song_playing = None
-song_feed_on = True
+song_feed_on: bool = True
 
-list_url = 'http://api-server:8000/api/v1/songlist'
-vote_url = 'http://api-server:8000/api/v1/vote'
-select_url = 'http://api-server:8000/api/v1/select'
-delete_url = 'http://api-server:8000/api/v1/del'
-clear_url = 'http://api-server:8000/api/v1/clear'
-rem_url = 'http://api-server:8000/api/v1/rem'
+api_host: str = os.environ.get("API_SERVER", "")
+
+list_url: str = f"http://{api_host}:8000/api/v1/songlist"
+vote_url: str = f"http://{api_host}:8000/api/v1/vote"
+select_url: str = f"http://{api_host}:8000/api/v1/select"
+delete_url: str = f"http://{api_host}:8000/api/v1/del"
+clear_url: str = f"http://{api_host}:8000/api/v1/clear"
+rem_url: str = f"http://{api_host}:8000/api/v1/rem"
 
 
-async def user_song_request(content, timestamp, username, send_message):
+async def user_song_request(content: str, timestamp: datetime, username: str, send_message):
     global sorted_song_list
     global song_playing
     cost = 1
@@ -31,7 +34,7 @@ async def user_song_request(content, timestamp, username, send_message):
     try:
         song_name = re.search("(?<=\\!sr ).+", content)[0]
     except Exception:
-        song_name = None
+        return False
 
     test_url1 = re.match("https?://", song_name)
     test_url2 = re.match(r"[A-z]+\.(com|org|in|co|tv|us|be)", song_name)
@@ -39,7 +42,7 @@ async def user_song_request(content, timestamp, username, send_message):
     if test_result:
         await send_message(f"@{username} ไม่อนุญาตให้ใส่ลิงค์นะคะ")
         return False
-    if (song_name is not None) and (len(song_name) == 1):
+    if len(song_name) == 1:
         song_id = re.match("[1-5]", song_name)
         if song_id is not None:
             try:
@@ -47,34 +50,31 @@ async def user_song_request(content, timestamp, username, send_message):
                 song_name = sorted_song_list[song_id - 1]["songKey"]
             except Exception:
                 return False
-    if song_name is not None:
-        if check_exist(username):
-            userdata = retrieve(username)
-            if userdata["coin"] >= cost:
-                add_coin(username, -cost)
-                song_name = song_name.strip()
-                song_key = song_name.lower()
-                song_request = {
-                    "songKey": song_key,
-                    "songName": song_name,
-                    "vote": 1,
-                    "ts": datetime.timestamp(timestamp) * 1000
-                }
-                response = requests.post(vote_url, json=song_request)
-                if response.status_code == 200:
-                    response_json = json.loads(response.content)
-                    sorted_song_list = response_json["songlist"]
-                    try:
-                        song_playing = response_json["nowplaying"]
-                    except KeyError:
-                        song_playing = None
-                    await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songname']} sniffsMic คะแนนรวม {response_json['songvote']} คะแนน")
-                    user_song_request_feed(username, song_name, userdata["coin"] - cost)
-                    return True
-                elif response.status_code == 404:
-                    print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")
-                    return False
-            else:
+    if check_exist(username):
+        userdata = retrieve(username)
+        if userdata["coin"] >= cost:
+            add_coin(username, -cost)
+            song_name = song_name.strip()
+            song_key = song_name.lower()
+            song_request = {
+                "songKey": song_key,
+                "songName": song_name,
+                "vote": 1,
+                "ts": datetime.timestamp(timestamp) * 1000
+            }
+            response = requests.post(vote_url, json=song_request)
+            if response.status_code == 200:
+                response_json = json.loads(response.content)
+                sorted_song_list = response_json["songlist"]
+                try:
+                    song_playing = response_json["nowplaying"]
+                except KeyError:
+                    song_playing = None
+                await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songName']} sniffsMic คะแนนรวม {response_json['songVote']} คะแนน")
+                user_song_request_feed(username, song_name, userdata["coin"] - cost)
+                return True
+            elif response.status_code == 404:
+                print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")
                 return False
         else:
             return False
@@ -82,7 +82,7 @@ async def user_song_request(content, timestamp, username, send_message):
         return False
 
 
-async def now_playing(username, send_message):
+async def now_playing(username: str, send_message):
     global sorted_song_list
     global song_playing
     sorted_song_list, song_playing = get_song_list_api()
@@ -121,11 +121,10 @@ async def get_song_list(send_message):
         await send_message("ยังไม่มีเพลงในคิวจ้า sniffsHeart sniffsHeart sniffsHeart")
 
 
-async def select_song(song_id, send_message):
+async def select_song(song_id: str, send_message):
     global sorted_song_list, song_playing
     song_id = int(song_id)
     try:
-        # if we have front end, we need to fetch new list
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
         song_select = sorted_song_list[song_id - 1]["songKey"]
@@ -188,12 +187,11 @@ async def remove_nowplaying(send_message):
         print(f"[SONG] [{get_timestamp()}] Error deleting from api")
 
 
-async def delete_song(song_id, send_message):
+async def delete_song(song_id: str, send_message):
     global sorted_song_list
     global song_playing
     song_id = int(song_id)
     try:
-        # if we have front end, we need to fetch new list
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
         song_select = sorted_song_list[song_id - 1]["songKey"]
@@ -209,7 +207,6 @@ async def delete_song(song_id, send_message):
             except KeyError:
                 song_playing = None
             await send_message(f"สนิฟลบเพลง {song_select} sniffsHeart")
-            # await self.get_song_list(send_message)
             print(f"[SONG] [{get_timestamp()}] Sniffs delete {song_select} from list")
         elif response.status_code == 404:
             response_json = json.loads(response.content)
