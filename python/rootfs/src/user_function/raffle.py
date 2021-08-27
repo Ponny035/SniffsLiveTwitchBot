@@ -5,7 +5,7 @@ raffle_list = []
 raffle_status = False
 
 
-def raffle_start(status):
+def raffle_start(status: bool):
     # clear raffle list every time start raffle
     global raffle_list, raffle_status
     if not raffle_status:
@@ -31,7 +31,7 @@ def raffle_winner():
     return None
 
 
-def raffle_stop(status):
+def raffle_stop(status: bool):
     global raffle_status
     if raffle_status:
         raffle_status = status
