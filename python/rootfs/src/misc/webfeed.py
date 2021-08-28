@@ -3,6 +3,7 @@ import requests
 
 
 api_host: str = os.environ.get("API_SERVER", "")
+api_key: str = os.environ.get("WS_KEY", "")
 
 webfeed_url = f"http://{api_host}:8000/api/v1/webfeed"
 webfeed_status = True
@@ -29,7 +30,7 @@ flip_win_icon = "<span class='icon'><i class='fas fa-hand-holding-usd'></i></spa
 feed_icon = "<span class='icon'><i class='fas fa-rss'></i></span>"
 
 
-def activate_webfeed_feed(status):
+def activate_webfeed_feed(status: bool):
     global webfeed_status
     if status:
         if not webfeed_status:
@@ -45,7 +46,7 @@ def activate_webfeed_feed(status):
             send_feed(feedtext, long_timeout)
 
 
-def subscription_payout_feed(username, coin, plan, viewer):
+def subscription_payout_feed(username: str, coin: int, plan: int, viewer: int):
     feedtext_1 = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext_1 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin จากการ Subscribe</span>"
     feedtext_1 += f"<span class='{default_tag_viewer}'>{plan}</span>"
@@ -56,7 +57,7 @@ def subscription_payout_feed(username, coin, plan, viewer):
     send_feed(feedtext_2)
 
 
-def gift_subscription_payout_feed(username, recipent, coin, plan, viewer):
+def gift_subscription_payout_feed(username: str, recipent: str, coin: int, plan: int, viewer: int):
     feedtext_1 = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext_1 += f"<span class='text-white'>ได้รับ {coin_icon} {coin} Sniffscoin จากการ {gift_icon} Gift ให้</span><span class='{default_tag_name}'>{recipent}</span>"
     feedtext_1 += f"<span class='{default_tag_viewer}'>{plan}</span>"
@@ -234,4 +235,4 @@ def coinflip_feed(username, win_side, coin_left, win, prize=None):
 
 
 def send_feed(feedtext, timeout=default_timeout):
-    requests.post(webfeed_url, json={'message': feedtext, 'timeout': timeout})
+    requests.post(webfeed_url, headers={'Authorization': api_key}, json={'message': feedtext, 'timeout': timeout})
