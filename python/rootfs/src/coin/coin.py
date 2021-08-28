@@ -2,7 +2,7 @@ from src.db_function import check_exist, insert, retrieve, update
 from src.timefn.timestamp import get_timestamp
 
 
-def add_coin(username, coin, nolog=False):
+def add_coin(username: str, coin: int, nolog=False):
     if check_exist(username):
         userdata = retrieve(username)
         userdata["coin"] += coin
@@ -19,7 +19,7 @@ def add_coin(username, coin, nolog=False):
         print(f"[COIN] [{get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
 
-async def get_coin(username, send_message):
+async def get_coin(username: str, send_message):
     if check_exist(username):
         coin = retrieve(username)["coin"]
     else:
