@@ -112,6 +112,11 @@ async def add_point_by_watchtime():
             add_coin(username, point_to_add)
 
 
+@add_point_by_watchtime.error
+async def add_point_by_watchtime_error(error: Exception):
+    print(f"[_ERR] [{get_timestamp()}] ROUTINES: Watchtime System Error with {error}")
+
+
 async def get_user_watchtime(username: str, live: bool, channels: str, send_message):
     if live:
         update_user_watchtime()
