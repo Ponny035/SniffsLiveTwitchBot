@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from twitchio.channel import Channel
 from twitchio.client import Client
 from twitchio.models import Stream
 from twitchio.ext import routines
@@ -43,7 +44,7 @@ class EventTrigger:
     async def get_channel_status_error(error: Exception):
         print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {error}")
 
-    async def check_bits(self, rawdata, event_bit):
+    async def check_bits(self, rawdata: str, event_bit):
         username = ""
         timestamp = bits = 0
         tags = result = {}
@@ -76,7 +77,7 @@ class EventTrigger:
             }
             await event_bit(result)
 
-    async def handle_channelpoints(self, rawdata, event_channelpoint):
+    async def handle_channelpoints(self, rawdata: str, event_channelpoint):
         username = ""
         id_match = "e80c4383-ee96-41cd-94ab-b232adc47f8f"
         id_match5k = "8b3458b8-f0bf-4218-b046-829c506279e5"
@@ -123,7 +124,7 @@ class EventTrigger:
             }
             await event_channelpoint(result)
 
-    async def parsing_sub_data(self, channel, tags, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
+    async def parsing_sub_data(self, channel: Channel, tags: list, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
         username = plan = plan_name = prime = streak_months = recipent = gift_sub_count = sub_month_count = msg_id = ""
         try:
             username = tags["login"]
