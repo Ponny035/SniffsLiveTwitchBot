@@ -7,7 +7,7 @@ default_cooldown = 20
 
 
 # get cooldown
-def get_cooldown(command):
+def get_cooldown(command: str):
     match command:
         case "sr":
             return 120
@@ -17,7 +17,7 @@ def get_cooldown(command):
             return default_cooldown
 
 
-def check_global(command):
+def check_global(command: str):
     match command:
         case "uptime" | "discord" | "facebook" | "youtube" | "instagram" | "commands" | "np":
             return True
@@ -26,7 +26,8 @@ def check_global(command):
 
 
 # cooldown related system
-def set_cooldown(username, command):
+def set_cooldown(username: str, command: str):
+    global command_cooldown
     now = get_timestamp()
     if check_global(command):
         try:
@@ -42,7 +43,8 @@ def set_cooldown(username, command):
             command_cooldown[username][command] = now
 
 
-def check_cooldown(username, command):
+def check_cooldown(username: str, command: str):
+    global command_cooldown
     cooldown = get_cooldown(command)
     if check_global(command):
         try:
