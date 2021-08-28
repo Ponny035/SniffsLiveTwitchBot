@@ -10,7 +10,7 @@ from twitchio.ext import commands
 
 from .coin.coin import add_coin, get_coin, payday
 from .coin.subbit import subscription_payout, gift_subscription_payout, giftmystery_subscription_payout, anongift_subscription_payout, add_point_by_bit
-from .misc.automod import automod
+from .misc.automod import auto_mod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
@@ -33,9 +33,6 @@ class TwitchBot(commands.Bot,):
         self.TOKEN: str = os.environ.get("IRC_TOKEN", "")
         self.APIID: str = os.environ.get("API_ID", "")
         self.APISEC: str = os.environ.get("API_TOKEN", "")
-
-        # init external function
-        self.automod = automod()  # need to fixed
 
         # define default variable
         self.feed_enable: bool = True
@@ -162,7 +159,7 @@ class TwitchBot(commands.Bot,):
             await update_submonth(message.author.name.lower(), message.raw_data)
             await self.event_trigger.handle_channelpoints(message.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(message.raw_data, self.event_bits)
-            await self.automod.auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.send_message_timeout, self.send_message_ban)
+            await auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.send_message_timeout, self.send_message_ban)
             await self.handle_commands(message)
 
     async def event_bits(self, data: dict):
