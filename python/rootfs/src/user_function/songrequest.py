@@ -16,6 +16,7 @@ song_playing = None
 song_feed_on: bool = True
 
 api_host: str = os.environ.get("API_SERVER", "")
+api_key: str = os.environ.get("WS_KEY", "")
 
 list_url: str = f"http://{api_host}:8000/api/v1/songlist"
 vote_url: str = f"http://{api_host}:8000/api/v1/vote"
@@ -62,7 +63,7 @@ async def user_song_request(content: str, timestamp: datetime, username: str, se
                 "vote": 1,
                 "ts": datetime.timestamp(timestamp) * 1000
             }
-            response = requests.post(vote_url, json=song_request)
+            response = requests.post(vote_url, headers={'Authorization': api_key}, json=song_request)
             if response.status_code == 200:
                 response_json = json.loads(response.content)
                 sorted_song_list = response_json["songlist"]
@@ -91,7 +92,7 @@ async def now_playing(username: str, send_message):
 
 
 def get_song_list_api():
-    response = requests.get(list_url)
+    response = requests.get(list_url, headers={'Authorization': api_key})
     if response.status_code == 200:
         response_json = json.loads(response.content)
         try:
@@ -128,7 +129,7 @@ async def select_song(song_id: str, send_message):
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
         song_select = sorted_song_list[song_id - 1]["songKey"]
-        response = requests.post(select_url, json={"songKey": song_select})
+        response = requests.post(select_url, headers={'Authorization': api_key}, json={"songKey": song_select})
         if response.status_code == 200:
             response_json = json.loads(response.content)
             try:
@@ -158,7 +159,7 @@ async def select_song(song_id: str, send_message):
 async def delete_songlist(send_message):
     global sorted_song_list
     global song_playing
-    response = requests.post(clear_url, json={"confirm": True})
+    response = requests.post(clear_url, headers={'Authorization': api_key}, json={"confirm": True})
     if response.status_code == 200:
         sorted_song_list = []
         response_json = json.loads(response.content)
@@ -174,7 +175,7 @@ async def delete_songlist(send_message):
 async def remove_nowplaying(send_message):
     global sorted_song_list
     global song_playing
-    response = requests.post(rem_url, json={"confirm": True})
+    response = requests.post(rem_url, headers={'Authorization': api_key}, json={"confirm": True})
     if response.status_code == 200:
         response_json = json.loads(response.content)
         song_playing = None
@@ -195,7 +196,7 @@ async def delete_song(song_id: str, send_message):
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
         song_select = sorted_song_list[song_id - 1]["songKey"]
-        response = requests.post(delete_url, json={"songKey": song_select})
+        response = requests.post(delete_url, headers={'Authorization': api_key}, json={"songKey": song_select})
         if response.status_code == 200:
             response_json = json.loads(response.content)
             try:
