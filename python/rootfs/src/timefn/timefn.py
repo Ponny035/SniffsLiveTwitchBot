@@ -1,4 +1,6 @@
-import asyncio
+from datetime import datetime
+
+from twitchio.ext import routines
 
 from src.coin.coin import add_coin
 from src.db_function import check_exist, insert, retrieve, update
@@ -6,13 +8,13 @@ from .timestamp import get_timestamp, sec_to_hms
 
 
 # init var
-channel_live = False
-channel_live_on = None
-watchtime_session = {}
+channel_live: bool = False
+channel_live_on: datetime = None
+watchtime_session: dict = {}
 
 # coin var
-coin_join_before_live = 5
-watchtime_to_point = 60
+coin_join_before_live: int = 5
+watchtime_to_point: int = 60
 
 
 async def activate_point_system(live, starttime=None, usernames=None):
@@ -26,12 +28,11 @@ async def activate_point_system(live, starttime=None, usernames=None):
             for username in usernames:
                 user_join_part("join", username.lower(), channel_live_on)
                 add_coin(username.lower(), coin_join_before_live)
-        await add_point_by_watchtime()
     else:
         update_user_watchtime(True)
 
 
-def user_join_part(status, username, timestamp):
+def user_join_part(status: str, username: str, timestamp: datetime):
     global watchtime_session
     try:
         if watchtime_session[username]["status"] != status:
@@ -90,29 +91,28 @@ def update_user_watchtime(force=False):
         watchtime_session = {}
 
 
+@routines.routine(minutes=watchtime_to_point)
 async def add_point_by_watchtime():
     global watchtime_session
-    while channel_live:
-        update_user_watchtime()
-        for username, user_stat in watchtime_session.items():
-            time_to_point = watchtime_to_point * 60
-            try:
-                session = user_stat["watchtime_session"]
-            except KeyError:
-                session = 0
-            try:
-                redeem = user_stat["watchtime_redeem"]
-            except KeyError:
-                redeem = 0
-            point_to_add = int((session - redeem) / time_to_point)
-            redeem += point_to_add * time_to_point
-            user_stat["watchtime_redeem"] = redeem
-            if point_to_add > 0:
-                add_coin(username, point_to_add)
-        await asyncio.sleep(watchtime_to_point * 60)
+    update_user_watchtime()
+    for username, user_stat in watchtime_session.items():
+        time_to_point = watchtime_to_point * 60
+        try:
+            session = user_stat["watchtime_session"]
+        except KeyError:
+            session = 0
+        try:
+            redeem = user_stat["watchtime_redeem"]
+        except KeyError:
+            redeem = 0
+        point_to_add = int((session - redeem) / time_to_point)
+        redeem += point_to_add * time_to_point
+        user_stat["watchtime_redeem"] = redeem
+        if point_to_add > 0:
+            add_coin(username, point_to_add)
 
 
-async def get_user_watchtime(username, live, channels, send_message):
+async def get_user_watchtime(username: str, live: bool, channels: str, send_message):
     if live:
         update_user_watchtime()
     try:

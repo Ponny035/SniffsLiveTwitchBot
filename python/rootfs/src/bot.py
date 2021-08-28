@@ -1,9 +1,7 @@
-import asyncio
 import os
 import time
 import traceback
 
-import nest_asyncio
 import requests
 from twitchio.channel import Channel
 from twitchio.message import Message
@@ -20,7 +18,7 @@ from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed
 from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
-from .timefn.timefn import activate_point_system, user_join_part, get_user_watchtime
+from .timefn.timefn import activate_point_system, add_point_by_watchtime, user_join_part, get_user_watchtime
 from .timefn.timestamp import get_timestamp, sec_to_hms
 
 
@@ -38,8 +36,6 @@ class TwitchBot(commands.Bot,):
 
         # init external function
         self.automod = automod()  # need to fixed
-
-        nest_asyncio.apply()
 
         # define default variable
         self.feed_enable: bool = True
@@ -146,7 +142,8 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
         await self.greeting_sniffs()
         usernames = self.get_users_list()
-        asyncio.create_task(activate_point_system(self.channel_live, self.channel_live_on, usernames))
+        await activate_point_system(self.channel_live, self.channel_live_on, usernames)
+        add_point_by_watchtime.start(stop_on_error=False)
 
     # custom event to trigger when channel is offline
     async def event_offline(self):
@@ -154,7 +151,8 @@ class TwitchBot(commands.Bot,):
         self.channel_live_on = None
         print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
-        asyncio.create_task(activate_point_system(self.channel_live))
+        add_point_by_watchtime.cancel()
+        await activate_point_system(self.channel_live)
 
     async def event_message(self, message: Message):
         if (message.author is not None) and (message.author.name.lower() != self.NICK):
