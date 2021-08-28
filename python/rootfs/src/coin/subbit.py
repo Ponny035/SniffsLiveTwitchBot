@@ -9,7 +9,7 @@ sub_to_point = [5, 10, 25]
 bit_to_point = 50
 
 
-async def subscription_payout(username, sub_month_count, plan, usernames, send_message, send_message_feed):
+async def subscription_payout(username: str, sub_month_count: str, plan: list[int], usernames: list[str], send_message, send_message_feed):
     plan_select = int(plan[1] / 1000)
     add_coin(username, sub_to_point[plan_select - 1], True)
     payday(usernames, 1, True)
@@ -34,7 +34,7 @@ async def subscription_payout(username, sub_month_count, plan, usernames, send_m
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1]} sniffscoin by sub tier {plan_select}")
 
 
-async def gift_subscription_payout(username, recipent, plan, usernames, send_message):
+async def gift_subscription_payout(username: str, recipent: str, plan: list[int], usernames: list[str], send_message):
     plan_select = int(plan[1] / 1000)
     add_coin(username, sub_to_point[plan_select - 1], True)
     add_coin(recipent, sub_to_point[plan_select - 1], True)
@@ -45,7 +45,7 @@ async def gift_subscription_payout(username, recipent, plan, usernames, send_mes
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1]} sniffscoin by giftsub to {recipent} tier {plan_select}")
 
 
-async def giftmystery_subscription_payout(username, gift_count, plan, usernames, send_message):
+async def giftmystery_subscription_payout(username: str, gift_count: int, plan: list[int], usernames: list[str], send_message):
     plan_select = int(plan[1] / 1000)
     # add_coin(username, sub_to_point * gift_count, True)
     # payday(usernames, 1, True)
@@ -55,7 +55,7 @@ async def giftmystery_subscription_payout(username, gift_count, plan, usernames,
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1] * gift_count} sniffscoin by giftmysterysub tier {plan_select}")
 
 
-async def anongift_subscription_payout(recipent, plan, usernames, send_message, send_message_feed):
+async def anongift_subscription_payout(recipent: str, plan: list[int], usernames: list[str], send_message, send_message_feed):
     plan_select = int(plan[1] / 1000)
     add_coin(recipent, sub_to_point[plan_select - 1], True)
     payday(usernames, 1, True)
@@ -65,7 +65,7 @@ async def anongift_subscription_payout(recipent, plan, usernames, send_message, 
     print(f"[COIN] [{get_timestamp()}] {recipent} receive {sub_to_point[plan_select - 1]} sniffscoin by anongiftsub tier {plan_select}")
 
 
-async def add_point_by_bit(username, bits, submonth, send_message):
+async def add_point_by_bit(username: str, bits: int, submonth: int, send_message):
     if submonth > 0:
         mod_rate = min(submonth, 6) / 100
     else:
