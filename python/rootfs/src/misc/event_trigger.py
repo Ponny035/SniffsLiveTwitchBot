@@ -21,7 +21,7 @@ class EventTrigger:
             client_secret="7uf45fl76gkewvlzjseyngshijki1x"
         )
 
-    @routines.routine(seconds=30)
+    @routines.routine(seconds=10)
     async def get_channel_status(self, chan_offline, chan_online):
         if self.channel_live:
             channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
