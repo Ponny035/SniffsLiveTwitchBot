@@ -23,7 +23,7 @@ const WebfeedComponent: NextPage = (): JSX.Element => {
     if (lastMessage) {
       const history = receivedMessages.slice(-199)
       setReceivedMessages([...history, lastMessage])
-      
+
       const containerElement = document.createElement('div')
       containerElement.className = 'pt-2 fadein'
 
@@ -39,8 +39,8 @@ const WebfeedComponent: NextPage = (): JSX.Element => {
         containerElement.classList.add('fadeout')
         setTimeout(() => {
           baseRef.current?.removeChild(containerElement)
-        }, 200);
-      }, lastMessage.to | defaultMessageTimeout);
+        }, 200)
+      }, lastMessage.to | defaultMessageTimeout)
     }
   }, [lastMessage])
 

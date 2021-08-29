@@ -2,7 +2,9 @@ import Ably from 'ably/promises'
 import { useEffect } from 'react'
 import type { Types } from 'ably'
 
-const ably: Types.RealtimePromise = new Ably.Realtime.Promise({ authUrl: '/api/createTokenRequest' })
+const ably: Types.RealtimePromise = new Ably.Realtime.Promise({
+  authUrl: '/api/createTokenRequest',
+})
 
 export const useChannel = (
   channelName: string,

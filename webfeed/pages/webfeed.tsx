@@ -1,7 +1,9 @@
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 
-const WebfeedComponent = dynamic(() => import('../utils/webfeedComponent'), { ssr: false })
+const WebfeedComponent = dynamic(() => import('../utils/webfeedComponent'), {
+  ssr: false,
+})
 
 const Webfeed = (): JSX.Element => {
   return (
