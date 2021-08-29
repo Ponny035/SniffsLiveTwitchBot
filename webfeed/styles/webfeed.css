@@ -1,0 +1,41 @@
+html{
+  background-color: rgba(0,0,0,0) !important;
+}
+body{
+  background-color: rgba(0,0,0,0);
+}
+body::before{
+  background: none;
+  background-color: rgba(0,0,0,0);
+}
+.base-container{
+  background-color: rgba(0,0,0,0);
+  overflow: hidden;
+  height: 720px;
+  font-family: 'Noto Sans ExtBd', 'Noto Sans Thai ExtBd';
+}
+::-webkit-scrollbar{
+  visibility: hidden;
+  display: none;
+}
+.text-white{
+  color: white;
+  -webkit-text-stroke: 0.5px black;
+  font-weight: bold;
+}
+.fadein{
+  width: 100%;
+  animation: fadein 0.2s linear forwards;
+}
+@keyframes fadein{
+  0% { opacity: 0; }
+  100% { opacity: 100; }
+}
+.fadeout{
+  width: 100%;
+  animation: fadeout 0.2s linear forwards;
+}
+@keyframes fadeout{
+  0% { opacity: 100; }
+  100% { opacity: 0; }
+}
