@@ -3,7 +3,7 @@ from datetime import datetime
 from twitchio.ext import routines
 
 from src.coin.coin import add_coin
-from src.db_function import check_exist, insert, retrieve, update
+from src.db_function import upsert, retrieve
 from .timestamp import get_timestamp, sec_to_hms
 
 
@@ -73,18 +73,13 @@ def update_user_watchtime(force=False):
         for username, user_stat in watchtime_session.items():
             try:
                 if user_stat["watchtime_session"] != 0:
-                    if check_exist(username):
-                        userdata = retrieve(username)
-                        userdata["watchtime"] += int(user_stat["watchtime_session"])
-                        update(userdata)
+                    userdata = retrieve(username)
+                    if userdata:
+                        userdata["Watch_Time"] += int(user_stat["watchtime_session"])
                     else:
-                        userdata = {
-                            "username": username,
-                            "coin": 0,
-                            "watchtime": int(user_stat["watchtime"]),
-                            "submonth": 0
-                        }
-                        insert(userdata)
+                        userdata["User_Name"] = username
+                        userdata["Watch_Time"] = int(user_stat["watchtime_session"])
+                    upsert(userdata)
             except KeyError:
                 pass
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime Success")
@@ -124,10 +119,10 @@ async def get_user_watchtime(username: str, live: bool, channels: str, send_mess
         session = watchtime_session[username]["watchtime_session"]
     except KeyError:
         session = 0
-    if check_exist(username):
-        past = retrieve(username)["watchtime"]
-    else:
-        past = 0
+    userdata = retrieve(username)
+    past = 0
+    if userdata:
+        past = userdata["Watch_Time"]
     watchtime = past + session
     watchtime_dhms = sec_to_hms(watchtime)
     if any(time > 0 for time in watchtime_dhms):

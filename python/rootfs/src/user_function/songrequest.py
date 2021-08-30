@@ -5,7 +5,7 @@ import re
 import requests
 
 from src.coin.coin import add_coin
-from src.db_function import check_exist, retrieve
+from src.db_function import retrieve
 from src.misc.webfeed import user_song_request_feed
 from src.timefn.timestamp import get_timestamp
 
@@ -48,9 +48,9 @@ async def user_song_request(content: str, timestamp: datetime, username: str, se
                 song_name = sorted_song_list[song_id - 1]["songKey"]
             except Exception:
                 return False
-    if check_exist(username):
-        userdata = retrieve(username)
-        if userdata["coin"] >= cost:
+    userdata = retrieve(username)
+    if userdata:
+        if userdata["Coin"] >= cost:
             add_coin(username, -cost)
             song_name = song_name.strip()
             song_key = song_name.lower()
@@ -69,7 +69,7 @@ async def user_song_request(content: str, timestamp: datetime, username: str, se
                 except KeyError:
                     song_playing = None
                 await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songName']} sniffsMic คะแนนรวม {response_json['songVote']} คะแนน")
-                user_song_request_feed(username, song_name, userdata["coin"] - cost)
+                user_song_request_feed(username, song_name, userdata["Coin"] - cost)
                 return True
             elif response.status_code == 404:
                 print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")

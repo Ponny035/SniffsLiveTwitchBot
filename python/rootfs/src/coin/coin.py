@@ -1,27 +1,23 @@
-from src.db_function import check_exist, insert, retrieve, update
+from src.db_function import upsert, retrieve
 from src.timefn.timestamp import get_timestamp
 
 
 def add_coin(username: str, coin: int, nolog=False):
-    if check_exist(username):
-        userdata = retrieve(username)
-        userdata["coin"] += coin
-        update(userdata)
+    userdata = retrieve(username)
+    if userdata:
+        userdata["Coin"] += coin
     else:
-        userdata = {
-            "username": username,
-            "coin": coin,
-            "watchtime": 0,
-            "submonth": 0
-        }
-        insert(userdata)
+        userdata["User_Name"] = username
+        userdata["Coin"] = coin
+    upsert(userdata)
     if not nolog:
         print(f"[COIN] [{get_timestamp()}] User: {username} receive(deduct) {coin} sniffscoin")
 
 
 async def get_coin(username: str, send_message):
-    if check_exist(username):
-        coin = retrieve(username)["coin"]
+    userdata = retrieve(username)
+    if userdata:
+        coin = userdata["Coin"]
     else:
         coin = 0
     await send_message(f"@{username} มี {coin} sniffscoin sniffsAH")

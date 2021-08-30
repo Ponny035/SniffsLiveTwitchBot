@@ -1,6 +1,6 @@
 from .coin import add_coin, payday
 from src.timefn.timestamp import get_timestamp
-from src.db_function import check_exist, insert, retrieve, update
+from src.db_function import upsert, retrieve
 from src.misc.webfeed import anongift_subscription_payout_feed, bit_to_coin_feed, gift_subscription_payout_feed, giftmystery_subscription_payout_feed, subscription_payout_feed
 
 
@@ -14,18 +14,11 @@ async def subscription_payout(username: str, sub_month_count: str, plan: list[in
     add_coin(username, sub_to_point[plan_select - 1], True)
     payday(usernames, 1, True)
     try:
-        if check_exist(username):
-            userdata = retrieve(username)
-            userdata["submonth"] = int(sub_month_count)
-            update(userdata)
-        else:
-            userdata = {
-                "username": username,
-                "coin": 0,
-                "watchtime": 0,
-                "submonth": int(sub_month_count)
-            }
-            insert(userdata)
+        userdata = retrieve(username)
+        if not userdata:
+            userdata["User_Name"] = username
+        userdata["Sub_Month"] = int(sub_month_count)
+        upsert(userdata)
     except Exception as msg:
         print(f"[_ERR] [{get_timestamp()}] Cannot update db for user {username} with {sub_month_count} submonth {msg}")
     await send_message(f"ยินดีต้อนรับ @{username} มาเป็นต้าวๆของสนิฟ sniffsHeart sniffsHeart sniffsHeart")

@@ -17,10 +17,9 @@ services:
       - CHANNELS
       - CLIENT_ID
       - CLIENT_SECRET
-      - DB_HOST
-      - DB_NAME
-      - DB_USER
-      - DB_PASS
+      - SUPABASE_URL
+      - SUPABASE_API
+      - TABLE
       - API_SERVER
       - WS_KEY
       - ABLY_KEY

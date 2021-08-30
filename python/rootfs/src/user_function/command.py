@@ -9,7 +9,7 @@ from .lotto import check_winner
 from .games import coinflip
 from .raffle import raffle_save, raffle_winner
 from src.coin.coin import add_coin
-from src.db_function import check_exist, retrieve
+from src.db_function import retrieve
 from src.timefn.timestamp import get_timestamp
 from src.misc.webfeed import buy_lotto_feed, buy_raffle_feed, call_to_hell_feed, coinflip_feed, draw_lotto_feed, draw_raffle_feed, shooter_dodge_feed, shooter_success_feed, shooter_suicide_feed, shooter_unsuccess_feed, shooter_vip_feed
 
@@ -69,12 +69,13 @@ async def shooter(employer: str, target: str, vip_list: list[str], dev_list: lis
             available = False
     if available:
         shooter_cooldown = get_timestamp()
-        if check_exist(employer):
-            userdata = retrieve(employer)
-            if userdata["coin"] >= payrate:
+        userdata = retrieve(employer)
+        if userdata:
+            if userdata["Coin"] >= payrate:
                 add_coin(employer, -payrate)
-                if check_exist(target):
-                    submonth = retrieve(target)["submonth"]
+                targetdata = retrieve(target)
+                if targetdata:
+                    submonth = targetdata["Sub_Month"]
                     dodge_rate += min(submonth, 6)
                 if target in exclude_target:
                     await timeout(employer, shooter_timeout, f"บังอาจเหิมเกริมหรอ นั่งพักไปก่อน {shooter_timeout} วินาที")
@@ -85,7 +86,7 @@ async def shooter(employer: str, target: str, vip_list: list[str], dev_list: lis
                     if random.random() > (dodge_rate / 100):
                         await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
                         await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที sniffsAH")
-                        shooter_success_feed(employer, target, shooter_timeout, userdata["coin"] - payrate)
+                        shooter_success_feed(employer, target, shooter_timeout, userdata["Coin"] - payrate)
                         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
                     else:
                         shooter_cooldown = 0
@@ -120,9 +121,9 @@ async def buy_lotto(username: str, lotto: str, send_message):
     global player_lotto_list
     lotto_cost = 5
     if (re.match(r"[0-9]{2}", lotto) is not None) and (len(lotto) == 2):
-        if check_exist(username):
-            userstat = retrieve(username)
-            if userstat["coin"] >= lotto_cost:
+        userdata = retrieve(username)
+        if userdata:
+            if userdata["Coin"] >= lotto_cost:
                 lotto_int = int(lotto)
                 add_coin(username, -lotto_cost)
                 player_lotto_list += [[username, lotto_int]]
@@ -181,9 +182,9 @@ async def check_message(username, message, vip_list, dev_list, send_message, tim
 
 async def buy_raffle(username, count, send_message, timeout):
     raffle_cost = 1
-    if check_exist(username):
-        userstat = retrieve(username)
-        total_raffle = min(int(userstat["coin"] / raffle_cost), count)
+    userdata = retrieve(username)
+    if userdata:
+        total_raffle = min(int(userdata["Coin"] / raffle_cost), count)
         if total_raffle > 0:
             success = raffle_save(username, total_raffle)
             if success:
@@ -212,9 +213,9 @@ async def draw_raffle(send_message):
 # coinflip system
 async def buy_coinflip(username, side, bet, send_message):
     prize = bet * 2
-    if check_exist(username):
-        userstat = retrieve(username)
-        if userstat["coin"] >= bet:
+    userdata = retrieve(username)
+    if userdata:
+        if userdata["Coin"] >= bet:
             add_coin(username, -bet)
             result, win_side = coinflip(side)
             if win_side == "h":
@@ -223,12 +224,12 @@ async def buy_coinflip(username, side, bet, send_message):
                 win_side = "ก้อย"
             if result:
                 await send_message(f"เหรียญออกที่{win_side}ค่า! sniffsHeart ได้รับ {prize} sniff coin")
-                coinflip_feed(username, win_side, userstat["coin"] - bet + prize, result, prize)
+                coinflip_feed(username, win_side, userdata["Coin"] - bet + prize, result, prize)
                 add_coin(username, prize)
                 print(f"[FLIP] [{get_timestamp()}] {username} won {prize}")
             else:
                 await send_message(f"ไม่น้าาาเหรียญออกที่{win_side} sniffsCry")
-                coinflip_feed(username, win_side, userstat["coin"] - bet, result)
+                coinflip_feed(username, win_side, userdata["Coin"] - bet, result)
                 print(f"[FLIP] [{get_timestamp()}] {username} lose {bet}")
         else:
             await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก PunOko PunOko PunOko")
@@ -236,13 +237,12 @@ async def buy_coinflip(username, side, bet, send_message):
 
 
 async def transfer_coin(user, recipent, amount, viewers, send_message):
-    if check_exist(user):
-        userstat = retrieve(user)
-    else:
+    userstat = retrieve(user)
+    if not userstat:
         return
-    if not(check_exist(recipent) or (recipent in viewers)):
+    if not(retrieve(recipent) or (recipent in viewers)):
         return
-    if userstat["coin"] >= amount:
+    if userstat["Coin"] >= amount:
         add_coin(user, -amount)
         add_coin(recipent, amount)
         print(f"[COIN] [{get_timestamp()}] {user} transfer {amount} sniffscoin to {recipent}")

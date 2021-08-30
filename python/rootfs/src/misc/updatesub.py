@@ -1,6 +1,6 @@
 import re
 
-from src.db_function import check_exist, insert, retrieve, update
+from src.db_function import upsert, retrieve
 from src.timefn.timestamp import get_timestamp
 
 
@@ -11,18 +11,14 @@ async def update_submonth(username: str, rawdata: str):
     except Exception:
         return
     if submonth > 0:
-        if check_exist(username):
-            userdata = retrieve(username)
-            if userdata["submonth"] != submonth:
-                userdata["submonth"] = submonth
-                update(userdata)
+        userdata = retrieve(username)
+        if userdata:
+            if userdata["Sub_Month"] != submonth:
+                userdata["Sub_Month"] = submonth
+                upsert(userdata)
                 print(f"[INFO] [{get_timestamp()}] Update {username} submonth to {submonth} months")
         else:
-            userdata = {
-                "username": username,
-                "coin": 0,
-                "watchtime": 0,
-                "submonth": submonth
-            }
-            insert(userdata)
+            userdata["User_Name"] = username
+            userdata["Sub_Month"] = submonth
+            upsert(userdata)
             print(f"[INFO] [{get_timestamp()}] Insert {username} with submonth {submonth} months")
