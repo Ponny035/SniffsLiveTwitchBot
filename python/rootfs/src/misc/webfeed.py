@@ -1,11 +1,12 @@
+import base64
+import json
 import os
 import requests
 
 
-api_host: str = os.environ.get("API_SERVER", "")
-api_key: str = os.environ.get("WS_KEY", "")
+ably_key: str = os.environ.get("ABLY_KEY", "")
 
-webfeed_url = f"{api_host}/api/webfeed"
+webfeed_url = "https://rest.ably.io/channels/webfeed/messages"
 webfeed_status = True
 default_timeout = 10000
 long_timeout = 30000
@@ -235,4 +236,7 @@ def coinflip_feed(username, win_side, coin_left, win, prize=None):
 
 
 def send_feed(feedtext, timeout=default_timeout):
-    requests.post(webfeed_url, headers={'Authorization': api_key}, json={'message': feedtext, 'timeout': timeout})
+    payload = json.dumps({"message": feedtext, "timeout": timeout})
+    requests.post(webfeed_url,
+                  headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                  json={'name': 'feedmessage', 'data': payload})
