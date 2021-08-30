@@ -10,7 +10,6 @@ idna==3.2
 mccabe==0.6.1
 multidict==5.1.0
 mysql-connector-python==8.0.26
-nest-asyncio==1.5.1
 protobuf==3.17.3
 pycodestyle==2.7.0
 pyflakes==2.3.1
