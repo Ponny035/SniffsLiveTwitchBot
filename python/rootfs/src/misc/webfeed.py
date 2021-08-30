@@ -5,7 +5,7 @@ import requests
 api_host: str = os.environ.get("API_SERVER", "")
 api_key: str = os.environ.get("WS_KEY", "")
 
-webfeed_url = f"http://{api_host}/api/webfeed"
+webfeed_url = f"{api_host}/api/webfeed"
 webfeed_status = True
 default_timeout = 10000
 long_timeout = 30000

@@ -18,9 +18,9 @@ song_feed_on: bool = True
 api_host: str = os.environ.get("API_SERVER", "")
 api_key: str = os.environ.get("WS_KEY", "")
 
-list_url: str = f"http://{api_host}/api/songlist"
-vote_url: str = f"http://{api_host}/api/vote"
-manage_url: str = f"http://{api_host}/api/songmanage"
+list_url: str = f"{api_host}/api/songlist"
+vote_url: str = f"{api_host}/api/vote"
+manage_url: str = f"{api_host}/api/songmanage"
 
 
 async def user_song_request(content: str, timestamp: datetime, username: str, send_message):
