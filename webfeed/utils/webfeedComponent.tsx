@@ -15,8 +15,10 @@ const WebfeedComponent: NextPage = (): JSX.Element => {
   const defaultMessageTimeout = 5000
 
   useChannel('webfeed', (message: Types.Message) => {
-    const messageParse = JSON.parse(message.data)
-    setLastMessage(messageParse)
+    if (message.name === 'feedmessage') {
+      const messageParse = JSON.parse(message.data)
+      setLastMessage(messageParse)
+    }
   })
 
   useEffect(() => {

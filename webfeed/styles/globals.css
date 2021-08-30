@@ -366,3 +366,46 @@ a {
     opacity: 0;
   }
 }
+
+.nowrap-text {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.songfeed {
+  color: white;
+  background-color: rgba(0, 0, 0, 0);
+  padding: 0px 20px 0px 20px;
+  height: 335px;
+  font-family: 'Noto Sans ExtBd', 'Noto Sans Thai ExtBd';
+  -webkit-text-stroke: 1.2px black;
+}
+
+.song-list {
+  height: 244px !important;
+}
+
+.text-bolder {
+  font-weight: 900 !important;
+}
+
+.sliding-text {
+  width: 100%;
+  transform: translateX(100%);
+  animation: sliding-text 8s linear infinite;
+}
+
+@keyframes sliding-text {
+  0% {
+    transform: translateX(100%);
+  }
+  35% {
+    transform: translateX(0%);
+  }
+  55% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-135%);
+  }
+}
