@@ -18,12 +18,9 @@ song_feed_on: bool = True
 api_host: str = os.environ.get("API_SERVER", "")
 api_key: str = os.environ.get("WS_KEY", "")
 
-list_url: str = f"http://{api_host}:8000/api/v1/songlist"
-vote_url: str = f"http://{api_host}:8000/api/v1/vote"
-select_url: str = f"http://{api_host}:8000/api/v1/select"
-delete_url: str = f"http://{api_host}:8000/api/v1/del"
-clear_url: str = f"http://{api_host}:8000/api/v1/clear"
-rem_url: str = f"http://{api_host}:8000/api/v1/rem"
+list_url: str = f"http://{api_host}/api/songlist"
+vote_url: str = f"http://{api_host}/api/vote"
+manage_url: str = f"http://{api_host}/api/songmanage"
 
 
 async def user_song_request(content: str, timestamp: datetime, username: str, send_message):
@@ -66,9 +63,9 @@ async def user_song_request(content: str, timestamp: datetime, username: str, se
             response = requests.post(vote_url, headers={'Authorization': api_key}, json=song_request)
             if response.status_code == 200:
                 response_json = json.loads(response.content)
-                sorted_song_list = response_json["songlist"]
+                sorted_song_list = response_json["songList"]
                 try:
-                    song_playing = response_json["nowplaying"]
+                    song_playing = response_json["nowPlaying"]
                 except KeyError:
                     song_playing = None
                 await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songName']} sniffsMic คะแนนรวม {response_json['songVote']} คะแนน")
@@ -96,11 +93,11 @@ def get_song_list_api():
     if response.status_code == 200:
         response_json = json.loads(response.content)
         try:
-            sorted_song_list = response_json["songlist"]
+            sorted_song_list = response_json["songList"]
         except KeyError:
             sorted_song_list = None
         try:
-            song_playing = response_json["nowplaying"]
+            song_playing = response_json["nowPlaying"]
         except KeyError:
             song_playing = None
     else:
@@ -128,25 +125,25 @@ async def select_song(song_id: str, send_message):
     try:
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
-        song_select = sorted_song_list[song_id - 1]["songKey"]
-        response = requests.post(select_url, headers={'Authorization': api_key}, json={"songKey": song_select})
+        song_select = sorted_song_list[song_id - 1]["id"]
+        response = requests.post(manage_url, headers={'Authorization': api_key}, json={"id": song_select})
         if response.status_code == 200:
             response_json = json.loads(response.content)
             try:
-                sorted_song_list = response_json["songlist"]
+                sorted_song_list = response_json["songList"]
             except KeyError:
                 sorted_song_list = []
-            song_playing = response_json["nowplaying"]
+            song_playing = response_json["nowPlaying"]
             await send_message(f"สนิฟเลือกเพลง {song_playing['songName']} sniffsMic sniffsMic sniffsMic")
             print(f"[SONG] [{get_timestamp()}] Sniffs choose {song_playing['songName']} Delete this song from list")
         elif response.status_code == 404:
             response_json = json.loads(response.content)
             try:
-                sorted_song_list = response_json["songlist"]
+                sorted_song_list = response_json["songList"]
             except Exception:
                 sorted_song_list = []
             try:
-                song_playing = response_json["nowplaying"]
+                song_playing = response_json["nowPlaying"]
             except KeyError:
                 song_playing = None
             await send_message("ไม่มีเพลงนี้น้า sniffsAH")
@@ -159,12 +156,12 @@ async def select_song(song_id: str, send_message):
 async def delete_songlist(send_message):
     global sorted_song_list
     global song_playing
-    response = requests.post(clear_url, headers={'Authorization': api_key}, json={"confirm": True})
+    response = requests.delete(manage_url, headers={'Authorization': api_key}, json={"confirm": True})
     if response.status_code == 200:
         sorted_song_list = []
         response_json = json.loads(response.content)
         try:
-            song_playing = response_json["nowplaying"]
+            song_playing = response_json["nowPlaying"]
         except KeyError:
             song_playing = None
         await send_message("ล้าง List เพลงให้แล้วต้าวสนิฟ sniffsHeart")
@@ -175,12 +172,12 @@ async def delete_songlist(send_message):
 async def remove_nowplaying(send_message):
     global sorted_song_list
     global song_playing
-    response = requests.post(rem_url, headers={'Authorization': api_key}, json={"confirm": True})
+    response = requests.patch(manage_url, headers={'Authorization': api_key}, json={"confirm": True})
     if response.status_code == 200:
         response_json = json.loads(response.content)
         song_playing = None
         try:
-            sorted_song_list = response_json["songlist"]
+            sorted_song_list = response_json["songList"]
         except KeyError:
             sorted_song_list = []
         await send_message("ลบ Now Playing เพลงให้แล้วต้าวสนิฟ sniffsHeart")
@@ -195,25 +192,26 @@ async def delete_song(song_id: str, send_message):
     try:
         if song_feed_on:
             sorted_song_list, song_playing = get_song_list_api()
-        song_select = sorted_song_list[song_id - 1]["songKey"]
-        response = requests.post(delete_url, headers={'Authorization': api_key}, json={"songKey": song_select})
+        song_select = sorted_song_list[song_id - 1]["id"]
+        song_name = sorted_song_list[song_id - 1]["songName"]
+        response = requests.put(manage_url, headers={'Authorization': api_key}, json={"id": song_select})
         if response.status_code == 200:
             response_json = json.loads(response.content)
             try:
-                sorted_song_list = response_json["songlist"]
+                sorted_song_list = response_json["songList"]
             except KeyError:
                 sorted_song_list = []
             try:
-                song_playing = response_json["nowplaying"]
+                song_playing = response_json["nowPlaying"]
             except KeyError:
                 song_playing = None
-            await send_message(f"สนิฟลบเพลง {song_select} sniffsHeart")
-            print(f"[SONG] [{get_timestamp()}] Sniffs delete {song_select} from list")
+            await send_message(f"สนิฟลบเพลง {song_name} sniffsHeart")
+            print(f"[SONG] [{get_timestamp()}] Sniffs delete {song_name} from list")
         elif response.status_code == 404:
             response_json = json.loads(response.content)
             try:
-                sorted_song_list = response_json["songlist"]
-                song_playing = response_json["nowplaying"]
+                sorted_song_list = response_json["songList"]
+                song_playing = response_json["nowPlaying"]
             except KeyError:
                 sorted_song_list = []
                 song_playing = None

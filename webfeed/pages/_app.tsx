@@ -2,9 +2,8 @@ import Head from 'next/head'
 import type { AppProps } from 'next/app'
 import 'bulma/bulma.sass'
 import '../styles/globals.css'
-import '../styles/webfeed.css'
 
-function MyApp({ Component, pageProps }: AppProps) {
+const MyApp = ({ Component, pageProps }: AppProps): JSX.Element => {
   return (
     <>
       <Head>

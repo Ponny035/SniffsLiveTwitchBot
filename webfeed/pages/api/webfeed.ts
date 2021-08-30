@@ -15,10 +15,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         .status(200)
         .json({ success: true, msg: req.body.message, to: req.body.to })
     } else {
-      res.status(404).json({ success: false, msg: 'unauthorized' })
+      res.status(403).json({ success: false, msg: 'unauthorized' })
     }
   } else {
-    res.status(403).json({ success: false, msg: 'no data input' })
+    res.status(404).json({ success: false, msg: 'no data input' })
   }
 }
 
