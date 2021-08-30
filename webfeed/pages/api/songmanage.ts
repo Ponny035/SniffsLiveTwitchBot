@@ -10,6 +10,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.body) {
+    if (typeof req.body === 'string') {
+      req.body = JSON.parse(req.body)
+    }
     if (req.headers.authorization && checkHeader(req.headers.authorization)) {
       let response: SongResponse
       switch (req.method) {

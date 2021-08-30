@@ -11,9 +11,12 @@ import type { Song, SongResponse } from '../utils/songSelector'
 const containerClass = 'columns is-mobile is-size-4 text-bolder mb-3'
 const listClass = 'column has-text-centered p-0'
 const nameClass = 'column is-three-fifths p-0 nowrap-text'
-const scoreClass = 'column is-one-quarter has-text-centered p-0'
+const scoreClass = 'column has-text-centered p-0'
+const linkClass = 'column has-text-centered p-0'
 
-const SongFeed: NextPage = (): JSX.Element => {
+const serverKey: string = 'jSjens73jZks73'
+
+const SongList: NextPage = (): JSX.Element => {
   const [songList, setSongList] = useState<Song[]>()
   const [nowPlaying, setNowPlaying] = useState<Song>()
   const songListRef = useRef<HTMLDivElement>(null)
@@ -50,40 +53,82 @@ const SongFeed: NextPage = (): JSX.Element => {
     })
   }, [songList, nowPlaying])
 
+  const selectSong = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    const id: number = parseInt(e.currentTarget.id)
+    fetch('/api/songmanage', {
+      method: 'POST',
+      headers: new Headers({ Authorization: serverKey }),
+      body: JSON.stringify({ id }),
+    })
+  }
+
+  const deleteSong = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    const id: number = parseInt(e.currentTarget.id)
+    fetch('/api/songmanage', {
+      method: 'PUT',
+      headers: new Headers({ Authorization: serverKey }),
+      body: JSON.stringify({ id }),
+    })
+  }
+
+  const remNowPlaying = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    fetch('/api/songmanage', {
+      method: 'PATCH',
+      headers: new Headers({ Authorization: serverKey }),
+      body: JSON.stringify({ confirm: true }),
+    })
+  }
+
   return (
     <>
       <Head>
         <title>Sniffsbot Songfeed</title>
       </Head>
       <div className="songfeed is-flex is-flex-direction-column">
-        <div
-          ref={songListRef}
-          className="is-flex is-flex-direction-column song-list"
-        >
+        <div ref={songListRef} className="is-flex is-flex-direction-column">
           <p className="has-text-centered is-underlined is-size-3 text-bolder mb-4">
-            List เพลงจากต้าวๆ
+            Song List
           </p>
           {songList &&
             songList.map((song: Song, index: number) => {
-              if (index < 5) {
-                return (
-                  <div key={`container_${index}`} className={containerClass}>
-                    <div key={`list_${index}`} className={listClass}>
-                      [{(index + 1).toString()}]
-                    </div>
-                    <div
-                      key={`name_${index}`}
-                      className={nameClass}
-                      ref={(div) => div && nameRef.current.push(div)}
-                    >
-                      {song.songName}
-                    </div>
-                    <div key={`score_${index}`} className={scoreClass}>
-                      {song.vote.toString()} pts
-                    </div>
+              return (
+                <div key={`container_${index}`} className={containerClass}>
+                  <div key={`list_${index}`} className={listClass}>
+                    [{(index + 1).toString()}]
                   </div>
-                )
-              }
+                  <div
+                    key={`name_${index}`}
+                    className={nameClass}
+                    ref={(div) => div && nameRef.current.push(div)}
+                  >
+                    {song.songName}
+                  </div>
+                  <div key={`score_${index}`} className={scoreClass}>
+                    {song.vote.toString()} pts
+                  </div>
+                  <div className={linkClass}>
+                    <button
+                      id={song.id?.toString()}
+                      className="button is-primary m-1"
+                      onClick={selectSong}
+                    >
+                      Select
+                    </button>
+                  </div>
+                  <div className={linkClass}>
+                    <button
+                      id={song.id?.toString()}
+                      className="button is-primary m-1"
+                      onClick={deleteSong}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )
             })}
         </div>
         <div ref={nowplayingRef} className="is-flex is-flex-direction-column">
@@ -104,6 +149,14 @@ const SongFeed: NextPage = (): JSX.Element => {
                 {nowPlaying.songName}
               </div>
               <div className={scoreClass}>{nowPlaying.vote} pts</div>
+              <div className={linkClass}>
+                <button
+                  className="button is-primary m-1"
+                  onClick={remNowPlaying}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -112,4 +165,4 @@ const SongFeed: NextPage = (): JSX.Element => {
   )
 }
 
-export default SongFeed
+export default SongList
