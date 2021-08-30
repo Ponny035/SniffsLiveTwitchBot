@@ -5,7 +5,8 @@ services:
     build: ./python
     container_name: py-backend
     networks:
-      sniffs.bot:
+      br0:
+        ipv4_address: "10.0.3.99"
     environment:
       - env
       - msg
@@ -24,4 +25,6 @@ services:
       - WS_KEY
 
 networks:
-  sniffs.bot:
+  br0:
+    external:
+      name: br0
