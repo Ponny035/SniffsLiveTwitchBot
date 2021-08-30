@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 from twitchio.channel import Channel
 from twitchio.client import Client
@@ -9,17 +10,14 @@ from src.timefn.timestamp import get_timestamp
 
 
 class EventTrigger:
-    def __init__(self, channels: str, token: str, id: str, secret: str):
+    def __init__(self, channels: str):
         self.CHANNELS = channels
-        self.TOKEN = token
-        self.APIID = id
-        self.APISEC = secret
         self.channel_live = False
         self.success_callback = [0, 0]
 
         self.twitch_api = Client.from_client_credentials(
-            client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
-            client_secret="7uf45fl76gkewvlzjseyngshijki1x"
+            client_id=os.environ.get("CLIENT_ID", ""),
+            client_secret=os.environ.get("CLIENT_SECRET", "")
         )
 
     @routines.routine(seconds=10)

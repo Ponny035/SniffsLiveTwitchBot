@@ -68,7 +68,7 @@ class TwitchBot(commands.Bot,):
                 nick=self.NICK,
                 initial_channels=[self.CHANNELS],
             )
-            self.event_trigger = EventTrigger(self.CHANNELS, self.TOKEN, self.APIID, self.APISEC)
+            self.event_trigger = EventTrigger(self.CHANNELS)
 
             print(f"[INFO] [{get_timestamp()}] Done")
 
