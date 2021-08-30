@@ -3,6 +3,8 @@ import json
 import os
 import requests
 
+from src.timefn.timestamp import get_timestamp
+
 
 ably_key: str = os.environ.get("ABLY_KEY", "")
 
@@ -237,6 +239,10 @@ def coinflip_feed(username, win_side, coin_left, win, prize=None):
 
 def send_feed(feedtext, timeout=default_timeout):
     payload = json.dumps({"message": feedtext, "timeout": timeout})
-    requests.post(webfeed_url,
-                  headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
-                  json={'name': 'feedmessage', 'data': payload})
+    res = requests.post(webfeed_url,
+                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        json={'name': 'feedmessage', 'data': payload})
+    if res.status_code == 201:
+        print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
+    else:
+        print(f"[WARN] [{get_timestamp()}] unable to Send Webfeed with {res.json()}")
