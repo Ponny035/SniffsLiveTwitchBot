@@ -1,31 +1,27 @@
-version: '3'
+version: "3"
 
 services:
-    web:
-        build: ./api
-        container_name: api-server
-        ports:
-            - "8000:8000"
-        networks:
-            sniffs.bot:
-    backend:
-        build: ./python
-        container_name: py-backend
-        networks:
-            sniffs.bot:
-        depends_on:
-            - web
-        environment:
-            - env
-            - msg
-            - IRC_TOKEN
-            - API_TOKEN
-            - BOTNICK
-            - CHANNELS
-            - DB_HOST
-            - DB_USER
-            - DB_PASS
-            - DB_NAME
+  backend:
+    build: ./python
+    container_name: py-backend
+    networks:
+      sniffs.bot:
+    environment:
+      - env
+      - msg
+      - IRC_TOKEN
+      - API_ID
+      - API_TOKEN
+      - BOTNICK
+      - CHANNELS
+      - CLIENT_ID
+      - CLIENT_SECRET
+      - DB_HOST
+      - DB_NAME
+      - DB_USER
+      - DB_PASS
+      - API_SERVER
+      - WS_KEY
 
 networks:
-    sniffs.bot:
+  sniffs.bot:
