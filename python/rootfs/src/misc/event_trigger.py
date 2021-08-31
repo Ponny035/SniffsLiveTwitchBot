@@ -6,6 +6,7 @@ from twitchio.client import Client
 from twitchio.models import Stream
 from twitchio.ext import routines
 
+from src.misc.webfeed import live_notification_feed
 from src.timefn.timestamp import get_timestamp
 
 
@@ -23,20 +24,28 @@ class EventTrigger:
     @routines.routine(seconds=10)
     async def get_channel_status(self, chan_offline, chan_online):
         if self.channel_live:
-            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-            if channel_status == [] and self.success_callback[0] == 0:
-                self.channel_live = False
-                self.success_callback = [1, 1]
-                await chan_offline()
-                self.success_callback[1] = 0
+            try:
+                channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+                if channel_status == [] and self.success_callback[0] == 0:
+                    self.channel_live = False
+                    self.success_callback = [1, 1]
+                    await chan_offline()
+                    self.success_callback[1] = 0
+            except Exception as msg:
+                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {msg}")
         elif not self.channel_live:
-            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-            if channel_status != [] and self.success_callback[1] == 0:
-                self.channel_live = True
-                self.channel_live_on = channel_status[0].started_at
-                self.success_callback = [1, 1]
-                await chan_online(self.channel_live_on)
-                self.success_callback[0] = 0
+            try:
+                channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+                if channel_status != [] and self.success_callback[1] == 0:
+                    if channel_status[0].started_at is not None:
+                        self.channel_live = True
+                        self.channel_live_on = channel_status[0].started_at
+                        self.success_callback = [1, 1]
+                        await chan_online(self.channel_live_on)
+                        self.success_callback[0] = 0
+                        live_notification_feed(channel_status[0])
+            except Exception as msg:
+                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {msg}")
 
     @get_channel_status.error
     async def get_channel_status_error(error: Exception):

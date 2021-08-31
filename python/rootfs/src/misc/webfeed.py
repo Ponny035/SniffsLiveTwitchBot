@@ -3,6 +3,8 @@ import json
 import os
 import requests
 
+from twitchio.models import Stream
+
 from src.timefn.timestamp import get_timestamp
 
 
@@ -195,6 +197,10 @@ def buy_lotto_feed(username, lotto):
     feedtext = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext += f"<span class='text-white'>ซื้อ {lotto_icon} SniffsLotto หมายเลข {lotto} สำเร็จ</span>"
     send_feed(feedtext)
+    send_discord('lottobuy', {
+        "username": username,
+        "lotto": lotto
+    })
 
 
 def draw_lotto_feed(win_number_string, payout, lotto_winners):
@@ -206,6 +212,11 @@ def draw_lotto_feed(win_number_string, payout, lotto_winners):
         feedtext_2 = f"<span class='{default_tag_name}'>{username}</span>"
         feedtext_2 += f"<span class='text-white'>ได้รับ {coin_icon} {prize} Sniffscoin</span>"
         send_feed(feedtext_2, long_timeout)
+    send_discord("lottodraw", {
+        "usernames": lotto_winners,
+        "win_number": win_number_string,
+        "payout": payout
+    })
 
 
 def raffle_start_feed():
@@ -220,16 +231,23 @@ def raffle_stop_feed():
     send_feed(feedtext, long_timeout)
 
 
-def draw_raffle_feed(username):
-    feedtext = f"<span class='{default_tag_name}'>{username}</span>"
-    feedtext += f"<span class='text-white'>ได้รับรางวัล {raffle_icon}</span>"
-    send_feed(feedtext, long_timeout)
-
-
 def buy_raffle_feed(username, count):
     feedtext = f"<span class='{default_tag_name}'>{username}</span>"
     feedtext += f"<span class='text-white'>ซื้อตั๋วชิงโชค {raffle_icon} {count} ใบ"
     send_feed(feedtext)
+    send_discord("rafflebuy", {
+        "username": username,
+        "count": count
+    })
+
+
+def draw_raffle_feed(username):
+    feedtext = f"<span class='{default_tag_name}'>{username}</span>"
+    feedtext += f"<span class='text-white'>ได้รับรางวัล {raffle_icon}</span>"
+    send_feed(feedtext, long_timeout)
+    send_discord("raffledraw", {
+        "username": username
+    })
 
 
 def coinflip_feed(username, win_side, coin_left, win, prize=None):
@@ -241,6 +259,30 @@ def coinflip_feed(username, win_side, coin_left, win, prize=None):
         feedtext = f"<span class='{default_snap_name}'>{username}</span>"
         feedtext += f"<span class='text-white'>เสียใจด้วยนะ Coinflip ออก{win_side} ({coin_left})</span>"
         send_feed(feedtext)
+    send_discord('coinflip', {
+        'username': username,
+        'win_side': win_side,
+        'coin_left': coin_left,
+        'win': win,
+        'prize': prize
+    })
+
+
+def live_notification_feed(channel: Stream):
+    payload = json.dumps({
+        "user_name": channel.user.name,
+        "title": channel.title,
+        "game_name": channel.game_name,
+        "viewers": channel.viewer_count,
+        "profile": "https://static-cdn.jtvnw.net/jtv_user_pictures/4e1e0f54-9ede-446b-8d57-be4f56c3cb23-profile_image-300x300.png"
+    })
+    res = requests.post(webfeed_url,
+                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        json={'name': 'livemessage', 'data': payload})
+    if res.status_code == 201:
+        print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
+    else:
+        print(f"[WARN] [{get_timestamp()}] unable to Send Webfeed with {res.json()}")
 
 
 def send_feed(feedtext, timeout=default_timeout):
@@ -248,6 +290,17 @@ def send_feed(feedtext, timeout=default_timeout):
     res = requests.post(webfeed_url,
                         headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
                         json={'name': 'feedmessage', 'data': payload})
+    if res.status_code == 201:
+        print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
+    else:
+        print(f"[WARN] [{get_timestamp()}] unable to Send Webfeed with {res.json()}")
+
+
+def send_discord(type: str, message: dict):
+    payload = json.dumps(message)
+    res = requests.post(webfeed_url,
+                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        json={'name': type, 'data': payload})
     if res.status_code == 201:
         print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
     else:
