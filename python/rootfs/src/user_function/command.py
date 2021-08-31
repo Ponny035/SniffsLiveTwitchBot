@@ -237,12 +237,13 @@ async def buy_coinflip(username, side, bet, send_message):
 
 
 async def transfer_coin(user, recipent, amount, viewers, send_message):
-    userstat = retrieve(user)
-    if not userstat:
+    recipent = re.sub(r'^@', '', recipent)
+    userdata = retrieve(user)
+    if not userdata:
         return
     if not(retrieve(recipent) or (recipent in viewers)):
         return
-    if userstat["Coin"] >= amount:
+    if userdata["Coin"] >= amount:
         add_coin(user, -amount)
         add_coin(recipent, amount)
         print(f"[COIN] [{get_timestamp()}] {user} transfer {amount} sniffscoin to {recipent}")

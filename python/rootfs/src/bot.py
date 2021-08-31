@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import traceback
 
@@ -295,6 +296,7 @@ class TwitchBot(commands.Bot,):
             commands_split = ctx.message.content.split()
             try:
                 username = commands_split[1]
+                username = re.sub(r'^@', '', username)
             except IndexError:
                 return
             try:
@@ -543,6 +545,8 @@ class TwitchBot(commands.Bot,):
                     if bet < 1:
                         return
                 except IndexError:
+                    bet = 1
+                except ValueError:
                     bet = 1
                 await buy_coinflip(ctx.author.name.lower(), side, bet, self.send_message_feed)
 
