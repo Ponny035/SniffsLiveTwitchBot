@@ -15,7 +15,7 @@ from .misc.automod import auto_mod
 from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
-from .misc.webfeed import activate_webfeed_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
+from .misc.webfeed import activate_webfeed_feed, deductcoin_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
 from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, send_lotto_msg, check_message, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start, raffle_stop
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song, song_feed
@@ -308,6 +308,25 @@ class TwitchBot(commands.Bot,):
             add_coin(username, coin)
             await self.send_message_feed(f"@{username} ได้รับ {coin} sniffscoin sniffsAH")
             givecoin_feed(username, coin)
+
+    @commands.command(name="deduct")
+    async def deduct_coin_user(self, ctx: commands.Context):
+        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in self.dev_list):
+            commands_split = ctx.message.content.split()
+            try:
+                username = commands_split[1]
+                username = re.sub(r'^@', '', username)
+            except IndexError:
+                return
+            try:
+                coin = int(commands_split[2])
+                if coin < 0:
+                    return
+            except IndexError:
+                coin = 1
+            add_coin(username, -coin)
+            await self.send_message_feed(f"@{username} ถูกหัก {coin} sniffscoin sniffsAH")
+            deductcoin_feed(username, coin)
 
     @commands.command(name="coin")
     async def check_coin(self, ctx: commands.Context):

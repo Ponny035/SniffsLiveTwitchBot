@@ -115,6 +115,12 @@ def givecoin_feed(username, coin):
     send_feed(feedtext)
 
 
+def deductcoin_feed(username, coin):
+    feedtext = f"<span class='{default_tag_name}'>{username}</span>"
+    feedtext += f"<span class='text-white'>ถูกหัก {coin_icon} {coin} Sniffscoin</span>"
+    send_feed(feedtext)
+
+
 def call_to_hell_feed(username, idx, total):
     feedtext = f"<span class='{default_tag_name}'>SNIFFSNOS</span>"
     feedtext += f"<span class='text-white'>{sniffsnos_icon}</span>"
