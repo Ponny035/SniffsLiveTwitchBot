@@ -77,7 +77,7 @@ def update_user_watchtime(force=False):
                     if userdata:
                         userdata["Watch_Time"] += int(user_stat["watchtime_session"])
                     else:
-                        userdata["User_Name"] = username
+                        userdata["User_Name"] = username.lower()
                         userdata["Watch_Time"] = int(user_stat["watchtime_session"])
                     upsert(userdata)
             except KeyError:

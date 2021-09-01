@@ -16,7 +16,7 @@ async def subscription_payout(username: str, sub_month_count: str, plan: list[in
     try:
         userdata = retrieve(username)
         if not userdata:
-            userdata["User_Name"] = username
+            userdata["User_Name"] = username.lower()
         userdata["Sub_Month"] = int(sub_month_count)
         upsert(userdata)
     except Exception as msg:

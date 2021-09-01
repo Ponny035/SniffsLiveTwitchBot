@@ -297,6 +297,7 @@ class TwitchBot(commands.Bot,):
             try:
                 username = commands_split[1]
                 username = re.sub(r'^@', '', username)
+                username = username.lower()
             except IndexError:
                 return
             try:
@@ -316,6 +317,7 @@ class TwitchBot(commands.Bot,):
             try:
                 username = commands_split[1]
                 username = re.sub(r'^@', '', username)
+                username = username.lower()
             except IndexError:
                 return
             try:

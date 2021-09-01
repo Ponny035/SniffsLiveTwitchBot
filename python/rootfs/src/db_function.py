@@ -38,7 +38,7 @@ def upsert(userdata: dict):
 
 
 def retrieve(username: str):
-    resp = supabase.table(table).select("*").eq("User_Name", username).single().execute()
+    resp = supabase.table(table).select("*").eq("User_Name", username.lower()).single().execute()
     if resp["status_code"] == 200:
         return resp["data"]
     else:
@@ -46,7 +46,7 @@ def retrieve(username: str):
 
 
 def delete(username: str):
-    resp = supabase.table(table).delete().eq("User_Name", username)
+    resp = supabase.table(table).delete().eq("User_Name", username.lower())
     if resp["status_code"] == 200:
         return "success"
     else:
