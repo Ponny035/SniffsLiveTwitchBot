@@ -6,7 +6,7 @@ import requests
 from twitchio.channel import Channel
 from twitchio.message import Message
 from twitchio.user import User
-from twitchio.ext import commands
+from twitchio.ext import commands, routines
 
 from .coin.coin import add_coin, get_coin, payday
 from .coin.subbit import subscription_payout, gift_subscription_payout, giftmystery_subscription_payout, anongift_subscription_payout, add_point_by_bit
@@ -83,6 +83,7 @@ class TwitchBot(commands.Bot,):
     async def send_message(self, msg: str):
         while self.channel is None:
             await self.join_channels([self.CHANNELS])
+            self.channel = self.get_channel(self.CHANNELS)
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
         else:
@@ -111,12 +112,26 @@ class TwitchBot(commands.Bot,):
     async def event_ready(self):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
-        print(self.channel)
+        while len(self.connected_channels) == 0:
+            self.join_channels([self.CHANNELS])
+            self.channel = self.get_channel(self.CHANNELS)
+        print(F"{self.channel} Connected")
         if self.first_run:
             self.first_run = False
             self.event_trigger.get_channel_status.start(self.event_offline, self.event_live, stop_on_error=False)
+            self.check_channel.start(stop_on_error=False)
+        else:
+            print(f"[INFO] [{get_timestamp()}] BOT Reconnected")
         await self.send_message(self.NICK + " is joined the channels.")
         print(f"[INFO] [{get_timestamp()}] Joined")
+
+    @routines.routine(seconds=20)
+    async def check_channel(self):
+        if len(self.connected_channels) == 0:
+            print(f"[_ERR] [{get_timestamp()}] No Connected Channels!")
+            self.join_channels([self.CHANNELS])
+            self.channel = self.get_channel(self.CHANNELS)
+            print(f"[INFO] [{get_timestamp()}] Rejoined Channels!")
 
     async def event_raw_usernotice(self, channel: Channel, tags: list):
         await self.event_trigger.parsing_sub_data(
