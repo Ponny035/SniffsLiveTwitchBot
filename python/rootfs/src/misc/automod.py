@@ -36,8 +36,9 @@ async def auto_removelink(user: str, role: bool, message: str, msg_id: str, send
 
 async def auto_removetwitchlink(user: str, message: str, msg_id: str, send_message, timeout, ban):
     check_url = bool(re.match("(https://)?(www.)?twitch.tv/", message))
+    check_sniffslive = not bool(re.match("(https://)?(www.)?twitch.tv/sniffslive/?", message))
     check_clipurl = not bool(re.match("(https://)?(www.)?twitch.tv/.*/clip/.*", message))
-    if check_url and check_clipurl:
+    if check_url and check_sniffslive and check_clipurl:
         warning_link_timers = (0, 0, 10, 30, 60)
         await warn(user, send_message, timeout, ban, warning_link_timers, msg_id, reason="paste_twitch_link")
 
