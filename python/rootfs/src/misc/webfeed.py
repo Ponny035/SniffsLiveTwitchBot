@@ -274,7 +274,7 @@ def live_notification_feed(channel: Stream):
         "title": channel.title,
         "game_name": channel.game_name,
         "viewers": channel.viewer_count,
-        "profile": "https://static-cdn.jtvnw.net/jtv_user_pictures/4e1e0f54-9ede-446b-8d57-be4f56c3cb23-profile_image-300x300.png"
+        "thumbnail_url": channel.thumbnail_url
     })
     res = requests.post(webfeed_url,
                         headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},

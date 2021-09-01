@@ -14,7 +14,6 @@ class EventTrigger:
     def __init__(self, channels: str):
         self.CHANNELS = channels
         self.channel_live = False
-        self.success_callback = [0, 0]
 
         self.twitch_api = Client.from_client_credentials(
             client_id=os.environ.get("CLIENT_ID", ""),
@@ -26,30 +25,26 @@ class EventTrigger:
         if self.channel_live:
             try:
                 channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-                if channel_status == [] and self.success_callback[0] == 0:
+                if channel_status == []:
                     self.channel_live = False
-                    self.success_callback = [1, 1]
                     await chan_offline()
-                    self.success_callback[1] = 0
             except Exception as msg:
-                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {msg}")
+                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel offline status check Error with {msg}")
         elif not self.channel_live:
             try:
                 channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-                if channel_status != [] and self.success_callback[1] == 0:
+                if channel_status != []:
                     if channel_status[0].started_at is not None:
                         self.channel_live = True
                         self.channel_live_on = channel_status[0].started_at
-                        self.success_callback = [1, 1]
                         await chan_online(self.channel_live_on)
-                        self.success_callback[0] = 0
                         live_notification_feed(channel_status[0])
             except Exception as msg:
-                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {msg}")
+                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel online status check Error with {msg}")
 
     @get_channel_status.error
     async def get_channel_status_error(error: Exception):
-        print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status check Error with {error}")
+        print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status global check Error with {error}")
 
     async def check_bits(self, rawdata: str, event_bit):
         username = ""

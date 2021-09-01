@@ -27,7 +27,7 @@ async def auto_removelink(user: str, role: bool, message: str, msg_id: str, send
     #     await warn(user, send_message, timeout, ban, warning_curses_timers, reason="curses")
     if not role:  # not mod or subscriber
         test_url1 = re.match("https?://", message)
-        test_url2 = re.match(r"[A-z]+\.(com|org|in|co|tv|us)", message)  # need to fine tune regex
+        test_url2 = re.match(r"([A-z]+\.)?[A-z]+\.(com|org|in|co|tv|us)", message)  # need to fine tune regex
         test_result = bool(test_url1 or test_url2)
         if test_result:
             warning_link_timers = (0, 0, 1, 5, 10, 30, 60)
@@ -35,8 +35,8 @@ async def auto_removelink(user: str, role: bool, message: str, msg_id: str, send
 
 
 async def auto_removetwitchlink(user: str, message: str, msg_id: str, send_message, timeout, ban):
-    check_url = bool(re.match("https?://(www.)?twitch.tv/", message))
-    check_clipurl = not bool(re.match("https?://(www.)?twitch.tv/.*/clip/.*", message))
+    check_url = bool(re.match("(https://)?(www.)?twitch.tv/", message))
+    check_clipurl = not bool(re.match("(https://)?(www.)?twitch.tv/.*/clip/.*", message))
     if check_url and check_clipurl:
         warning_link_timers = (0, 0, 10, 30, 60)
         await warn(user, send_message, timeout, ban, warning_link_timers, msg_id, reason="paste_twitch_link")

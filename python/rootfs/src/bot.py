@@ -1,6 +1,5 @@
 import os
 import re
-import time
 import traceback
 
 import requests
@@ -82,6 +81,8 @@ class TwitchBot(commands.Bot,):
             raise TypeError(msg)
 
     async def send_message(self, msg: str):
+        while self.channel is None:
+            await self.join_channels([self.CHANNELS])
         if self.dryrun != "msgoff":
             await self.channel.send(msg)
         else:
@@ -109,11 +110,8 @@ class TwitchBot(commands.Bot,):
 
     async def event_ready(self):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
-        while self.channel is None:
-            self.channel = self.get_channel(self.CHANNELS)
-            if self.channel is None:
-                time.sleep(10)
-                await self.join_channels([self.CHANNELS])
+        self.channel = self.get_channel(self.CHANNELS)
+        print(self.channel)
         if self.first_run:
             self.first_run = False
             self.event_trigger.get_channel_status.start(self.event_offline, self.event_live, stop_on_error=False)
@@ -154,13 +152,13 @@ class TwitchBot(commands.Bot,):
 
     async def event_message(self, message: Message):
         if (message.author is not None) and (message.author.name.lower() != self.NICK):
-            print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()}: {message.content}")
+            print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()} Is Mod {message.author.is_mod} Is Sub {bool(message.author.is_subscriber)}: {message.content}")
 
             await check_message(message.author.name.lower(), message.content, self.vip_list, self.dev_list, self.send_message, self.send_message_timeout)
             await update_submonth(message.author.name.lower(), message.raw_data)
             await self.event_trigger.handle_channelpoints(message.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(message.raw_data, self.event_bits)
-            await auto_mod(message.author.name.lower(), (message.author.is_mod or message.author.is_subscriber == 1), message.content, message.raw_data, self.send_message, self.send_message_timeout, self.send_message_ban)
+            await auto_mod(message.author.name.lower(), (message.author.is_mod or bool(message.author.is_subscriber)), message.content, message.raw_data, self.send_message, self.send_message_timeout, self.send_message_ban)
             await self.handle_commands(message)
 
     async def event_bits(self, data: dict):
@@ -333,7 +331,7 @@ class TwitchBot(commands.Bot,):
     @commands.command(name="coin")
     async def check_coin(self, ctx: commands.Context):
         if ctx.cooldown:
-            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or bool(ctx.author.is_subscriber) or self.market_open):
                 await get_coin(ctx.author.name.lower(), self.send_message)
 
     @commands.command(name="watchtime")
@@ -552,7 +550,7 @@ class TwitchBot(commands.Bot,):
     @commands.command(name="flip")
     async def coin_flip(self, ctx: commands.Context):
         if ctx.cooldown:
-            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or ctx.author.is_subscriber == 1 or self.market_open):
+            if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod or bool(ctx.author.is_subscriber) or self.market_open):
                 commands_split = ctx.message.content.split()
                 try:
                     side = commands_split[1]
