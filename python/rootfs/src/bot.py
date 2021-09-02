@@ -42,7 +42,7 @@ class TwitchBot(commands.Bot,):
         self.song_feed_on: bool = True
         self.channel = None
         self.channel_live: bool = False
-        self.channel_live_on = None
+        self.channel_live_on = 0
         self.request_status: bool = False
         self.first_run: bool = True
         self.discord_link: str = "https://discord.gg/Q3AMaHQEGU"  # temp link
@@ -159,7 +159,7 @@ class TwitchBot(commands.Bot,):
     # custom event to trigger when channel is offline
     async def event_offline(self):
         self.channel_live = False
-        self.channel_live_on = None
+        self.channel_live_on = 0
         print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
         add_point_by_watchtime.cancel()
