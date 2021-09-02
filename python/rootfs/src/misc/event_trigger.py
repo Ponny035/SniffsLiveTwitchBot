@@ -14,6 +14,7 @@ class EventTrigger:
     def __init__(self, channels: str):
         self.CHANNELS = channels
         self.channel_live = False
+        self.channel_live_on = 0
 
         self.twitch_api = Client.from_client_credentials(
             client_id=os.environ.get("CLIENT_ID", ""),
