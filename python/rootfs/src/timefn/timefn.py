@@ -9,7 +9,7 @@ from .timestamp import get_timestamp, sec_to_hms
 
 # init var
 channel_live: bool = False
-channel_live_on: datetime = None
+channel_live_on: datetime = 0
 watchtime_session: dict = {}
 
 # coin var
@@ -80,8 +80,8 @@ def update_user_watchtime(force=False):
                         userdata["User_Name"] = username.lower()
                         userdata["Watch_Time"] = int(user_stat["watchtime_session"])
                     upsert(userdata)
-            except KeyError:
-                pass
+            except Exception as msg:
+                print(f"[_LOG] Write Watchtime Error {msg}")
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime Success")
         watchtime_session = {}
 
