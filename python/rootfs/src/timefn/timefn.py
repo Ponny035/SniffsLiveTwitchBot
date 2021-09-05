@@ -9,7 +9,7 @@ from .timestamp import get_timestamp, sec_to_hms
 
 # init var
 channel_live: bool = False
-channel_live_on: datetime = 0
+channel_live_on = 0
 watchtime_session: dict = {}
 
 # coin var
@@ -77,6 +77,7 @@ def update_user_watchtime(force=False):
                     if userdata:
                         userdata["Watch_Time"] += int(user_stat["watchtime_session"])
                     else:
+                        userdata = {}
                         userdata["User_Name"] = username.lower()
                         userdata["Watch_Time"] = int(user_stat["watchtime_session"])
                     upsert(userdata)

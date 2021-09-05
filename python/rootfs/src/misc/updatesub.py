@@ -18,6 +18,7 @@ async def update_submonth(username: str, rawdata: str):
                 upsert(userdata)
                 print(f"[INFO] [{get_timestamp()}] Update {username} submonth to {submonth} months")
         else:
+            userdata = {}
             userdata["User_Name"] = username.lower()
             userdata["Sub_Month"] = submonth
             upsert(userdata)

@@ -113,7 +113,7 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
         while len(self.connected_channels) == 0:
-            self.join_channels([self.CHANNELS])
+            await self.join_channels([self.CHANNELS])
             self.channel = self.get_channel(self.CHANNELS)
         print(F"{self.channel} Connected")
         if self.first_run:
@@ -129,7 +129,7 @@ class TwitchBot(commands.Bot,):
     async def check_channel(self):
         if len(self.connected_channels) == 0:
             print(f"[_ERR] [{get_timestamp()}] No Connected Channels!")
-            self.join_channels([self.CHANNELS])
+            await self.join_channels([self.CHANNELS])
             self.channel = self.get_channel(self.CHANNELS)
             print(f"[INFO] [{get_timestamp()}] Rejoined Channels!")
 
@@ -147,7 +147,7 @@ class TwitchBot(commands.Bot,):
         )
 
     # custom event to trigger when channel is live and return channel start time
-    async def event_live(self, starttime: str):
+    async def event_live(self, starttime):
         self.channel_live = True
         self.channel_live_on = starttime
         print(f"[INFO] [{starttime}] {self.CHANNELS} is live")

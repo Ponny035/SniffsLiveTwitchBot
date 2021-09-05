@@ -7,6 +7,7 @@ def add_coin(username: str, coin: int, nolog=False):
     if userdata:
         userdata["Coin"] += coin
     else:
+        userdata = {}
         userdata["User_Name"] = username.lower()
         userdata["Coin"] = coin
     upsert(userdata)
