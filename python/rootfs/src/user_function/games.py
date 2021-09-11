@@ -1,8 +1,24 @@
-from random import choice
+import os
+from random import random
 
 
-def coinflip(side: str):
-    result = choice(("head", "tail"))
+flip_rate = int(os.environ.get("fliprate", "50"))
+flip_threshold = int(os.environ.get("flipthreshold", "0"))
+
+
+def coinflip(side: str, bet: int):
+    flip = ['h', 't']
+    mod = 100
+    if bet > flip_threshold:
+        mod = flip_rate
+    rand = int(random() * mod)
+    print(rand)
+    print(flip_rate)
+    if rand > flip_rate:
+        result = side[0]
+    else:
+        flip.remove(side[0])
+        result = flip[0]
     if side[0] == result[0]:
         return True, result[0]
     else:

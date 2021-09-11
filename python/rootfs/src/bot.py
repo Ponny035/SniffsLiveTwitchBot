@@ -569,7 +569,7 @@ class TwitchBot(commands.Bot,):
                 commands_split = ctx.message.content.split()
                 try:
                     side = commands_split[1]
-                    if (side := side.lower()) not in (opt := ("h", "t", "head", "tail", "หัว", "ก้อย")):
+                    if (side := side.lower()) not in (opt := ("h", "t", "head", "tail")):
                         await self.send_message("ใส่ด้านของเหรียญตามนี้เท่านั้นนะ! " + ", ".join(opt))
                         return
                 except IndexError:

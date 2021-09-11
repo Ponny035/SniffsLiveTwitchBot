@@ -217,7 +217,7 @@ async def buy_coinflip(username, side, bet, send_message):
     if userdata:
         if userdata["Coin"] >= bet:
             add_coin(username, -bet)
-            result, win_side = coinflip(side)
+            result, win_side = coinflip(side, bet)
             if win_side == "h":
                 win_side = "หัว"
             else:

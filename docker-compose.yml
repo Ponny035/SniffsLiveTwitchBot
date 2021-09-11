@@ -23,6 +23,8 @@ services:
       - API_SERVER
       - WS_KEY
       - ABLY_KEY
+      - fliprate
+      - flipthreshold
 
 networks:
   br0:
