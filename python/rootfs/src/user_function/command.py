@@ -128,7 +128,7 @@ async def buy_lotto(username: str, lotto: str, send_message):
                 add_coin(username, -lotto_cost)
                 player_lotto_list += [[username, lotto_int]]
                 await send_message(f"@{username} ซื้อ SniffsLotto หมายเลข {lotto} สำเร็จ sniffsHeart sniffsHeart sniffsHeart")
-                buy_lotto_feed(username, lotto)
+                buy_lotto_feed(username, lotto, userdata["Coin"] - lotto_cost)
                 print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} successfully")
                 return True
             else:
