@@ -469,11 +469,12 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="kill")
     async def kill_user(self, ctx: commands.Context):
+        override = bool(ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in self.dev_list)
         if self.channel_live:
             commands_split = ctx.message.content.split()
             try:
                 target = commands_split[1].lower()
-                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.send_message_timeout)
+                await shooter(ctx.author.name.lower(), target, self.vip_list, self.dev_list, self.send_message_feed, self.send_message_timeout, override)
             except IndexError:
                 return
 

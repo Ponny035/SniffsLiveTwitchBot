@@ -44,7 +44,7 @@ async def call_to_hell(usernames: list[str], exclude_list: list[str], timeout: i
     return data
 
 
-async def shooter(employer: str, target: str, vip_list: list[str], dev_list: list[str], send_message, timeout: int):
+async def shooter(employer: str, target: str, vip_list: list[str], dev_list: list[str], send_message, timeout: int, override: bool):
     global shooter_cooldown
     dodge_rate = 10
     payrate = 5
@@ -67,6 +67,8 @@ async def shooter(employer: str, target: str, vip_list: list[str], dev_list: lis
             available = True
         else:
             available = False
+    if override:
+        available = True
     if available:
         shooter_cooldown = get_timestamp()
         userdata = retrieve(employer)
