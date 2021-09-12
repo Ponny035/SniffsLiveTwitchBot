@@ -12,8 +12,6 @@ def coinflip(side: str, bet: int):
     if bet > flip_threshold:
         mod = flip_rate
     rand = int(random() * mod)
-    print(rand)
-    print(flip_rate)
     if rand > flip_rate:
         result = side[0]
     else:
