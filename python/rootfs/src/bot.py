@@ -85,7 +85,7 @@ class TwitchBot(commands.Bot,):
             await self.join_channels([self.CHANNELS])
             self.channel = self.get_channel(self.CHANNELS)
         if self.dryrun != "msgoff":
-            await self.channel.send(msg)
+            await self.channel.send(f"/me {msg}")
         else:
             print(f"[INFO] [{get_timestamp()}] Dry run mode is on \"{msg}\" not sent")
 
