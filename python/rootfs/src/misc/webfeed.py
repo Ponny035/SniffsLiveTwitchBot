@@ -85,7 +85,7 @@ def shooter_suicide_feed(username, timeout):
 
 
 def shooter_success_feed(username, target, timeout, coinleft):
-    send_feed("shooterSucessFeed", {"username": username, "target": target, "timeout": timeout, "coinleft": coinleft})
+    send_feed("shooterSuccessFeed", {"username": username, "target": target, "timeout": timeout, "coinleft": coinleft})
 
 
 def shooter_dodge_feed(target, dodge_rate):
