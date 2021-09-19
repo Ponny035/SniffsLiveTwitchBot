@@ -134,7 +134,10 @@ class TwitchBot(commands.Bot,):
             print(f"[INFO] [{get_timestamp()}] Rejoined Channels!")
 
     async def event_raw_data(self, data: str):
-        tags = {split_data.split("=")[0]: split_data.split("=")[1] for split_data in data.split(";")}
+        try:
+            tags = {split_data.split("=")[0]: split_data.split("=")[1] for split_data in data.split(";")}
+        except IndexError:
+            return
         target_msg_id = ["sub", "resub", "subgift", "submysterygift", "anonsubgift", "anonsubmysterygift", "raid"]
         try:
             if tags["msg-id"] in target_msg_id:
@@ -149,7 +152,7 @@ class TwitchBot(commands.Bot,):
                     self.event_raid
                 )
         except KeyError:
-            pass
+            return
         '''
         {
             '@badge-info': 'subscriber/2',
