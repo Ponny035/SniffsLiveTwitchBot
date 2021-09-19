@@ -133,18 +133,52 @@ class TwitchBot(commands.Bot,):
             self.channel = self.get_channel(self.CHANNELS)
             print(f"[INFO] [{get_timestamp()}] Rejoined Channels!")
 
-    async def event_raw_usernotice(self, channel: Channel, tags: list):
-        await self.event_trigger.parsing_sub_data(
-            channel,
-            tags,
-            self.event_sub,
-            self.event_resub,
-            self.event_subgift,
-            self.event_submystergift,
-            self.event_anonsubgift,
-            self.event_anonsubmysterygift,
-            self.event_raid
-        )
+    async def event_raw_data(self, data: str):
+        tags = {split_data.split("=")[0]: split_data.split("=")[1] for split_data in data.split(";")}
+        target_msg_id = ["sub", "resub", "subgift", "submysterygift", "anonsubgift", "anonsubmysterygift", "raid"]
+        try:
+            if tags["msg-id"] in target_msg_id:
+                await self.event_trigger.parsing_sub_data(
+                    tags,
+                    self.event_sub,
+                    self.event_resub,
+                    self.event_subgift,
+                    self.event_submystergift,
+                    self.event_anonsubgift,
+                    self.event_anonsubmysterygift,
+                    self.event_raid
+                )
+        except KeyError:
+            pass
+        '''
+        {
+            '@badge-info': 'subscriber/2',
+            'badges': 'subscriber/2',
+            'color': '#FF69B4',
+            'display-name': 'Doxx_A420',
+            'emotes': '',
+            'flags': '',
+            'id': '92c4f1a1-aeab-41b0-ade1-c5f918ae7c52',
+            'login': 'doxx_a420',
+            'mod': '0',
+            'msg-id': 'resub',
+            'msg-param-cumulative-months': '2',
+            'msg-param-months': '0',
+            'msg-param-multimonth-duration': '0',
+            'msg-param-multimonth-tenure': '0',
+            'msg-param-should-share-streak': '1',
+            'msg-param-streak-months': '1',
+            'msg-param-sub-plan-name': 'Channel\\sSubscription\\s(sniffslive)',
+            'msg-param-sub-plan': '1000',
+            'msg-param-was-gifted': 'false',
+            'room-id': '134938304',
+            'subscriber': '1',
+            'system-msg': "Doxx_A420\\ssubscribed\\sat\\sTier\\s1.\\sThey've\\ssubscribed\\sfor\\s2\\smonths,\\scurrently\\son\\sa\\s1\\smonth\\sstreak!",
+            'tmi-sent-ts': '1632061419122',
+            'user-id': '153245048',
+            'user-type': ' :tmi.twitch.tv USERNOTICE #sniffslive :FOR MSG EATING (JK JK)'
+        }
+        '''
 
     # custom event to trigger when channel is live and return channel start time
     async def event_live(self, starttime):
@@ -182,36 +216,36 @@ class TwitchBot(commands.Bot,):
     async def event_channelpoint(self, data: dict):
         add_coin(data["username"], data["coin"])
 
-    async def event_sub(self, channel: Channel, data: dict):
+    async def event_sub(self, data: dict):
         usernames = self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"sub: {data}")
 
-    async def event_resub(self, channel: Channel, data: dict):
+    async def event_resub(self, data: dict):
         usernames = self.get_users_list()
         await subscription_payout(data["username"], data["sub_month_count"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"resub: {data}")
 
-    async def event_subgift(self, channel: Channel, data: dict):
+    async def event_subgift(self, data: dict):
         usernames = self.get_users_list()
         await gift_subscription_payout(data["username"], data["recipent"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"subgift: {data}")
 
-    async def event_submystergift(self, channel: Channel, data: dict):
+    async def event_submystergift(self, data: dict):
         usernames = self.get_users_list()
         await giftmystery_subscription_payout(data["username"], data["gift_sub_count"], data["methods"], usernames, self.send_message_feed)
         self.print_to_console(f"submysterygift: {data}")
 
-    async def event_anonsubgift(self, channel: Channel, data: dict):
+    async def event_anonsubgift(self, data: dict):
         usernames = self.get_users_list()
         await anongift_subscription_payout(data["recipent"], data["methods"], usernames, self.send_message, self.send_message_feed)
         self.print_to_console(f"anonsubgift: {data}")
 
-    async def event_anonsubmysterygift(self, channel: Channel, data: dict):
+    async def event_anonsubmysterygift(self, data: dict):
         await self.send_message(f"ขอบคุณ Gift จากผู้ไม่ประสงค์ออกนามจำนวน {data['gift_sub_count']} Gift sniffsHeart sniffsHeart sniffsHeart")
         self.print_to_console(f"anonsubmysterygift: {data}")
 
-    async def event_raid(self, channel: Channel, data: dict):
+    async def event_raid(self, data: dict):
         await self.send_message_feed(f"ขอบคุณ @{data['username']} สำหรับการ Raid ผู้ชมจำนวน {data['viewers']} คน ค่าา sniffsHeart sniffsHeart sniffsHeart")
         raid_feed(data['username'], data['viewers'])
         self.print_to_console(f"raid: {data}")

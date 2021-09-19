@@ -1,7 +1,6 @@
 from datetime import datetime
 import os
 
-from twitchio.channel import Channel
 from twitchio.client import Client
 from twitchio.models import Stream
 from twitchio.ext import routines
@@ -127,7 +126,7 @@ class EventTrigger:
             }
             await event_channelpoint(result)
 
-    async def parsing_sub_data(self, channel: Channel, tags: list, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
+    async def parsing_sub_data(self, tags: list, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
         username = plan = plan_name = prime = streak_months = recipent = gift_sub_count = sub_month_count = msg_id = ""
         try:
             username = tags["login"]
@@ -176,7 +175,7 @@ class EventTrigger:
                 "methods": methods,
                 "sub_month_count": sub_month_count
             }
-            await sub(channel, data)
+            await sub(data)
 
         elif msg_id == "resub":
             data = {
@@ -185,7 +184,7 @@ class EventTrigger:
                 "sub_month_count": sub_month_count,
                 "streak_months": streak_months
             }
-            await resub(channel, data)
+            await resub(data)
 
         elif msg_id == "subgift":
             data = {
@@ -194,7 +193,7 @@ class EventTrigger:
                 "streak_months": streak_months,
                 "recipent": recipent
             }
-            await subgift(channel, data)
+            await subgift(data)
 
         elif msg_id == "submysterygift":
             data = {
@@ -202,7 +201,7 @@ class EventTrigger:
                 "methods": methods,
                 "gift_sub_count": gift_sub_count
             }
-            await submysterygift(channel, data)
+            await submysterygift(data)
 
         elif msg_id == "anonsubgift":
             data = {
@@ -210,14 +209,14 @@ class EventTrigger:
                 "streak_months": streak_months,
                 "recipent": recipent
             }
-            await anonsubgift(channel, data)
+            await anonsubgift(data)
 
         elif msg_id == "anonsubmysterygift":
             data = {
                 "methods": methods,
                 "gift_sub_count": gift_sub_count
             }
-            await anonsubmysterygift(channel, data)
+            await anonsubmysterygift(data)
 
         elif msg_id == "raid":
             try:
@@ -228,4 +227,4 @@ class EventTrigger:
                 "username": username,
                 "viewers": tags["msg-param-viewerCount"]
             }
-            await raid(channel, data)
+            await raid(data)
