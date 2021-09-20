@@ -136,7 +136,7 @@ class EventTrigger:
             except KeyError:
                 pass
         try:
-            plan = tags["msg-param-sub-plan"]
+            plan = int(tags["msg-param-sub-plan"])
         except KeyError:
             plan = ""
         try:
@@ -157,11 +157,11 @@ class EventTrigger:
             except KeyError:
                 pass
         try:
-            gift_sub_count = tags["msg-param-mass-gift-count"]
+            gift_sub_count = int(tags["msg-param-mass-gift-count"])
         except KeyError:
             gift_sub_count = 0
         try:
-            sub_month_count = tags["msg-param-cumulative-months"]
+            sub_month_count = int(tags["msg-param-cumulative-months"])
         except KeyError:
             pass
         try:
