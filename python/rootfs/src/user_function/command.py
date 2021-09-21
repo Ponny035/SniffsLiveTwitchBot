@@ -241,6 +241,7 @@ async def buy_coinflip(username, side, bet, send_message):
 async def transfer_coin(user, recipent, amount, viewers, send_message):
     recipent = re.sub(r'^@', '', recipent)
     recipent = recipent.lower()
+    viewers = [viewer.lower() for viewer in viewers]
     userdata = retrieve(user)
     if not userdata:
         return
