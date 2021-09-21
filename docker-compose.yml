@@ -17,6 +17,8 @@ services:
       - CHANNELS
       - CLIENT_ID
       - CLIENT_SECRET
+      - CBHOST
+      - CBPORT
       - SUPABASE_URL
       - SUPABASE_API
       - TABLE
