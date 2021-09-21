@@ -6,7 +6,7 @@ import requests
 from twitchio.channel import Channel
 from twitchio.message import Message
 from twitchio.user import User
-from twitchio.ext import commands, routines
+from twitchio.ext import commands, eventsub, routines
 
 from .coin.coin import add_coin, get_coin, payday
 from .coin.subbit import subscription_payout, gift_subscription_payout, giftmystery_subscription_payout, anongift_subscription_payout, add_point_by_bit
@@ -68,7 +68,7 @@ class TwitchBot(commands.Bot,):
                 nick=self.NICK,
                 initial_channels=[self.CHANNELS],
             )
-            self.event_trigger = EventTrigger(self.CHANNELS)
+            self.event_trigger = EventTrigger(self, self.CHANNELS)
 
             print(f"[INFO] [{get_timestamp()}] Done")
 
@@ -118,12 +118,36 @@ class TwitchBot(commands.Bot,):
         print(F"{self.channel} Connected")
         if self.first_run:
             self.first_run = False
-            self.event_trigger.get_channel_status.start(self.event_offline, self.event_live, stop_on_error=False)
             self.check_channel.start(stop_on_error=False)
+            channel_live, channel_live_on = await self.event_trigger.get_channel_info()
+            if channel_live:
+                self.channel_live = channel_live
+                self.channel_live_on = channel_live_on
+            else:
+                self.channel_live = channel_live
+            await self.event_trigger.start_server()
         else:
             print(f"[INFO] [{get_timestamp()}] BOT Reconnected")
         await self.send_message(self.NICK + " is joined the channels.")
         print(f"[INFO] [{get_timestamp()}] Joined")
+
+    async def event_eventsub_notification_stream_start(self, event: eventsub.NotificationEvent):
+        channel_live, channel_live_on = await self.event_trigger.get_channel_info()
+        self.channel_live = channel_live
+        self.channel_live_on = channel_live_on
+        print(f"[INFO] [{channel_live_on}] {self.CHANNELS} is live")
+        await self.greeting_sniffs()
+        usernames = self.get_users_list()
+        await activate_point_system(self.channel_live, self.channel_live_on, usernames)
+        add_point_by_watchtime.start(stop_on_error=False)
+
+    async def event_eventsub_notification_stream_end(self, event: eventsub.NotificationEvent):
+        self.channel_live = False
+        self.channel_live_on = 0
+        print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
+        await self.greeting_sniffs()
+        add_point_by_watchtime.cancel()
+        await activate_point_system(self.channel_live)
 
     @routines.routine(seconds=20)
     async def check_channel(self):
@@ -182,25 +206,6 @@ class TwitchBot(commands.Bot,):
             'user-type': ' :tmi.twitch.tv USERNOTICE #sniffslive :FOR MSG EATING (JK JK)'
         }
         '''
-
-    # custom event to trigger when channel is live and return channel start time
-    async def event_live(self, starttime):
-        self.channel_live = True
-        self.channel_live_on = starttime
-        print(f"[INFO] [{starttime}] {self.CHANNELS} is live")
-        await self.greeting_sniffs()
-        usernames = self.get_users_list()
-        await activate_point_system(self.channel_live, self.channel_live_on, usernames)
-        add_point_by_watchtime.start(stop_on_error=False)
-
-    # custom event to trigger when channel is offline
-    async def event_offline(self):
-        self.channel_live = False
-        self.channel_live_on = 0
-        print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
-        await self.greeting_sniffs()
-        add_point_by_watchtime.cancel()
-        await activate_point_system(self.channel_live)
 
     async def event_message(self, message: Message):
         if (message.author is not None) and (message.author.name.lower() != self.NICK):

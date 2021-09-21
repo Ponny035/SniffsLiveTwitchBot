@@ -35,7 +35,7 @@ six==1.16.0
 sniffio==1.2.0
 supabase-py==0.0.2
 toml==0.10.2
-twitchio==2.0.6
+git+git://github.com/bossoq/TwitchIO@bugfix#egg=twitchio
 typing-extensions==3.10.0.0
 urllib3==1.26.6
 websockets==8.1

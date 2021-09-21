@@ -3,14 +3,16 @@ import os
 
 from twitchio.client import Client
 from twitchio.models import Stream
-from twitchio.ext import routines
+from twitchio.ext import eventsub
 
 from src.misc.webfeed import live_notification_feed
 from src.timefn.timestamp import get_timestamp
 
 
 class EventTrigger:
-    def __init__(self, channels: str):
+    def __init__(self, bot, channels: str):
+        self.LISTEN = os.environ.get("CBPORT", "")
+        self.HOST = os.environ.get("CBHOST", "")
         self.CHANNELS = channels
         self.channel_live = False
         self.channel_live_on = 0
@@ -19,32 +21,25 @@ class EventTrigger:
             client_id=os.environ.get("CLIENT_ID", ""),
             client_secret=os.environ.get("CLIENT_SECRET", "")
         )
+        self.eventsub_client = eventsub.EventSubClient(bot, "mysuperlongsecret", self.HOST)
 
-    @routines.routine(seconds=10)
-    async def get_channel_status(self, chan_offline, chan_online):
-        if self.channel_live:
-            try:
-                channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-                if channel_status == []:
-                    self.channel_live = False
-                    await chan_offline()
-            except Exception as msg:
-                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel offline status check Error with {msg}")
-        elif not self.channel_live:
-            try:
-                channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
-                if channel_status != []:
-                    if channel_status[0].started_at is not None:
-                        self.channel_live = True
-                        self.channel_live_on = channel_status[0].started_at
-                        await chan_online(self.channel_live_on)
-                        live_notification_feed(channel_status[0])
-            except Exception as msg:
-                print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel online status check Error with {msg}")
+    async def start_server(self):
+        print(f"Start Listen on host {self.HOST} and port {self.LISTEN}")
+        await self.eventsub_client.listen(port=self.LISTEN)
 
-    @get_channel_status.error
-    async def get_channel_status_error(error: Exception):
-        print(f"[_ERR] [{get_timestamp()}] ROUTINES: Channel status global check Error with {error}")
+    async def get_channel_info(self):
+        try:
+            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+            if channel_status != []:
+                self.channel_live = True
+                self.channel_live_on = channel_status[0].started_at
+                live_notification_feed(channel_status[0])
+                return True, self.channel_live_on
+            else:
+                self.channel_live = False
+                return False, self.channel_live_on
+        except Exception as msg:
+            print(f"[_ERR] [{get_timestamp()}] Fetch Channel Info Error with {msg}")
 
     async def check_bits(self, rawdata: str, event_bit):
         username = ""
