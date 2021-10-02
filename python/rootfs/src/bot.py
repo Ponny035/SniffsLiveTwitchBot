@@ -113,8 +113,11 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{get_timestamp()}] Bot joining channel.")
         self.channel = self.get_channel(self.CHANNELS)
         while len(self.connected_channels) == 0:
-            await self.join_channels([self.CHANNELS])
-            self.channel = self.get_channel(self.CHANNELS)
+            try:
+                await self.join_channels([self.CHANNELS])
+                self.channel = self.get_channel(self.CHANNELS)
+            except Exception as msg:
+                print(msg)
         print(F"{self.channel} Connected")
         if self.first_run:
             self.first_run = False
@@ -123,6 +126,10 @@ class TwitchBot(commands.Bot,):
             if channel_live:
                 self.channel_live = channel_live
                 self.channel_live_on = channel_live_on
+                print(f"[INFO] [{channel_live_on}] {self.CHANNELS} is live")
+                usernames = self.get_users_list()
+                await activate_point_system(self.channel_live, self.channel_live_on, usernames)
+                add_point_by_watchtime.start(stop_on_error=False)
             else:
                 self.channel_live = channel_live
             await self.event_trigger.start_server()
