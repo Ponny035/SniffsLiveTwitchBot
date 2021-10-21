@@ -174,7 +174,7 @@ async def send_lotto_msg_error(error: Exception):
     print(f"[_ERR] [{get_timestamp()}] ROUTINES: Lotto Message Error with {error}")
 
 
-async def check_message(username, message, vip_list, dev_list, send_message, timeout):
+async def check_message(username: str, message: str, vip_list: list[str], dev_list: list[str], send_message, timeout):
     restricted_message = ["บอทกาก", "บอทกๅก"]
     exclude_list = vip_list + dev_list
     if username not in exclude_list:
@@ -186,7 +186,7 @@ async def check_message(username, message, vip_list, dev_list, send_message, tim
                 print(f"[_MOD] [{get_timestamp()}] Kill: {username} for 30 secs")
 
 
-async def buy_raffle(username, count, send_message, timeout):
+async def buy_raffle(username: str, count: int, send_message, timeout):
     raffle_cost = 1
     userdata = retrieve(username)
     if userdata:
@@ -217,7 +217,7 @@ async def draw_raffle(send_message):
 
 
 # coinflip system
-async def buy_coinflip(username, side, bet, send_message):
+async def buy_coinflip(username: str, side: str, bet: int, send_message):
     prize = bet * 2
     userdata = retrieve(username)
     if userdata:
@@ -242,7 +242,7 @@ async def buy_coinflip(username, side, bet, send_message):
             print(f"[FLIP] [{get_timestamp()}] {username} coin insufficient")
 
 
-async def transfer_coin(user, recipent, amount, viewers, send_message):
+async def transfer_coin(user: str, recipent: str, amount: int, viewers: list[str], send_message):
     recipent = re.sub(r'^@', '', recipent)
     recipent = recipent.lower()
     viewers = [viewer.lower() for viewer in viewers]
