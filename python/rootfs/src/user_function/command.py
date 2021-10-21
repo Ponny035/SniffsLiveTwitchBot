@@ -44,7 +44,7 @@ async def call_to_hell(usernames: list[str], exclude_list: list[str], timeout: i
     return data
 
 
-async def shooter(employer: str, target: str, vip_list: list[str], dev_list: list[str], send_message, timeout: int, override: bool):
+async def shooter(employer: str, target: str, vip_list: list[str], dev_list: list[str], send_message, timeout: int, viewers: list[str], override: bool):
     global shooter_cooldown
     dodge_rate = 10
     payrate = 5
@@ -55,6 +55,9 @@ async def shooter(employer: str, target: str, vip_list: list[str], dev_list: lis
         await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที sniffsAH")
         shooter_suicide_feed(employer, shooter_timeout)
         print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
+        return
+    viewers = [viewer.lower() for viewer in viewers]
+    if not (target in viewers):
         return
     exclude_target = vip_list + dev_list
     cooldown = 1200
@@ -70,7 +73,8 @@ async def shooter(employer: str, target: str, vip_list: list[str], dev_list: lis
     if override:
         available = True
     if available:
-        shooter_cooldown = get_timestamp()
+        if not override:
+            shooter_cooldown = get_timestamp()
         userdata = retrieve(employer)
         if userdata:
             if userdata["Coin"] >= payrate:
