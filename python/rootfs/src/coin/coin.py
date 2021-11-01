@@ -37,6 +37,7 @@ def payday(coin, nolog=False):
         if userdata:
             userdata["Coin"] += coin
         else:
+            userdata = {}
             userdata["User_Name"] = username.lower()
             userdata["Coin"] = coin
             userdata["Watch_Time"] = 0
