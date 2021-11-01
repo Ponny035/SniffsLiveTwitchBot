@@ -49,16 +49,28 @@ def update_user_watchtime(force=False):
         for user_stat in alldata.watchtime_session.values():
             now = get_timestamp()
             if user_stat["status"] == "join":
-                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                try:
+                    user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                except TypeError:
+                    pass
             else:
-                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                try:
+                    user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                except TypeError:
+                    pass
     if force and alldata.watchtime_session != {}:
         for user_stat in alldata.watchtime_session.values():
             now = get_timestamp()
             if user_stat["status"] == "join":
-                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                try:
+                    user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                except TypeError:
+                    pass
             else:
-                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                try:
+                    user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+                except TypeError:
+                    pass
     if (not alldata.channel_live) and (alldata.watchtime_session != {}):
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime to DB")
         bulk_userdatas = []
