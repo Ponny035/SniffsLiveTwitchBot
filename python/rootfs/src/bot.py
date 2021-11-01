@@ -126,7 +126,6 @@ class TwitchBot(commands.Bot,):
 
     async def event_eventsub_notification_stream_end(self, event: eventsub.NotificationEvent):
         alldata.channel_live = False
-        alldata.channel_live_on = 0
         print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
         await self.greeting_sniffs()
         add_point_by_watchtime.cancel()

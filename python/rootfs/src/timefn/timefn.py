@@ -71,6 +71,7 @@ def update_user_watchtime(force=False):
                     user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
                 except TypeError:
                     pass
+        alldata.channel_live_on = 0
     if (not alldata.channel_live) and (alldata.watchtime_session != {}):
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime to DB")
         bulk_userdatas = []
