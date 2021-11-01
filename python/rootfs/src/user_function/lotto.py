@@ -1,8 +1,10 @@
 import random
 
+from src.misc import alldata
 
-def get_winning_number(lotto_list: list):
-    lotto_number = [player[1] for player in lotto_list]
+
+def get_winning_number():
+    lotto_number = [player[1] for player in alldata.player_lotto_list]
     unique_lotto_list = list(set(lotto_number))
     if len(unique_lotto_list) > 1:
         for i in range(5):
@@ -14,17 +16,17 @@ def get_winning_number(lotto_list: list):
     return int(winning_number)
 
 
-def check_winner(lotto_list: list):
-    win_number = get_winning_number(lotto_list)
-    total_income = len(lotto_list) * 5
+def check_winner():
+    win_number = get_winning_number()
+    total_income = len(alldata.player_lotto_list) * 5
     tax = 0.2
-    if len(lotto_list) > 5:
+    if len(alldata.player_lotto_list) > 5:
         min_prize = 10
     else:
         min_prize = 5
     win_prize = (total_income * (1 - tax) + (random.random() * 5))
     winning_dict = {}
-    for lotto in lotto_list:
+    for lotto in alldata.player_lotto_list:
         player_lotto = lotto[1]
         if win_number == player_lotto:
             try:

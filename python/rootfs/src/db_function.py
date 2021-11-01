@@ -37,6 +37,24 @@ def upsert(userdata: dict):
         return "error"
 
 
+def bulk_upsert(userdatas: list[dict]):
+    updated_time = get_time()
+    userdatas = [dict(item, **{'Update_Time': updated_time}) for item in userdatas]
+    resp = supabase.table(table).insert(userdatas, upsert=True).execute()
+    if resp["status_code"] == 200:
+        return "success"
+    else:
+        return "error"
+
+
+def retrieve_all():
+    resp = supabase.table(table).select("User_Name", "Coin", "Watch_Time", "Sub_Month").execute()
+    if resp["status_code"] == 200:
+        return resp["data"]
+    else:
+        return None
+
+
 def retrieve(username: str):
     resp = supabase.table(table).select("*").eq("User_Name", username.lower()).single().execute()
     if resp["status_code"] == 200:

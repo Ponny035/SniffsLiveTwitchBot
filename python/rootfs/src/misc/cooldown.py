@@ -1,8 +1,8 @@
+from src.misc import alldata
 from src.timefn.timestamp import get_timestamp
 
 
 # init variable
-command_cooldown = {}
 default_cooldown = 20
 
 
@@ -27,28 +27,26 @@ def check_global(command: str):
 
 # cooldown related system
 def set_cooldown(username: str, command: str):
-    global command_cooldown
     now = get_timestamp()
     if check_global(command):
         try:
-            command_cooldown["global"][command] = now
+            alldata.command_cooldown["global"][command] = now
         except KeyError:
-            command_cooldown["global"] = {}
-            command_cooldown["global"][command] = now
+            alldata.command_cooldown["global"] = {}
+            alldata.command_cooldown["global"][command] = now
     else:
         try:
-            command_cooldown[username][command] = now
+            alldata.command_cooldown[username][command] = now
         except KeyError:
-            command_cooldown[username] = {}
-            command_cooldown[username][command] = now
+            alldata.command_cooldown[username] = {}
+            alldata.command_cooldown[username][command] = now
 
 
 def check_cooldown(username: str, command: str):
-    global command_cooldown
     cooldown = get_cooldown(command)
     if check_global(command):
         try:
-            timestamp = command_cooldown["global"][command]
+            timestamp = alldata.command_cooldown["global"][command]
             now = get_timestamp()
             diff = (now - timestamp).total_seconds()
             if diff > cooldown:
@@ -60,7 +58,7 @@ def check_cooldown(username: str, command: str):
             return True
     else:
         try:
-            timestamp = command_cooldown[username][command]
+            timestamp = alldata.command_cooldown[username][command]
             now = get_timestamp()
             diff = (now - timestamp).total_seconds()
             if diff > cooldown:

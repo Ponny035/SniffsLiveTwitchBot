@@ -1,9 +1,11 @@
 import os
 
 from src.bot import TwitchBot
+from src.misc import alldata
 
 
 def main():
+    alldata.init()
     bot = TwitchBot()
     bot.run()
 

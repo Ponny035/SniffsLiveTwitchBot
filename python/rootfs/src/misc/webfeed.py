@@ -1,31 +1,23 @@
 import base64
 import json
-import os
 import requests
 
 from twitchio.models import Stream
 
+from src.misc import alldata
 from src.timefn.timestamp import get_timestamp
 
 
-ably_key: str = os.environ.get("ABLY_KEY", "")
-
 webfeed_url = "https://rest.ably.io/channels/webfeed/messages"
-webfeed_status = True
 default_timeout = 10000
 long_timeout = 30000
 
 
-def activate_webfeed_feed(status: bool):
-    global webfeed_status
-    if status:
-        if not webfeed_status:
-            webfeed_status = status
-            send_feed("webfeed", {"status": True}, long_timeout)
-    elif not status:
-        if webfeed_status:
-            webfeed_status = status
-            send_feed("webfeed", {"status": False}, long_timeout)
+def activate_webfeed_feed():
+    if alldata.feed_enable:
+        send_feed("webfeed", {"status": True}, long_timeout)
+    elif not alldata.feed_enable:
+        send_feed("webfeed", {"status": False}, long_timeout)
 
 
 def subscription_payout_feed(username: str, coin: int, plan: int, viewer: int):
@@ -169,7 +161,7 @@ def live_notification_feed(channel: Stream):
         "thumbnail_url": channel.thumbnail_url
     })
     res = requests.post(webfeed_url,
-                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        headers={'Authorization': "Basic " + base64.b64encode(alldata.ABLYKEY.encode()).decode()},
                         json={'name': 'livemessage', 'data': payload})
     if res.status_code == 201:
         print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
@@ -180,7 +172,7 @@ def live_notification_feed(channel: Stream):
 def send_feed(msgtype, feedtext, timeout=default_timeout):
     payload = json.dumps({"type": msgtype, "message": feedtext, "timeout": timeout})
     res = requests.post(webfeed_url,
-                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        headers={'Authorization': "Basic " + base64.b64encode(alldata.ABLYKEY.encode()).decode()},
                         json={'name': 'feedmessage', 'data': payload})
     if res.status_code == 201:
         print(f"[INFO] [{get_timestamp()}] Send Webfeed success")
@@ -191,7 +183,7 @@ def send_feed(msgtype, feedtext, timeout=default_timeout):
 def send_discord(type: str, message: dict):
     payload = json.dumps(message)
     res = requests.post(webfeed_url,
-                        headers={'Authorization': "Basic " + base64.b64encode(ably_key.encode()).decode()},
+                        headers={'Authorization': "Basic " + base64.b64encode(alldata.ABLYKEY.encode()).decode()},
                         json={'name': type, 'data': payload})
     if res.status_code == 201:
         print(f"[INFO] [{get_timestamp()}] Send Webfeed success")

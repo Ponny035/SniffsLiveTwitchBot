@@ -1,6 +1,7 @@
 from .coin import add_coin, payday
 from src.timefn.timestamp import get_timestamp
-from src.db_function import upsert, retrieve
+from src.db_function import upsert
+from src.misc import alldata
 from src.misc.webfeed import anongift_subscription_payout_feed, bit_to_coin_feed, gift_subscription_payout_feed, giftmystery_subscription_payout_feed, subscription_payout_feed
 
 
@@ -9,15 +10,20 @@ sub_to_point = [5, 10, 25]
 bit_to_point = 50
 
 
-async def subscription_payout(username: str, sub_month_count: str, plan: list[int], usernames: list[str], send_message, send_message_feed):
+async def subscription_payout(username: str, sub_month_count: str, plan: list[int], send_message, send_message_feed):
     plan_select = int(plan[1] / 1000)
     add_coin(username, sub_to_point[plan_select - 1], True)
-    payday(usernames, 1, True)
+    usernames = alldata.get_users_list()
+    payday(1, True)
     try:
-        userdata = retrieve(username)
+        userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
         if not userdata:
             userdata = {}
             userdata["User_Name"] = username.lower()
+            userdata["Coin"] = 0
+            userdata["Watch_Time"] = 0
+            userdata["Sub_Month"] = int(sub_month_count)
+            alldata.allusers_stats.append(userdata)
         userdata["Sub_Month"] = int(sub_month_count)
         upsert(userdata)
     except Exception as msg:
@@ -28,31 +34,34 @@ async def subscription_payout(username: str, sub_month_count: str, plan: list[in
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1]} sniffscoin by sub tier {plan_select}")
 
 
-async def gift_subscription_payout(username: str, recipent: str, plan: list[int], usernames: list[str], send_message):
+async def gift_subscription_payout(username: str, recipent: str, plan: list[int], send_message):
     plan_select = int(plan[1] / 1000)
     add_coin(username, sub_to_point[plan_select - 1], True)
     add_coin(recipent, sub_to_point[plan_select - 1], True)
-    payday(usernames, 1, True)
+    usernames = alldata.get_users_list()
+    payday(1, True)
     await send_message(f"@{username} ได้รับ {sub_to_point[plan_select - 1]} sniffscoin จากการ Gift ให้ {recipent} ระดับ {plan_select} sniffsHeart sniffsHeart sniffsHeart")
     await send_message(f"@{recipent} ได้รับ {sub_to_point[plan_select - 1]} sniffscoin จากการได้รับ Gift ระดับ {plan_select} และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
     gift_subscription_payout_feed(username, recipent, sub_to_point[plan_select - 1], plan_select, len(usernames))
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1]} sniffscoin by giftsub to {recipent} tier {plan_select}")
 
 
-async def giftmystery_subscription_payout(username: str, gift_count: int, plan: list[int], usernames: list[str], send_message):
+async def giftmystery_subscription_payout(username: str, gift_count: int, plan: list[int], send_message):
     plan_select = int(plan[1] / 1000)
     # add_coin(username, sub_to_point * gift_count, True)
-    # payday(usernames, 1, True)
+    # usernames = alldata.get_users_list()
+    # payday(1, True)
     # It seems like giftsub call subgift again, so we don't need to add coin here
     await send_message(f"@{username} ได้รับ {sub_to_point[plan_select - 1] * gift_count} sniffscoin จากการ Gift ระดับ {plan_select} ให้สมาชิก {gift_count} คน sniffsHeart sniffsHeart sniffsHeart")
     giftmystery_subscription_payout_feed(username, sub_to_point[plan_select - 1] * gift_count, gift_count, plan_select)
     print(f"[COIN] [{get_timestamp()}] {username} receive {sub_to_point[plan_select - 1] * gift_count} sniffscoin by giftmysterysub tier {plan_select}")
 
 
-async def anongift_subscription_payout(recipent: str, plan: list[int], usernames: list[str], send_message, send_message_feed):
+async def anongift_subscription_payout(recipent: str, plan: list[int], send_message, send_message_feed):
     plan_select = int(plan[1] / 1000)
     add_coin(recipent, sub_to_point[plan_select - 1], True)
-    payday(usernames, 1, True)
+    usernames = alldata.get_users_list()
+    payday(1, True)
     await send_message(f"ขอบคุณ Gift ระดับ {plan_select} จากผู้ไม่ประสงค์ออกนามค่าา sniffsHeart sniffsHeart sniffsHeart")
     await send_message_feed(f"@{recipent} ได้รับ {sub_to_point[plan_select - 1]} sniffscoin จากการได้รับ Gift ระดับ {plan_select} และผู้ชมทั้งหมด {len(usernames)} คนได้รับ 1 sniffscoin")
     anongift_subscription_payout_feed(recipent, sub_to_point[plan_select - 1], plan_select, len(usernames))

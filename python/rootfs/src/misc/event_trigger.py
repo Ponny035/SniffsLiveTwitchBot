@@ -1,25 +1,22 @@
 from datetime import datetime
-import os
 
 from twitchio.client import Client
 from twitchio.models import Stream
 from twitchio.ext import eventsub
 
+from src.misc import alldata
 from src.misc.webfeed import live_notification_feed
 from src.timefn.timestamp import get_timestamp
 
 
 class EventTrigger:
-    def __init__(self, bot, channels: str):
-        self.LISTEN = os.environ.get("CBPORT", "")
-        self.HOST = os.environ.get("CBHOST", "")
-        self.CHANNELS = channels
-        self.channel_live = False
-        self.channel_live_on = 0
+    def __init__(self, bot):
+        self.LISTEN = alldata.LISTEN
+        self.HOST = alldata.HOST
 
         self.twitch_api = Client.from_client_credentials(
-            client_id=os.environ.get("CLIENT_ID", ""),
-            client_secret=os.environ.get("CLIENT_SECRET", "")
+            client_id=alldata.CLIENTID,
+            client_secret=alldata.CLIENTSECRET
         )
         self.eventsub_client = eventsub.EventSubClient(bot, "mysuperlongsecret", self.HOST)
 
@@ -29,15 +26,15 @@ class EventTrigger:
 
     async def get_channel_info(self):
         try:
-            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[self.CHANNELS])
+            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[alldata.CHANNELS])
             if channel_status != []:
-                self.channel_live = True
-                self.channel_live_on = channel_status[0].started_at
+                alldata.channel_live = True
+                alldata.channel_live_on = channel_status[0].started_at
                 live_notification_feed(channel_status[0])
-                return True, self.channel_live_on
+                return
             else:
-                self.channel_live = False
-                return False, self.channel_live_on
+                alldata.channel_live = False
+                return
         except Exception as msg:
             print(f"[_ERR] [{get_timestamp()}] Fetch Channel Info Error with {msg}")
 
@@ -164,62 +161,126 @@ class EventTrigger:
         except KeyError:
             return
 
-        if msg_id == "sub":
-            data = {
-                "username": username,
-                "methods": methods,
-                "sub_month_count": sub_month_count
-            }
-            await sub(data)
+        match msg_id:
+            case "sub":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "sub_month_count": sub_month_count
+                }
+                await sub(data)
 
-        elif msg_id == "resub":
-            data = {
-                "username": username,
-                "methods": methods,
-                "sub_month_count": sub_month_count,
-                "streak_months": streak_months
-            }
-            await resub(data)
+            case "resub":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "sub_month_count": sub_month_count,
+                    "streak_months": streak_months
+                }
+                await resub(data)
 
-        elif msg_id == "subgift":
-            data = {
-                "username": username,
-                "methods": methods,
-                "streak_months": streak_months,
-                "recipent": recipent
-            }
-            await subgift(data)
+            case "subgift":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "streak_months": streak_months,
+                    "recipent": recipent
+                }
+                await subgift(data)
 
-        elif msg_id == "submysterygift":
-            data = {
-                "username": username,
-                "methods": methods,
-                "gift_sub_count": gift_sub_count
-            }
-            await submysterygift(data)
+            case "submysterygift":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "gift_sub_count": gift_sub_count
+                }
+                await submysterygift(data)
 
-        elif msg_id == "anonsubgift":
-            data = {
-                "methods": methods,
-                "streak_months": streak_months,
-                "recipent": recipent
-            }
-            await anonsubgift(data)
+            case "anonsubgift":
+                data = {
+                    "methods": methods,
+                    "streak_months": streak_months,
+                    "recipent": recipent
+                }
+                await anonsubgift(data)
 
-        elif msg_id == "anonsubmysterygift":
-            data = {
-                "methods": methods,
-                "gift_sub_count": gift_sub_count
-            }
-            await anonsubmysterygift(data)
+            case "anonsubmysterygift":
+                data = {
+                    "methods": methods,
+                    "gift_sub_count": gift_sub_count
+                }
+                await anonsubmysterygift(data)
 
-        elif msg_id == "raid":
-            try:
-                username = tags["msg-param-login"]
-            except KeyError:
-                username = tags["msg-param-displayName"].lower()
-            data = {
-                "username": username,
-                "viewers": tags["msg-param-viewerCount"]
-            }
-            await raid(data)
+            case "raid":
+                try:
+                    username = tags["msg-param-login"]
+                except KeyError:
+                    username = tags["msg-param-displayName"].lower()
+                data = {
+                    "username": username,
+                    "viewers": tags["msg-param-viewerCount"]
+                }
+                await raid(data)
+
+            case _:
+                return
+
+        # if msg_id == "sub":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "sub_month_count": sub_month_count
+        #     }
+        #     await sub(data)
+
+        # elif msg_id == "resub":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "sub_month_count": sub_month_count,
+        #         "streak_months": streak_months
+        #     }
+        #     await resub(data)
+
+        # elif msg_id == "subgift":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "streak_months": streak_months,
+        #         "recipent": recipent
+        #     }
+        #     await subgift(data)
+
+        # elif msg_id == "submysterygift":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "gift_sub_count": gift_sub_count
+        #     }
+        #     await submysterygift(data)
+
+        # elif msg_id == "anonsubgift":
+        #     data = {
+        #         "methods": methods,
+        #         "streak_months": streak_months,
+        #         "recipent": recipent
+        #     }
+        #     await anonsubgift(data)
+
+        # elif msg_id == "anonsubmysterygift":
+        #     data = {
+        #         "methods": methods,
+        #         "gift_sub_count": gift_sub_count
+        #     }
+        #     await anonsubmysterygift(data)
+
+        # elif msg_id == "raid":
+        #     try:
+        #         username = tags["msg-param-login"]
+        #     except KeyError:
+        #         username = tags["msg-param-displayName"].lower()
+        #     data = {
+        #         "username": username,
+        #         "viewers": tags["msg-param-viewerCount"]
+        #     }
+        #     await raid(data)

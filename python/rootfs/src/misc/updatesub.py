@@ -1,6 +1,7 @@
 import re
 
-from src.db_function import upsert, retrieve
+from src.db_function import upsert
+from src.misc import alldata
 from src.timefn.timestamp import get_timestamp
 
 
@@ -11,7 +12,7 @@ async def update_submonth(username: str, rawdata: str):
     except Exception:
         return
     if submonth > 0:
-        userdata = retrieve(username)
+        userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
         if userdata:
             if userdata["Sub_Month"] != submonth:
                 userdata["Sub_Month"] = submonth
@@ -20,6 +21,9 @@ async def update_submonth(username: str, rawdata: str):
         else:
             userdata = {}
             userdata["User_Name"] = username.lower()
+            userdata["Coin"] = 0
+            userdata["Watch_Time"] = 0
             userdata["Sub_Month"] = submonth
+            alldata.allusers_stats.append(userdata)
             upsert(userdata)
             print(f"[INFO] [{get_timestamp()}] Insert {username} with submonth {submonth} months")

@@ -2,17 +2,12 @@ import random
 
 
 raffle_list: list = []
-raffle_status: bool = False
 
 
-def raffle_start(status: bool):
+def raffle_start():
     # clear raffle list every time start raffle
-    global raffle_list, raffle_status
-    if not raffle_status:
-        raffle_status = status
-        raffle_list = []
-        return True
-    return False
+    global raffle_list
+    raffle_list = []
 
 
 def raffle_save(username, count):
@@ -29,11 +24,3 @@ def raffle_winner():
         del raffle_list[rand]
         return winner
     return None
-
-
-def raffle_stop(status: bool):
-    global raffle_status
-    if raffle_status:
-        raffle_status = status
-        return True
-    return False

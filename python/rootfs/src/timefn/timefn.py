@@ -2,96 +2,91 @@ from datetime import datetime
 
 from twitchio.ext import routines
 
-from src.coin.coin import add_coin
-from src.db_function import upsert, retrieve
+from src.coin.coin import add_coin, payday
+from src.db_function import bulk_upsert
+from src.misc import alldata
 from .timestamp import get_timestamp, sec_to_hms
 
-
-# init var
-channel_live: bool = False
-channel_live_on = 0
-watchtime_session: dict = {}
 
 # coin var
 coin_join_before_live: int = 5
 watchtime_to_point: int = 60
 
 
-async def activate_point_system(live, starttime=None, usernames=None):
-    global channel_live
-    global channel_live_on
-    global watchtime_session
-    channel_live = live
-    if (live) and (starttime is not None):
-        channel_live_on = starttime
-        if usernames is not None:
+async def activate_point_system():
+    if alldata.channel_live:
+        usernames = alldata.get_users_list()
+        if usernames is not None and len(usernames) > 0:
+            payday(coin_join_before_live)
             for username in usernames:
-                user_join_part("join", username.lower(), channel_live_on)
-                add_coin(username.lower(), coin_join_before_live)
+                user_join_part("join", username.lower(), alldata.channel_live_on)
     else:
         update_user_watchtime(True)
+        await alldata.sync_db()
 
 
 def user_join_part(status: str, username: str, timestamp: datetime):
-    global watchtime_session
     try:
-        if watchtime_session[username]["status"] != status:
-            watchtime_session[username]["status"] = status
+        if alldata.watchtime_session[username]["status"] != status:
+            alldata.watchtime_session[username]["status"] = status
             if status == "join":
-                watchtime_session[username]["join_on"] = timestamp
+                alldata.watchtime_session[username]["join_on"] = timestamp
             elif status == "part":
-                watchtime_session[username]["part_on"] = timestamp
+                alldata.watchtime_session[username]["part_on"] = timestamp
                 update_user_watchtime()
     except KeyError:
-        watchtime_session[username] = {}
-        watchtime_session[username]["status"] = status
+        alldata.watchtime_session[username] = {}
+        alldata.watchtime_session[username]["status"] = status
         if status == "join":
-            watchtime_session[username]["join_on"] = timestamp
+            alldata.watchtime_session[username]["join_on"] = timestamp
         elif status == "part":
-            watchtime_session[username]["part_on"] = timestamp
+            alldata.watchtime_session[username]["part_on"] = timestamp
             update_user_watchtime()
 
 
 def update_user_watchtime(force=False):
-    global watchtime_session
-    if channel_live and watchtime_session != {}:
-        for user_stat in watchtime_session.values():
+    if alldata.channel_live and alldata.watchtime_session != {}:
+        for user_stat in alldata.watchtime_session.values():
             now = get_timestamp()
             if user_stat["status"] == "join":
-                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], channel_live_on)).total_seconds())
+                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
             else:
-                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], channel_live_on)).total_seconds())
-    if force and watchtime_session != {}:
-        for user_stat in watchtime_session.values():
+                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+    if force and alldata.watchtime_session != {}:
+        for user_stat in alldata.watchtime_session.values():
             now = get_timestamp()
             if user_stat["status"] == "join":
-                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], channel_live_on)).total_seconds())
+                user_stat["watchtime_session"] = int((now - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
             else:
-                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], channel_live_on)).total_seconds())
-    if (not channel_live) and (watchtime_session != {}):
+                user_stat["watchtime_session"] = int((user_stat["part_on"] - max(user_stat["join_on"], alldata.channel_live_on)).total_seconds())
+    if (not alldata.channel_live) and (alldata.watchtime_session != {}):
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime to DB")
-        for username, user_stat in watchtime_session.items():
+        bulk_userdatas = []
+        for username, user_stat in alldata.watchtime_session.items():
             try:
                 if user_stat["watchtime_session"] != 0:
-                    userdata = retrieve(username)
+                    userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
                     if userdata:
                         userdata["Watch_Time"] += int(user_stat["watchtime_session"])
                     else:
                         userdata = {}
                         userdata["User_Name"] = username.lower()
+                        userdata["Coin"] = 0
                         userdata["Watch_Time"] = int(user_stat["watchtime_session"])
-                    upsert(userdata)
+                        userdata["Sub_Month"] = 0
+                        alldata.allusers_stats.append(userdata)
+                    bulk_userdatas.append(userdata)
             except Exception as msg:
                 print(f"[_LOG] Write Watchtime Error {msg}")
+        bulk_upsert(bulk_userdatas)
         print(f"[_LOG] [{get_timestamp()}] Write Watchtime Success")
-        watchtime_session = {}
+        alldata.watchtime_session = {}
 
 
 @routines.routine(minutes=watchtime_to_point)
 async def add_point_by_watchtime():
-    global watchtime_session
     update_user_watchtime()
-    for username, user_stat in watchtime_session.items():
+    for username, user_stat in alldata.watchtime_session.items():
         time_to_point = watchtime_to_point * 60
         try:
             session = user_stat["watchtime_session"]
@@ -113,14 +108,14 @@ async def add_point_by_watchtime_error(error: Exception):
     print(f"[_ERR] [{get_timestamp()}] ROUTINES: Watchtime System Error with {error}")
 
 
-async def get_user_watchtime(username: str, live: bool, channels: str, send_message):
-    if live:
+async def get_user_watchtime(username: str, send_message):
+    if alldata.channel_live:
         update_user_watchtime()
     try:
-        session = watchtime_session[username]["watchtime_session"]
+        session = alldata.watchtime_session[username]["watchtime_session"]
     except KeyError:
         session = 0
-    userdata = retrieve(username)
+    userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
     past = 0
     if userdata:
         past = userdata["Watch_Time"]
@@ -139,5 +134,5 @@ async def get_user_watchtime(username: str, live: bool, channels: str, send_mess
         response_string += " sniffsHeart sniffsHeart sniffsHeart"
         await send_message(response_string)
     else:
-        await send_message(f"@{username} เพิ่งมาดู @{channels} สิน้าาาาา sniffsAH")
+        await send_message(f"@{username} เพิ่งมาดู @{alldata.CHANNELS} สิน้าาาาา sniffsAH")
     print(f"[TIME] [{get_timestamp()}] Watchtime checked by {username}: {watchtime_dhms[0]} day {watchtime_dhms[1]} hours {watchtime_dhms[2]} mins {watchtime_dhms[3]} secs")

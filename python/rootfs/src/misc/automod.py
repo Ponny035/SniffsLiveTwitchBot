@@ -1,10 +1,10 @@
 import re
 
 from src.timefn.timestamp import get_timestamp
+from src.misc import alldata
 
 
 # CURSES = ("fuck", "poo", "boo", "you are suck")
-warning_users = {}
 
 
 async def auto_mod(user: str, role: bool, message: str, raw_data: str, send_message, timeout, ban):
@@ -44,14 +44,13 @@ async def auto_removetwitchlink(user: str, message: str, msg_id: str, send_messa
 
 
 async def warn(user: str, send_message, timeout, ban, timers: tuple[int], msg_id=None, reason=None):
-    global warning_users
     warning = 0
     try:
-        warning = warning_users[user][reason]
-        warning_users[user][reason] += 1
+        warning = alldata.warning_users[user][reason]
+        alldata.warning_users[user][reason] += 1
     except KeyError:
-        warning_users[user] = {}
-        warning_users[user][reason] = 1
+        alldata.warning_users[user] = {}
+        alldata.warning_users[user][reason] = 1
     if warning < len(timers):
         timeout_mins = timers[warning]
         if timeout_mins == 0:
@@ -59,10 +58,10 @@ async def warn(user: str, send_message, timeout, ban, timers: tuple[int], msg_id
             print(f"[AMOD] [{get_timestamp()}] DeleteMessage: {user} Duration: {timeout_mins} Reason: {reason}")
             await send_message(f"@{user} เตือนก่อนน้า PunOko PunOko PunOko")
         else:
-            await timeout(user, timeout_mins * 60, f"ไม่ได้น้า เตือนครั้งที่ {warning_users[user][reason]}")
+            await timeout(user, timeout_mins * 60, f"ไม่ได้น้า เตือนครั้งที่ {alldata.warning_users[user][reason]}")
             print(f"[AMOD] [{get_timestamp()}] Timeout: {user} Duration: {timeout_mins} Reason: {reason}")
             await send_message(f"@{user} ไม่เชื่อฟังสนิฟ PunOko PunOko PunOko ไปนั่งพักก่อนซัก {timeout_mins} นาทีนะ")
     else:
-        warning_users[user][reason] = 0  # reset counter
-        await ban(user, f"ละเมิดกฎครบ {warning_users[user][reason]} ครั้ง บินไปซะ")
+        alldata.warning_users[user][reason] = 0  # reset counter
+        await ban(user, f"ละเมิดกฎครบ {alldata.warning_users[user][reason]} ครั้ง บินไปซะ")
         await send_message(f"@{user} เตือนแล้วไม่ฟัง ขออนุญาตบินนะคะ PunOko PunOko PunOko")
