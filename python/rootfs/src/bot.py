@@ -479,12 +479,10 @@ class TwitchBot(commands.Bot,):
             try:
                 target = commands_split[1].lower()
             except IndexError:
-                target = 'jb_sadguy'
+                target = "jb_sadguy"
             viewers = alldata.get_users_list()
             viewers = [viewer.lower() for viewer in viewers]
-            if not (target in viewers):
-                return
-            else:
+            if (target in viewers) or (target == "me"):
                 await shooter(ctx.author.name.lower(), target, self.send_message_feed, self.send_message_timeout, override)
 
     @commands.command(name="lotto")
