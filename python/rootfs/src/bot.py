@@ -192,7 +192,10 @@ class TwitchBot(commands.Bot,):
 
     async def event_message(self, message: Message):
         if (message.author is not None) and (message.author.name.lower() != self.NICK):
-            print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()} Is Mod {message.author.is_mod} Is Sub {bool(message.author.is_subscriber)} Is Vip {message.author.badges.get('vip') == '1'}: {message.content}")
+            try:
+                print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()} Is Mod {message.author.is_mod} Is Sub {bool(message.author.is_subscriber)} Is Vip {message.author.badges.get('vip') == '1'}: {message.content}")
+            except ValueError:
+                print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()} Is Mod {message.author.is_mod} Is Sub {bool(message.author.is_subscriber)} Is Vip False: {message.content}")
 
             await check_message(message.author.name.lower(), message.content, self.send_message, self.send_message_timeout)
             await update_submonth(message.author.name.lower(), message.raw_data)
