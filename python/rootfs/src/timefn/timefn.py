@@ -2,7 +2,7 @@ from datetime import datetime
 
 from twitchio.ext import routines
 
-from src.coin.coin import add_coin, payday
+from src.coin.coin import payday
 from src.db_function import bulk_upsert
 from src.misc import alldata
 from .timestamp import get_timestamp, sec_to_hms
@@ -86,6 +86,7 @@ def update_user_watchtime(force=False):
 @routines.routine(minutes=watchtime_to_point)
 async def add_point_by_watchtime():
     update_user_watchtime()
+    bulk_userdatas = []
     for username, user_stat in alldata.watchtime_session.items():
         time_to_point = watchtime_to_point * 60
         try:
@@ -100,7 +101,19 @@ async def add_point_by_watchtime():
         redeem += point_to_add * time_to_point
         user_stat["watchtime_redeem"] = redeem
         if point_to_add > 0:
-            add_coin(username, point_to_add)
+            userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
+            if userdata:
+                userdata["Coin"] += point_to_add
+            else:
+                userdata = {}
+                userdata["Usser_Name"] = username.lower()
+                userdata["Coin"] = point_to_add
+                userdata["Watch_Time"] = 0
+                userdata["Sub_Month"] = 0
+                alldata.allusers_stats.append(userdata)
+            bulk_userdatas.append(userdata)
+            print(f"[COIN] [{get_timestamp()}] User: {username} receive(deduct) {point_to_add} sniffscoin")
+    bulk_upsert(bulk_userdatas)
 
 
 @add_point_by_watchtime.error
