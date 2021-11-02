@@ -22,7 +22,7 @@ async def activate_point_system():
                 user_join_part("join", username.lower(), alldata.channel_live_on)
     else:
         update_user_watchtime(True)
-        await alldata.sync_db()
+        await alldata.force_sync_db()
 
 
 def user_join_part(status: str, username: str, timestamp: datetime):

@@ -137,3 +137,11 @@ async def sync_db():
         bulk_upsert(allusers_stats)
         allusers_stats = retrieve_all()
         print(f"[_LOG] [{get_timestamp()}] Successfully Sync DB")
+
+
+async def force_sync_db():
+    global allusers_stats
+    print(f"[_LOG] [{get_timestamp()}] Start Force Sync DB")
+    bulk_upsert(allusers_stats)
+    allusers_stats = retrieve_all()
+    print(f"[_LOG] [{get_timestamp()}] Successfully Force Sync DB")
