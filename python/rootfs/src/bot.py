@@ -604,6 +604,11 @@ class TwitchBot(commands.Bot,):
             return
         await transfer_coin(ctx.author.name.lower(), recipent, amount, self.send_message)
 
+    @commands.command(name="syncdb")
+    async def sync_db(self, ctx: commands.Context):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list):
+            await alldata.force_sync_db()
+
     async def global_before_invoke(self, ctx: commands.Context):
         postpone_cooldown = ["market", "webfeed", "payday", "give", "callhell", "sr", "song", "kill", "lotto", "raffle", "flip", "transfer"]
         ctx.cooldown = check_cooldown(ctx.author.name.lower(), ctx.command.name) or (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list)
