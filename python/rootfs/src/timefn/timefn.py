@@ -119,7 +119,7 @@ async def add_point_by_watchtime():
                 userdata["Coin"] += point_to_add
             else:
                 userdata = {}
-                userdata["Usser_Name"] = username.lower()
+                userdata["User_Name"] = username.lower()
                 userdata["Coin"] = point_to_add
                 userdata["Watch_Time"] = 0
                 userdata["Sub_Month"] = 0
