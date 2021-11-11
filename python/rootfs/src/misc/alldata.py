@@ -114,7 +114,7 @@ def get_users_list():
     global timestamp
     global users_cache
     now = get_timestamp()
-    if (now - timestamp).total_seconds() < 60 and not first_run:
+    if (now - timestamp).total_seconds() < 5 and not first_run:
         return users_cache
     url_endpoint = f"https://tmi.twitch.tv/group/user/{CHANNELS}/chatters"
     resp = requests.get(url_endpoint)
