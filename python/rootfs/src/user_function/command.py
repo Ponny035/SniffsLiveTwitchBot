@@ -107,7 +107,7 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
                     alldata.shooter_cooldown = get_timestamp()
                 await timeout(target, shooter_timeout, f"{employer} จ้างมือปืนสนิฟยิงปิ้วๆ {shooter_timeout} วินาที")
                 await send_message(f"@{employer} จ้างมือปืนสนิฟยิง @{target} {shooter_timeout} วินาที sniffsAH")
-                shooter_success_feed(employer, target, shooter_timeout, userdata["Coin"] - payrate)
+                shooter_success_feed(employer, target, shooter_timeout, userdata["Coin"])
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} request sniffsbot to shoot {target} for {shooter_timeout} sec")
             case "dodge":
                 await send_message(f"@{target} หลบมือปืนสนิฟได้ sniffsHeart @{employer} เสียใจด้วยนะ (Dodge = {int(dodge_rate)}%)")
@@ -238,12 +238,12 @@ async def buy_coinflip(username: str, side: str, bet: int, send_message):
                 win_side = "ก้อย"
             if result:
                 await send_message(f"เหรียญออกที่{win_side}ค่า! sniffsHeart ได้รับ {prize} sniff coin")
-                coinflip_feed(username, win_side, userdata["Coin"] - bet + prize, result, prize)
                 add_coin(username, prize)
+                coinflip_feed(username, win_side, userdata["Coin"], result, prize)
                 print(f"[FLIP] [{get_timestamp()}] {username} won {prize}")
             else:
                 await send_message(f"ไม่น้าาาเหรียญออกที่{win_side} sniffsCry")
-                coinflip_feed(username, win_side, userdata["Coin"] - bet, result)
+                coinflip_feed(username, win_side, userdata["Coin"], result)
                 print(f"[FLIP] [{get_timestamp()}] {username} lose {bet}")
         else:
             await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก PunOko PunOko PunOko")

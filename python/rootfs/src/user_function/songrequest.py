@@ -53,7 +53,7 @@ async def user_song_request(content: str, timestamp: datetime, username: str, se
                 except KeyError:
                     alldata.song_playing = None
                 await send_message(f"@{username} ใช้ {cost} sniffscoin โหวตเพลง {response_json['songName']} sniffsMic คะแนนรวม {response_json['songVote']} คะแนน")
-                user_song_request_feed(username, song_name, userdata["Coin"] - cost)
+                user_song_request_feed(username, song_name, userdata["Coin"])
                 return True
             elif response.status_code == 404:
                 print(f"[SONG] [{get_timestamp()}] {song_name} Error connecting to API")
