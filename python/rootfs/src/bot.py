@@ -118,18 +118,20 @@ class TwitchBot(commands.Bot,):
         print(f"[INFO] [{get_timestamp()}] Joined")
 
     async def event_eventsub_notification_stream_start(self, event: eventsub.NotificationEvent):
-        await self.event_trigger.get_channel_info()
-        print(f"[INFO] [{alldata.channel_live_on}] {self.CHANNELS} is live")
-        await self.greeting_sniffs()
-        await activate_point_system()
-        add_point_by_watchtime.start(stop_on_error=False)
+        if not alldata.channel_live:
+            await self.event_trigger.get_channel_info()
+            print(f"[INFO] [{alldata.channel_live_on}] {self.CHANNELS} is live")
+            await self.greeting_sniffs()
+            await activate_point_system()
+            add_point_by_watchtime.start(stop_on_error=False)
 
     async def event_eventsub_notification_stream_end(self, event: eventsub.NotificationEvent):
-        alldata.channel_live = False
-        print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
-        await self.greeting_sniffs()
-        add_point_by_watchtime.cancel()
-        await activate_point_system()
+        if alldata.channel_live:
+            alldata.channel_live = False
+            print(f"[INFO] [{get_timestamp()}] {self.CHANNELS} is offline")
+            await self.greeting_sniffs()
+            add_point_by_watchtime.cancel()
+            await activate_point_system()
 
     @routines.routine(seconds=20)
     async def check_channel(self):
