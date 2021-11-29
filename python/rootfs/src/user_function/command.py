@@ -132,18 +132,19 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
 
 
 # lotto system
-async def buy_lotto(username: str, lotto: str, send_message):
+async def buy_lotto(username: str, lotto: str, count: int, send_message):
     lotto_cost = 5
     if (re.match(r"[0-9]{2}", lotto) is not None) and (len(lotto) == 2):
         userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
         if userdata:
-            if userdata["Coin"] >= lotto_cost:
+            total_lotto = min(int(userdata["Coin"] / lotto_cost), count)
+            if total_lotto > 0:
                 lotto_int = int(lotto)
-                add_coin(username, -lotto_cost)
-                alldata.player_lotto_list += [[username, lotto_int]]
-                await send_message(f"@{username} ซื้อ SniffsLotto หมายเลข {lotto} สำเร็จ sniffsHeart sniffsHeart sniffsHeart")
-                buy_lotto_feed(username, lotto, userdata["Coin"] - lotto_cost)
-                print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} successfully")
+                add_coin(username, -lotto_cost * total_lotto)
+                alldata.player_lotto_list += [[username, lotto_int]] * total_lotto
+                await send_message(f"@{username} ซื้อ SniffsLotto หมายเลข {lotto} จำนวน {total_lotto} ใบ สำเร็จ sniffsHeart sniffsHeart sniffsHeart")
+                buy_lotto_feed(username, lotto, total_lotto, userdata["Coin"])
+                print(f"[LOTO] [{get_timestamp()}] {username} buy {lotto} * {total_lotto} successfully")
                 return True
             else:
                 await send_message(f"@{username} ไม่มีเงินแล้วยังจะซื้ออีก PunOko PunOko PunOko")

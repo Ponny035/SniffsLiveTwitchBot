@@ -100,11 +100,12 @@ def lotto_stop_feed():
     send_feed("lottoStat", {"status": True}, long_timeout)
 
 
-def buy_lotto_feed(username, lotto, coinleft):
-    send_feed("buyLottoFeed", {"username": username, "lotto": lotto, "coinleft": coinleft})
+def buy_lotto_feed(username, lotto, count, coinleft):
+    send_feed("buyLottoFeed", {"username": username, "lotto": lotto, "count": count, "coinleft": coinleft})
     send_discord('lottobuy', {
         "username": username,
         "lotto": lotto,
+        "count": count,
         "coinleft": coinleft
     })
 

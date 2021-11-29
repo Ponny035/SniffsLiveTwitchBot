@@ -521,7 +521,15 @@ class TwitchBot(commands.Bot,):
                         await draw_lotto(self.send_message)
                 case _:
                     if alldata.lotto_open:
-                        await buy_lotto(ctx.author.name.lower(), lotto, self.send_message_feed)
+                        try:
+                            count = int(commands_split[2])
+                            if count < 0:
+                                return
+                        except IndexError:
+                            count = 1
+                        except ValueError:
+                            count = 1
+                        await buy_lotto(ctx.author.name.lower(), lotto, count, self.send_message_feed)
         except IndexError:
             return
 
