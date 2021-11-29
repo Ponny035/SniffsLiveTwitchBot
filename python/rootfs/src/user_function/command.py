@@ -65,6 +65,7 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
             available = False
     if override:
         available = True
+        dodge_rate = 0
     if available:
         userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == employer), None)
 
