@@ -477,7 +477,10 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="kill")
     async def kill_user(self, ctx: commands.Context):
-        override = bool(ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list or (ctx.author.badges.get('vip') == '1'))
+        try:
+            override = bool(ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list or (ctx.author.badges.get('vip') == '1'))
+        except ValueError:
+            override = False
         if alldata.channel_live:
             commands_split = ctx.message.content.split()
             try:
