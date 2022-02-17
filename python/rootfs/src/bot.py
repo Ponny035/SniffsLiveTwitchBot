@@ -300,7 +300,7 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="payday")
     async def give_coin_allusers(self, ctx: commands.Context):
-        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in alldata.dev_list):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list):
             commands_split = ctx.message.content.split()
             try:
                 coin = int(commands_split[1])
@@ -315,7 +315,7 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="give")
     async def give_coin_user(self, ctx: commands.Context):
-        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in alldata.dev_list):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list):
             commands_split = ctx.message.content.split()
             try:
                 username = commands_split[1]
@@ -335,7 +335,7 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="deduct")
     async def deduct_coin_user(self, ctx: commands.Context):
-        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in alldata.dev_list):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list):
             commands_split = ctx.message.content.split()
             try:
                 username = commands_split[1]
@@ -412,7 +412,7 @@ class TwitchBot(commands.Bot,):
 
     @commands.command(name="callhell")
     async def callhell(self, ctx: commands.Context):
-        if (ctx.author.name.lower() == self.CHANNELS) or (ctx.author.name.lower() in alldata.dev_list):
+        if (ctx.author.name.lower() == self.CHANNELS or ctx.author.is_mod) or (ctx.author.name.lower() in alldata.dev_list):
             await self.send_message("รถทัวร์สู่ยมโลก มารับแล้ว")
             data = await call_to_hell(self.send_message_timeout)
             await self.send_message(f"ใช้งาน Sniffnos มี {data['casualtie']} คนในแชทหายตัวไป.... sniffsCry sniffsCry sniffsCry")
