@@ -43,15 +43,11 @@ async def call_to_hell(timeout):
 
 async def shooter(employer: str, target: str, send_message, timeout, override: bool):
     dodge_rate = 10
-    payrate = 5
+    payrate = 50
     shooter_timeout = random.randint(15, 60)
     target = re.sub(r'^@', '', target)
     if target == "me":
-        await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
-        await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที sniffsAH")
-        shooter_suicide_feed(employer, shooter_timeout)
-        print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
-        return
+        payrate = 10
     exclude_target = alldata.vip_list + alldata.dev_list
     cooldown = 1200
     if alldata.shooter_cooldown == 0:
@@ -75,17 +71,20 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
             # enough money case
             if userdata["Coin"] >= payrate:
                 add_coin(employer, -payrate)
-                targetdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == target), None)
-                if targetdata:
-                    submonth = targetdata["Sub_Month"]
-                    dodge_rate += min(submonth * 1.5, 10)
-                if target in exclude_target:
-                    shooter_state = "vip"
+                if target == "me":
+                    shooter_state = "me"
                 else:
-                    if random.random() > (dodge_rate / 100):
-                        shooter_state = "success"
+                    targetdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == target), None)
+                    if targetdata:
+                        submonth = targetdata["Sub_Month"]
+                        dodge_rate += min(submonth * 1.5, 10)
+                    if target in exclude_target:
+                        shooter_state = "vip"
                     else:
-                        shooter_state = "dodge"
+                        if random.random() > (dodge_rate / 100):
+                            shooter_state = "success"
+                        else:
+                            shooter_state = "dodge"
 
             # not enough money case
             else:
@@ -128,6 +127,11 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
                 await send_message(f"@{employer} ไม่มีเงินจ้างมือปืน PunOko โดนมือปืนยิงตาย {shooter_timeout} วินาที")
                 shooter_unsuccess_feed(employer, shooter_timeout)
                 print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} hit by sniffsbot for {shooter_timeout} sec")
+            case "me":
+                await timeout(employer, shooter_timeout, f"อยากไปเยือนยมโลกหรอ สนิฟจัดให้ {shooter_timeout} วินาที")
+                await send_message(f"@{employer} แวะไปเยือนยมโลก {shooter_timeout} วินาที sniffsAH")
+                shooter_suicide_feed(employer, shooter_timeout)
+                print(f"[SHOT] [{get_timestamp()}] Shooter: {employer} suicide by sniffsbot for {shooter_timeout} sec")
             case _:
                 return
 
