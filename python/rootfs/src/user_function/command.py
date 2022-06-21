@@ -78,7 +78,7 @@ async def shooter(employer: str, target: str, send_message, timeout, override: b
                 targetdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == target), None)
                 if targetdata:
                     submonth = targetdata["Sub_Month"]
-                    dodge_rate += min(submonth, 6)
+                    dodge_rate += min(submonth * 1.5, 10)
                 if target in exclude_target:
                     shooter_state = "vip"
                 else:
