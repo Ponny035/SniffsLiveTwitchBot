@@ -198,7 +198,7 @@ class TwitchBot(commands.Bot,):
             except ValueError:
                 print(f"[_MSG] [{message.timestamp.replace(microsecond=0)}] {message.author.name.lower()} Is Mod {message.author.is_mod} Is Sub {bool(message.author.is_subscriber)} Is Vip False: {message.content}")
 
-            await check_message(message.author.name.lower(), message.content, self.send_message, self.send_message_timeout)
+            # await check_message(message.author.name.lower(), message.content, self.send_message, self.send_message_timeout)
             await update_submonth(message.author.name.lower(), message.raw_data)
             await self.event_trigger.handle_channelpoints(message.raw_data, self.event_channelpoint)
             await self.event_trigger.check_bits(message.raw_data, self.event_bits)
