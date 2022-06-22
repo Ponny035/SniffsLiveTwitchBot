@@ -14,7 +14,7 @@ from .misc.cooldown import set_cooldown, check_cooldown
 from .misc.event_trigger import EventTrigger
 from .misc.updatesub import update_submonth
 from .misc.webfeed import activate_webfeed_feed, deductcoin_feed, givecoin_feed, lotto_start_feed, lotto_stop_feed, payday_feed, raffle_start_feed, raffle_stop_feed, raid_feed, song_request_off_feed, song_request_on_feed
-from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, send_lotto_msg, check_message, buy_raffle, draw_raffle
+from .user_function.command import buy_coinflip, call_to_hell, shooter, buy_lotto, draw_lotto, transfer_coin, send_lotto_msg, buy_raffle, draw_raffle
 from .user_function.raffle import raffle_start
 from .user_function.songrequest import user_song_request, now_playing, get_song_list, select_song, delete_songlist, remove_nowplaying, delete_song
 from .timefn.timefn import activate_point_system, add_point_by_watchtime, user_join_part, get_user_watchtime
