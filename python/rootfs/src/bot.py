@@ -486,7 +486,9 @@ class TwitchBot(commands.Bot,):
             try:
                 target = commands_split[1].lower()
             except IndexError:
-                target = "jb_sadguy"
+                # target = "jb_sadguy"
+                self.send_message("กรุณาระบุชื่อผู้ใช้ที่จะจ้างมือปืนสนิฟ")
+                return
             viewers = alldata.get_users_list()
             viewers = [viewer.lower() for viewer in viewers]
             if (target in viewers) or (target == "me"):
