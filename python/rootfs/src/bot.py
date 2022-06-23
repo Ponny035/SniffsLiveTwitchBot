@@ -487,7 +487,7 @@ class TwitchBot(commands.Bot,):
                 target = commands_split[1].lower()
             except IndexError:
                 # target = "jb_sadguy"
-                self.send_message("กรุณาระบุชื่อผู้ใช้ที่จะจ้างมือปืนสนิฟ")
+                await self.send_message("กรุณาระบุชื่อผู้ใช้ที่จะจ้างมือปืนสนิฟ")
                 return
             viewers = alldata.get_users_list()
             viewers = [viewer.lower() for viewer in viewers]
