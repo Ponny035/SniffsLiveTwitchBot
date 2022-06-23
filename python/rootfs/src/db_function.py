@@ -52,7 +52,7 @@ def retrieve_all():
     if resp["status_code"] == 200:
         return resp["data"]
     else:
-        return None
+        return {}
 
 
 def retrieve(username: str):
