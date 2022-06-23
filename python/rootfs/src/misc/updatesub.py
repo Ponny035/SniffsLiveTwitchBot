@@ -12,7 +12,10 @@ async def update_submonth(username: str, rawdata: str):
     except Exception:
         return
     if submonth > 0:
-        userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
+        try:
+            userdata = next((userdata for userdata in alldata.allusers_stats if userdata["User_Name"] == username), None)
+        except TypeError:
+            userdata = None
         if userdata:
             if userdata["Sub_Month"] != submonth:
                 userdata["Sub_Month"] = submonth
