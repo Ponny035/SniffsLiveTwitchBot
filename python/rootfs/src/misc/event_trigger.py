@@ -1,41 +1,44 @@
-import asyncio
 from datetime import datetime
 
 from twitchio.client import Client
+from twitchio.models import Stream
+from twitchio.ext import eventsub
+
+from src.misc import alldata
+from src.misc.webfeed import live_notification_feed
+from src.timefn.timestamp import get_timestamp
 
 
 class EventTrigger:
-    def __init__(self, channels):
-        self.CHANNELS = channels
-        self.channel_live = False
+    def __init__(self, bot):
+        self.LISTEN = alldata.LISTEN
+        self.HOST = alldata.HOST
 
-        self.twitch_api = Client(
-            client_id="wt9nmvcq4oszo9k4qpswvl7htigg08",
-            client_secret="5c2ihtk3viinbrpnvlooys8c56w56f"
+        self.twitch_api = Client.from_client_credentials(
+            client_id=alldata.CLIENTID,
+            client_secret=alldata.CLIENTSECRET
         )
+        self.eventsub_client = eventsub.EventSubClient(bot, "mysuperlongsecret", self.HOST)
 
-    async def get_channel_status(self, chan_offline, chan_online):
-        success_callback = [0, 0]
-        while True:
-            if self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is None and success_callback[0] == 0:
-                    self.channel_live = False
-                    success_callback = [1, 1]
-                    await chan_offline()
-                    await asyncio.sleep(31)
-                    success_callback[1] = 0
-            elif not self.channel_live:
-                channel_status = await self.twitch_api.get_stream(self.CHANNELS)
-                if channel_status is not None and success_callback[1] == 0:
-                    self.channel_live = (channel_status["type"] == "live")
-                    self.channel_live_on = datetime.strptime(channel_status["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-                    success_callback = [1, 1]
-                    await chan_online(self.channel_live_on)
-                    await asyncio.sleep(31)
-                    success_callback[0] = 0
+    async def start_server(self):
+        print(f"Start Listen on host {self.HOST} and port {self.LISTEN}")
+        await self.eventsub_client.listen(port=self.LISTEN)
 
-    async def check_bits(self, rawdata, event_bit):
+    async def get_channel_info(self):
+        try:
+            channel_status: list[Stream] = await self.twitch_api.fetch_streams(user_logins=[alldata.CHANNELS])
+            if channel_status != []:
+                alldata.channel_live = True
+                alldata.channel_live_on = channel_status[0].started_at
+                live_notification_feed(channel_status[0])
+                return
+            else:
+                alldata.channel_live = False
+                return
+        except Exception as msg:
+            print(f"[_ERR] [{get_timestamp()}] Fetch Channel Info Error with {msg}")
+
+    async def check_bits(self, rawdata: str, event_bit):
         username = ""
         timestamp = bits = 0
         tags = result = {}
@@ -68,7 +71,7 @@ class EventTrigger:
             }
             await event_bit(result)
 
-    async def handle_channelpoints(self, rawdata, event_channelpoint):
+    async def handle_channelpoints(self, rawdata: str, event_channelpoint):
         username = ""
         id_match = "e80c4383-ee96-41cd-94ab-b232adc47f8f"
         id_match5k = "8b3458b8-f0bf-4218-b046-829c506279e5"
@@ -115,7 +118,7 @@ class EventTrigger:
             }
             await event_channelpoint(result)
 
-    async def parsing_sub_data(self, channel, tags, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
+    async def parsing_sub_data(self, tags: list, sub, resub, subgift, submysterygift, anonsubgift, anonsubmysterygift, raid):
         username = plan = plan_name = prime = streak_months = recipent = gift_sub_count = sub_month_count = msg_id = ""
         try:
             username = tags["login"]
@@ -125,7 +128,7 @@ class EventTrigger:
             except KeyError:
                 pass
         try:
-            plan = tags["msg-param-sub-plan"]
+            plan = int(tags["msg-param-sub-plan"])
         except KeyError:
             plan = ""
         try:
@@ -146,11 +149,11 @@ class EventTrigger:
             except KeyError:
                 pass
         try:
-            gift_sub_count = tags["msg-param-mass-gift-count"]
+            gift_sub_count = int(tags["msg-param-mass-gift-count"])
         except KeyError:
             gift_sub_count = 0
         try:
-            sub_month_count = tags["msg-param-cumulative-months"]
+            sub_month_count = int(tags["msg-param-cumulative-months"])
         except KeyError:
             pass
         try:
@@ -158,62 +161,126 @@ class EventTrigger:
         except KeyError:
             return
 
-        if msg_id == "sub":
-            data = {
-                "username": username,
-                "methods": methods,
-                "sub_month_count": sub_month_count
-            }
-            await sub(channel, data)
+        match msg_id:
+            case "sub":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "sub_month_count": sub_month_count
+                }
+                await sub(data)
 
-        elif msg_id == "resub":
-            data = {
-                "username": username,
-                "methods": methods,
-                "sub_month_count": sub_month_count,
-                "streak_months": streak_months
-            }
-            await resub(channel, data)
+            case "resub":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "sub_month_count": sub_month_count,
+                    "streak_months": streak_months
+                }
+                await resub(data)
 
-        elif msg_id == "subgift":
-            data = {
-                "username": username,
-                "methods": methods,
-                "streak_months": streak_months,
-                "recipent": recipent
-            }
-            await subgift(channel, data)
+            case "subgift":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "streak_months": streak_months,
+                    "recipent": recipent
+                }
+                await subgift(data)
 
-        elif msg_id == "submysterygift":
-            data = {
-                "username": username,
-                "methods": methods,
-                "gift_sub_count": gift_sub_count
-            }
-            await submysterygift(channel, data)
+            case "submysterygift":
+                data = {
+                    "username": username,
+                    "methods": methods,
+                    "gift_sub_count": gift_sub_count
+                }
+                await submysterygift(data)
 
-        elif msg_id == "anonsubgift":
-            data = {
-                "methods": methods,
-                "streak_months": streak_months,
-                "recipent": recipent
-            }
-            await anonsubgift(channel, data)
+            case "anonsubgift":
+                data = {
+                    "methods": methods,
+                    "streak_months": streak_months,
+                    "recipent": recipent
+                }
+                await anonsubgift(data)
 
-        elif msg_id == "anonsubmysterygift":
-            data = {
-                "methods": methods,
-                "gift_sub_count": gift_sub_count
-            }
-            await anonsubmysterygift(channel, data)
+            case "anonsubmysterygift":
+                data = {
+                    "methods": methods,
+                    "gift_sub_count": gift_sub_count
+                }
+                await anonsubmysterygift(data)
 
-        elif msg_id == "raid":
-            try:
-                username = tags["msg-param-login"]
-            except KeyError:
-                username = tags["msg-param-displayName"].lower()
-            data = {
-                "username": username,
-                "viewers": tags["msg-param-viewerCount"]
-            }
-            await raid(channel, data)
+            case "raid":
+                try:
+                    username = tags["msg-param-login"]
+                except KeyError:
+                    username = tags["msg-param-displayName"].lower()
+                data = {
+                    "username": username,
+                    "viewers": tags["msg-param-viewerCount"]
+                }
+                await raid(data)
+
+            case _:
+                return
+
+        # if msg_id == "sub":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "sub_month_count": sub_month_count
+        #     }
+        #     await sub(data)
+
+        # elif msg_id == "resub":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "sub_month_count": sub_month_count,
+        #         "streak_months": streak_months
+        #     }
+        #     await resub(data)
+
+        # elif msg_id == "subgift":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "streak_months": streak_months,
+        #         "recipent": recipent
+        #     }
+        #     await subgift(data)
+
+        # elif msg_id == "submysterygift":
+        #     data = {
+        #         "username": username,
+        #         "methods": methods,
+        #         "gift_sub_count": gift_sub_count
+        #     }
+        #     await submysterygift(data)
+
+        # elif msg_id == "anonsubgift":
+        #     data = {
+        #         "methods": methods,
+        #         "streak_months": streak_months,
+        #         "recipent": recipent
+        #     }
+        #     await anonsubgift(data)
+
+        # elif msg_id == "anonsubmysterygift":
+        #     data = {
+        #         "methods": methods,
+        #         "gift_sub_count": gift_sub_count
+        #     }
+        #     await anonsubmysterygift(data)
+
+        # elif msg_id == "raid":
+        #     try:
+        #         username = tags["msg-param-login"]
+        #     except KeyError:
+        #         username = tags["msg-param-displayName"].lower()
+        #     data = {
+        #         "username": username,
+        #         "viewers": tags["msg-param-viewerCount"]
+        #     }
+        #     await raid(data)
